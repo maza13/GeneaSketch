@@ -1,0 +1,4 @@
+interface:
+  display_name: "GeneaSketch Build Process"
+  short_description: "Desktop build workflow with preflight and packaging checks"
+  default_prompt: "Use $geneasketch-build-process to run the full Windows release flow: validate release.meta + x.y.z manifests, enforce changelog/About gates, build MSI/NSIS, and produce visible-label distribution artifacts."

@@ -1,0 +1,19 @@
+{
+    "expectations": [
+        {
+            "text": "Scoring list prioritizes lineage/parents over names",
+            "passed": true,
+            "evidence": "Family relations have higher weight sum than identity."
+        },
+        {
+            "text": "Score for both parents is significantly high",
+            "passed": true,
+            "evidence": "+40 for both parents."
+        },
+        {
+            "text": "Includes negative scores for conflicts like anachronisms",
+            "passed": true,
+            "evidence": "Includes -100 for logically impossible dates."
+        }
+    ]
+}

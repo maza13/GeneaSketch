@@ -1,0 +1,19 @@
+{
+    "eval_id": 2,
+    "eval_name": "merging-logic-scoring",
+    "prompt": "Estoy implementando un sistema de fusión de árboles. Dame una lista de criterios de puntuación (scoring) para detectar duplicados de personas, priorizando los parentescos sobre los nombres.",
+    "assertions": [
+        {
+            "name": "lineage_priority",
+            "text": "Scoring list prioritizes lineage/parents over names"
+        },
+        {
+            "name": "parent_score_high",
+            "text": "Score for both parents is significantly high"
+        },
+        {
+            "name": "negatives_included",
+            "text": "Includes negative scores for conflicts like anachronisms"
+        }
+    ]
+}

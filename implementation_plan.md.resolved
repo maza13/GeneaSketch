@@ -1,0 +1,249 @@
+# Línea de Tiempo Analítico — Plan de Implementación Refinado
+
+Panel analítico nuevo en el slot derecho de la app. Muestra eventos genealógicos (`BIRT`, `MARR`, `DIV`, `DEAT`) en dos vistas (Lista cronológica y Escala vertical con zoom). Se integra con el árbol resaltando personas sin cambiar selección ni foco.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Submenú en TopMenuBar**: El [TopMenuBar](file:///c:/My_Projects/GeneaSketch/src/ui/TopMenuBar.tsx#21-87) actual solo soporta `MenuItem[]` plano. Para ítems tipo radio (`Panel derecho: Detalles | Timeline`) propongo **no implementar submenús anidados CSS** en MVP. En su lugar, usaremos ítems prefijados con checkmarks `✓` que actúan como radio-toggles (ej. `✓ Panel: Detalles` / `· Panel: Timeline`). Esto ahorra complejidad de UI sin sacrificar funcionalidad.
+
+> [!WARNING]
+> **[VisualConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#111-118) vs [ViewConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#76-110)**: Tu plan coloca `rightPanelView` y `timelineScope` en [VisualConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#111-118). Sin embargo, [VisualConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#111-118) es para estado visual persistente del lienzo (posiciones de nodos, grid, capas). El timeline es configuración de **vista**, así que debería ir en [ViewConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#76-110) directamente (no dentro de `dtree`). Esto es coherente con cómo `mode`, `preset` y `depth` ya viven en [ViewConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#76-110).
+
+> [!IMPORTANT]
+> **Rendimiento del modo "Solo visibles"**: Calcular `TimelineItem[]` en cada re-render puede ser costoso con árboles grandes. El pipeline debe ser un `useMemo` con dependencia en `expandedGraph.nodes` (ya deduplicado por canonicalId) y `document`, no recorrer todo `document.persons`.
+
+---
+
+## Arquitectura de Datos
+
+### Tipos nuevos en [editor.ts](file:///c:/My_Projects/GeneaSketch/src/types/editor.ts)
+
+```typescript
+type TimelineEventType = "BIRT" | "MARR" | "DIV" | "DEAT";
+
+type TimelineDateCertainty = "exact" | "estimated_manual" | "inferred_auto";
+
+type TimelineItem = {
+  id: string;                    // `${personId}-${eventType}` o `${famId}-${eventType}`
+  type: TimelineEventType;
+  label: string;                 // "Juan Pérez — Nacimiento"
+  certainty: TimelineDateCertainty;
+  sortDate: number;              // Año numérico para ordenar (punto medio en rangos)
+  displayDate: string;           // Texto legible: "ABT 1845", "15 MAR 1920"
+  rawGedcomDate: string;         // String original del GEDCOM
+  primaryPersonIds: string[];    // IDs canónicos para highlight primario
+  secondaryPersonIds: string[];  // IDs canónicos para highlight secundario (ej. padres)
+  personSex?: "M" | "F" | "U";  // Para iconografía
+  undated: boolean;              // true si no se pudo resolver ninguna fecha
+};
+
+type TimelineHighlightPayload = {
+  primaryPersonIds: string[];
+  secondaryPersonIds: string[];
+} | null;
+```
+
+### Estado en [domain.ts](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts) — [ViewConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#76-110)
+
+```diff
+ export type ViewConfig = {
+   mode: ViewMode;
+   preset: Preset;
++  rightPanelView: "details" | "timeline";
++  timeline?: {
++    scope: "visible" | "all";
++    view: "list" | "scale";
++    scaleZoom: number;      // 1=siglo, 2=década, 3=año, 4=mes
++    scaleOffset: number;    // Scroll vertical offset en px
++  };
+   // ... resto existente
+   dtree?: {
+     // ... campos existentes
++    timelineHighlight?: TimelineHighlightPayload;
+   };
+ };
+```
+
+> [!NOTE]
+> `rightPanelView` defaultea a `"details"`. `timeline` se inicializa lazy (solo cuando el usuario activa la timeline por primera vez). [normalizeViewConfig](file:///c:/My_Projects/GeneaSketch/src/state/store.ts#198-247) asigna defaults tolerantes para snapshots previos.
+
+---
+
+## Proposed Changes
+
+### Infraestructura de estado y menú
+
+#### [MODIFY] [domain.ts](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts)
+- Agregar `rightPanelView` y `timeline` a [ViewConfig](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts#76-110)
+- Agregar `timelineHighlight` a `ViewConfig.dtree`
+
+#### [MODIFY] [editor.ts](file:///c:/My_Projects/GeneaSketch/src/types/editor.ts)
+- Tipos: `TimelineEventType`, `TimelineDateCertainty`, `TimelineItem`, `TimelineHighlightPayload`
+
+#### [MODIFY] [store.ts](file:///c:/My_Projects/GeneaSketch/src/state/store.ts)
+- Acciones: `setRightPanelView`, `setTimelineScope`, `setTimelineView`, `setTimelineScaleZoom`, `setTimelineScaleOffset`, `setTimelineHighlight`
+- [normalizeViewConfig](file:///c:/My_Projects/GeneaSketch/src/state/store.ts#198-247): defaults tolerantes para campos nuevos
+- Default `rightPanelView: "details"` en [defaultViewConfig](file:///c:/My_Projects/GeneaSketch/src/state/store.ts#109-135)
+
+#### [MODIFY] [TopMenuBar.tsx](file:///c:/My_Projects/GeneaSketch/src/ui/TopMenuBar.tsx)
+- Extender [MenuItem](file:///c:/My_Projects/GeneaSketch/src/ui/TopMenuBar.tsx#3-10) con `checked?: boolean` para ítems tipo radio
+- Renderizar checkmark visual `✓` / `·` cuando `checked` está definido
+- Sin submenús anidados en MVP — items radio son ítems planos del dropdown
+
+#### [MODIFY] [App.tsx](file:///c:/My_Projects/GeneaSketch/src/App.tsx)
+- En menú `Vista`, agregar ítems radio:
+  - `Panel: Detalles` / `Panel: Timeline`
+  - `Alcance: Solo visibles` / `Alcance: Todo el archivo` (solo visible si timeline activa)
+- Render condicional: `<RightPanel>` o `<TimelineRightPanel>` según `rightPanelView`
+- Pasar `expandedGraph`, `document`, `viewConfig` a `TimelineRightPanel`
+
+---
+
+### Motor de datos timeline
+
+#### [NEW] [buildTimeline.ts](file:///c:/My_Projects/GeneaSketch/src/core/timeline/buildTimeline.ts)
+Pipeline puro:
+```
+(document, expandedGraph, scope, selectedPersonId?) → TimelineItem[]
+```
+**Responsabilidades:**
+1. Resolver personas según scope (`visible` = solo canonicalIds en `expandedGraph.nodes`, `all` = todas)
+2. Para cada persona: extraer `BIRT` y `DEAT` del array `events`
+3. Para cada familia: extraer `MARR` y `DIV`
+4. Deduplicar por `personId + eventType` usando score de confiabilidad
+5. Normalizar fecha → `sortDate` usando `dateNormalization`
+6. Si `BIRT` sin fecha: intentar inferir con [estimatePersonBirthYear](file:///c:/My_Projects/GeneaSketch/src/core/inference/dateInference.ts#129-529) → certeza `inferred_auto`
+7. Construir `label` según formato acordado
+8. Construir `primaryPersonIds` y `secondaryPersonIds` según reglas de highlight
+9. Ordenar por `sortDate` ASC; undated al final
+
+#### [NEW] [dateNormalization.ts](file:///c:/My_Projects/GeneaSketch/src/core/timeline/dateNormalization.ts)
+Funciones puras para parsear fechas GEDCOM:
+- `parseGedcomDate(raw: string) → { year: number; month?: number; day?: number; isRange: boolean; rangeEnd?: {...}; prefix?: string }`
+- `dateToSortValue(parsed) → number` (punto medio para rangos, inicio de periodo para incompletas)
+- `dateCertainty(raw: string) → TimelineDateCertainty`
+- `dateToDisplayString(parsed) → string`
+
+Reutiliza la detección de prefijos `ABT|EST|CAL|BET|BEF|AFT` que ya está en [bfsOldestAncestorPaths](file:///c:/My_Projects/GeneaSketch/src/App.tsx#51-111) de [App.tsx](file:///c:/My_Projects/GeneaSketch/src/App.tsx).
+
+#### [NEW] [highlightMapping.ts](file:///c:/My_Projects/GeneaSketch/src/core/timeline/highlightMapping.ts)
+Mapeo evento → payload de highlight:
+- `BIRT`: primario = persona; secundario = padres (husband/wife de famc[0])
+- `DEAT`: primario = persona; secundario = vacío
+- `MARR`/`DIV`: primario = ambos cónyuges; secundario = vacío
+
+---
+
+### Componentes UI
+
+#### [NEW] [TimelineRightPanel.tsx](file:///c:/My_Projects/GeneaSketch/src/ui/TimelineRightPanel.tsx)
+Panel contenedor con:
+- Header con título "Línea de Tiempo" + tabs `Lista | Escala`
+- Badge con conteo de eventos
+- Render condicional de `TimelineListView` o `TimelineScaleView`
+- `useMemo` que invoca `buildTimeline(...)` con las dependencias correctas
+
+#### [NEW] [TimelineListView.tsx](file:///c:/My_Projects/GeneaSketch/src/ui/timeline/TimelineListView.tsx)
+Lista scrollable de eventos:
+- Cada evento es un row con: icono tipo + label + chip certeza + fecha
+- Click → `setTimelineHighlight(payload)`
+- Hover → tooltip con detalle expandido
+- Secciones por siglo/década como separadores visuales opcionales
+- Undated al final con estilo atenuado
+
+#### [NEW] [TimelineScaleView.tsx](file:///c:/My_Projects/GeneaSketch/src/ui/timeline/TimelineScaleView.tsx)
+Eje vertical a escala:
+- Eje izquierdo con marcas de tiempo (año/década/siglo según zoom)
+- Eventos como dots/chips posicionados por `sortDate` en el eje
+- Zoom por niveles (botones + / −): siglo → década → año → mes
+- Stacking horizontal para colisiones en misma posición vertical
+- Scroll vertical con offset persistido
+- Undated excluidos de esta vista
+
+#### [NEW] [TimelineEventTooltip.tsx](file:///c:/My_Projects/GeneaSketch/src/ui/timeline/TimelineEventTooltip.tsx)
+Tooltip flotante al hover:
+- Nombre completo, tipo de evento, fecha formateada
+- Badge de certeza con color semántico
+- Si inferido: "Fecha estimada automáticamente" con evidencia resumida
+
+---
+
+### Integración de highlight en el árbol
+
+#### [MODIFY] [DTreeView.tsx](file:///c:/My_Projects/GeneaSketch/src/views/DTreeView.tsx)
+- Leer `dtreeConfig.timelineHighlight`
+- Si activo, aplicar overlay (igual que `deepestAncestorsPath`):
+  - Nodos primarios: opacidad 1.0, fill = `#38bdf8` (cyan del tema)
+  - Nodos secundarios: opacidad 0.45, fill = `#0ea5e9` (cyan más suave)
+  - Edges entre highlighted: grosor × 1.5
+- Click en fondo del canvas → `clearTimelineHighlight()`
+
+#### [MODIFY] [styles.css](file:///c:/My_Projects/GeneaSketch/src/styles.css)
+- Clases para timeline: `.timeline-panel`, `.timeline-event`, `.timeline-chip`, `.timeline-axis`
+- Clases para ítems de menú tipo radio: `.menu-dropdown-item--checked`
+- Variables CSS para colores de certeza: `--tl-exact`, `--tl-estimated`, `--tl-inferred`
+- Respeta dark/light theme usando variables existentes
+
+---
+
+## Fases de Implementación
+
+| Fase | Entregable | Archivos | Complejidad |
+|------|-----------|----------|-------------|
+| 1 | Estado + menú radio | [domain.ts](file:///c:/My_Projects/GeneaSketch/src/types/domain.ts), [store.ts](file:///c:/My_Projects/GeneaSketch/src/state/store.ts), [TopMenuBar.tsx](file:///c:/My_Projects/GeneaSketch/src/ui/TopMenuBar.tsx), [App.tsx](file:///c:/My_Projects/GeneaSketch/src/App.tsx) | ★★☆ |
+| 2 | Motor de datos | `dateNormalization.ts`, `buildTimeline.ts`, `highlightMapping.ts` | ★★★ |
+| 3 | Panel host + lista | `TimelineRightPanel.tsx`, `TimelineListView.tsx`, `TimelineEventTooltip.tsx` | ★★☆ |
+| 4 | Vista escala | `TimelineScaleView.tsx` | ★★★ |
+| 5 | Highlight en árbol | [DTreeView.tsx](file:///c:/My_Projects/GeneaSketch/src/views/DTreeView.tsx) | ★☆☆ |
+| 6 | CSS + pulido | [styles.css](file:///c:/My_Projects/GeneaSketch/src/styles.css), ajustes visuales | ★☆☆ |
+
+---
+
+## Reglas Funcionales de TimelineItem (Condensadas)
+
+| Regla | Detalle |
+|-------|---------|
+| Tipos MVP | `BIRT`, `MARR`, `DIV`, `DEAT` |
+| Certeza | `exact` > `estimated_manual` > `inferred_auto` > undated |
+| Dedup | Un evento por persona+tipo, gana el de mayor certeza |
+| BIRT sin fecha | Usa [estimatePersonBirthYear()](file:///c:/My_Projects/GeneaSketch/src/core/inference/dateInference.ts#129-529) → certeza `inferred_auto` |
+| MARR/DIV/DEAT sin fecha | `undated=true`, solo en lista (al final), excluido de escala |
+| Rango (`BET...AND`) | Punto medio para sortDate |
+| Fecha parcial (solo año) | 1 ENE del año como sortDate |
+| Label BIRT/DEAT | `Nombre Apellidos — Nacimiento/Defunción` |
+| Label MARR/DIV | `Nombre1 Apellido1 + Nombre2 Apellido2 — Matrimonio/Divorcio` |
+
+## Highlight en Árbol
+
+| Evento | Primario | Secundario |
+|--------|----------|------------|
+| BIRT | Persona | Padres (si existen) |
+| DEAT | Persona | — |
+| MARR | Ambos cónyuges | — |
+| DIV | Ambos cónyuges | — |
+
+Primario: opacidad 1.0. Secundario: opacidad 0.45, mismo tono.
+Click fondo canvas → limpia highlight.
+
+## Defaults y Supuestos
+
+- Panel derecho al abrir app → `"details"`
+- Timeline activada → vista `"list"`, scope `"visible"`, zoom nivel 1 (siglo)
+- Orden cronológico: antiguo → reciente
+- Sin edición de eventos desde timeline en esta iteración
+- Se reutiliza [estimatePersonBirthYear](file:///c:/My_Projects/GeneaSketch/src/core/inference/dateInference.ts#129-529) de [dateInference.ts](file:///c:/My_Projects/GeneaSketch/src/core/inference/dateInference.ts) sin persistir
+- Estado timeline se guarda en snapshot con normalización tolerante para snapshots previos
+
+## Verification Plan
+
+### Automated
+- `tsc --noEmit` y `npm run build` deben pasar sin errores tras cada fase
+- Funciones puras de `dateNormalization.ts` se pueden testear con vitest si se desea
+
+### Manual
+- Cambiar panel derecho entre Detalles ↔ Timeline y validar que no se pierda estado
+- Colapsar/expandir nodos → timeline "Solo visibles" se actualiza en tiempo real
+- Click evento → personas correctas resaltadas; click fondo → limpia
+- Escala vertical: zoom funciona, respeta límites min/max del dataset
+- Dark/light theme: colores y opacidades coherentes en ambos

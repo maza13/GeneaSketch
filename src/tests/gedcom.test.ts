@@ -1,0 +1,106 @@
+import { describe, expect, it } from "vitest";
+import JSZip from "jszip";
+import { parseGedcomAnyVersion, parseGedzipAnyVersion } from "@/core/gedcom/parser";
+import { serializeGedcom } from "@/core/gedcom/serializer";
+import { expandGraph } from "@/core/graph/expand";
+import type { ViewConfig } from "@/types/domain";
+
+const SAMPLE_GED = `0 HEAD
+1 GEDC
+2 VERS 7.0.3
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Doe/
+1 SEX M
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 SEX F
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Baby /Doe/
+1 SEX U
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 DIV
+2 DATE 1 JAN 2020
+0 TRLR`;
+
+describe("GED parser + serializer", () => {
+  it("parses valid GED 7.0.x", () => {
+    const parsed = parseGedcomAnyVersion(SAMPLE_GED);
+    expect(parsed.errors).toHaveLength(0);
+    expect(parsed.document).not.toBeNull();
+    expect(Object.keys(parsed.document!.persons)).toHaveLength(3);
+    expect(parsed.document!.persons["@I1@"].lifeStatus).toBe("alive");
+    expect(parsed.document!.persons["@I1@"].sex).toBe("M");
+  });
+
+  it("serializes and parses back", () => {
+    const parsed = parseGedcomAnyVersion(SAMPLE_GED);
+    const serialized = serializeGedcom(parsed.document!);
+    const reparsed = parseGedcomAnyVersion(serialized);
+    expect(reparsed.errors).toHaveLength(0);
+    expect(Object.keys(reparsed.document!.families)).toHaveLength(1);
+    expect(reparsed.document!.families["@F1@"].events.some((event) => event.type === "DIV")).toBe(true);
+  });
+
+  it("expands ancestors and descendants", () => {
+    const parsed = parseGedcomAnyVersion(SAMPLE_GED);
+    const config: ViewConfig = {
+      mode: "tree",
+      preset: "all_direct_ancestors",
+      focusPersonId: "@I1@",
+      focusFamilyId: null,
+      homePersonId: "@I1@",
+      rightPanelView: "details",
+      timeline: {
+        scope: "visible",
+        view: "list",
+        scaleZoom: 1,
+        scaleOffset: 0
+      },
+      depth: {
+        ancestors: 4,
+        descendants: 2,
+        unclesGreatUncles: 0,
+        siblingsNephews: 0,
+        unclesCousins: 0
+      },
+      showSpouses: true
+    };
+    const graph = expandGraph(parsed.document!, config);
+    expect(graph.nodes.length).toBeGreaterThanOrEqual(3);
+    expect(graph.edges.some((e) => e.type === "spouse")).toBe(true);
+    expect(graph.edges.some((e) => e.type === "child")).toBe(true);
+  });
+
+  it("imports GED 5.5.1 with conversion warnings model", () => {
+    const ged551 = SAMPLE_GED.replace("7.0.3", "5.5.1");
+    const parsed = parseGedcomAnyVersion(ged551);
+    expect(parsed.errors).toHaveLength(0);
+    expect(parsed.document).not.toBeNull();
+    expect(parsed.sourceVersion).toBe("5.5.1");
+  });
+
+  it("sets GDZ metadata when parsing legacy zipped import", async () => {
+    const zip = new JSZip();
+    zip.file("data.ged", SAMPLE_GED);
+    const bytes = await zip.generateAsync({ type: "uint8array" });
+    const parsed = await parseGedzipAnyVersion(bytes, "gdz");
+    expect(parsed.errors).toHaveLength(0);
+    expect(parsed.document?.metadata.sourceFormat).toBe("GDZ");
+  });
+
+  it("sets GSZ metadata when parsing native zipped import", async () => {
+    const zip = new JSZip();
+    zip.file("data.ged", SAMPLE_GED);
+    const bytes = await zip.generateAsync({ type: "uint8array" });
+    const parsed = await parseGedzipAnyVersion(bytes, "gsz");
+    expect(parsed.errors).toHaveLength(0);
+    expect(parsed.document?.metadata.sourceFormat).toBe("GSZ");
+  });
+});

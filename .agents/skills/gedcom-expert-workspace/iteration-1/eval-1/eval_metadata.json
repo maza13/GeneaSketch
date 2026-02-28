@@ -1,0 +1,19 @@
+{
+    "eval_id": 1,
+    "eval_name": "gedcom-conversion-7.0",
+    "prompt": "Tengo un archivo GEDCOM 5.5.1 que usa codificación ANSEL. Ayúdame a planificar la conversión a GEDCOM 7.0, asegurándote de que las notas multi-línea y los multimedia se manejen correctamente según el estándar.",
+    "assertions": [
+        {
+            "name": "utf8_bom",
+            "text": "Plan includes UTF-8 conversion with BOM"
+        },
+        {
+            "name": "remove_conc",
+            "text": "Plan mentions removing CONC for GEDCOM 7.0"
+        },
+        {
+            "name": "diacritics_mapping",
+            "text": "Plan mentions handling diacritics mapping from ANSEL"
+        }
+    ]
+}

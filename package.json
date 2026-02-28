@@ -1,0 +1,44 @@
+{
+    "name": "geneasketch",
+    "private": true,
+    "version": "0.3.5",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b \u0026\u0026 vite build",
+        "preview": "vite preview",
+        "test": "vitest run",
+        "desktop:dev": "tauri dev",
+        "desktop:build:win": "tauri build --bundles msi,nsis",
+        "release:preflight": "python .agents/skills/geneasketch-build-process/scripts/preflight_build.py",
+        "release:changelog": "python .agents/skills/geneasketch-build-process/scripts/ensure_changelog_entry.py",
+        "release:about:sync": "python .agents/skills/geneasketch-build-process/scripts/sync_about_release.py",
+        "release:artifacts:verify": "python .agents/skills/geneasketch-build-process/scripts/verify_build_artifacts.py",
+        "release:artifacts:rename": "python .agents/skills/geneasketch-build-process/scripts/rename_distribution_artifacts.py"
+    },
+    "dependencies": {
+        "@tauri-apps/api": "^2.10.1",
+        "@types/d3": "^7.4.3",
+        "@types/d3-flextree": "^2.1.4",
+        "d3": "^7.9.0",
+        "d3-flextree": "^2.1.2",
+        "idb": "^8.0.0",
+        "jspdf": "^4.2.0",
+        "jszip": "^3.10.1",
+        "react": "^18.3.1",
+        "@tauri-apps/plugin-oauth": "^2.0.0",
+        "@tauri-apps/plugin-stronghold": "^2.0.0",
+        "react-dom": "^18.3.1",
+        "zustand": "^4.5.4"
+    },
+    "devDependencies": {
+        "@tauri-apps/cli": "^2.2.5",
+        "@types/node": "^22.10.2",
+        "@types/react": "^18.3.12",
+        "@types/react-dom": "^18.3.1",
+        "@vitejs/plugin-react": "^4.3.4",
+        "typescript": "^5.7.2",
+        "vite": "^6.0.5",
+        "vitest": "^2.1.8"
+    }
+}

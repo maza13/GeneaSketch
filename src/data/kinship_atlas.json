@@ -1,0 +1,353 @@
+{
+    "metadata": {
+        "name": "GeneaSketch Kinship Atlas",
+        "version": "1.0.0",
+        "description": "Diccionario exhaustivo de parentesco con soporte de género y límites dinámicos.",
+        "limits": {
+            "ancestor_standard_cap": 11,
+            "descendant_standard_cap": 11
+        }
+    },
+    "vocabulary": {
+        "direct": {
+            "ancestors": {
+                "1": {
+                    "M": {
+                        "s": "Padre",
+                        "t": "Grado 1"
+                    },
+                    "F": {
+                        "s": "Madre",
+                        "t": "Grado 1"
+                    }
+                },
+                "2": {
+                    "M": {
+                        "s": "Abuelo",
+                        "t": "Abuelo 1°"
+                    },
+                    "F": {
+                        "s": "Abuela",
+                        "t": "Abuela 1°"
+                    }
+                },
+                "3": {
+                    "M": {
+                        "s": "Bisabuelo",
+                        "t": "Abuelo 2°"
+                    },
+                    "F": {
+                        "s": "Bisabuela",
+                        "t": "Abuela 2°"
+                    }
+                },
+                "4": {
+                    "M": {
+                        "s": "Tatarabuelo",
+                        "t": "Abuelo 3°"
+                    },
+                    "F": {
+                        "s": "Tatarabuela",
+                        "t": "Abuela 3°"
+                    }
+                },
+                "5": {
+                    "M": {
+                        "s": "Trastatarabuelo",
+                        "t": "Abuelo 4°"
+                    },
+                    "F": {
+                        "s": "Trastatarabuela",
+                        "t": "Abuela 4°"
+                    }
+                },
+                "6": {
+                    "M": {
+                        "s": "Pentabuelo",
+                        "t": "Abuelo 5°"
+                    },
+                    "F": {
+                        "s": "Pentabuela",
+                        "t": "Abuela 5°"
+                    }
+                },
+                "7": {
+                    "M": {
+                        "s": "Hexabuelo",
+                        "t": "Abuelo 6°"
+                    },
+                    "F": {
+                        "s": "Hexabuela",
+                        "t": "Abuela 6°"
+                    }
+                },
+                "8": {
+                    "M": {
+                        "s": "Heptabuelo",
+                        "t": "Abuelo 7°"
+                    },
+                    "F": {
+                        "s": "Heptabuela",
+                        "t": "Abuela 7°"
+                    }
+                },
+                "9": {
+                    "M": {
+                        "s": "Octabuelo",
+                        "t": "Abuelo 8°"
+                    },
+                    "F": {
+                        "s": "Octabuela",
+                        "t": "Abuela 8°"
+                    }
+                },
+                "10": {
+                    "M": {
+                        "s": "Nonabuelo",
+                        "t": "Abuelo 9°"
+                    },
+                    "F": {
+                        "s": "Nonabuela",
+                        "t": "Abuela 9°"
+                    }
+                },
+                "11": {
+                    "M": {
+                        "s": "Decabuelo",
+                        "t": "Abuelo 10°"
+                    },
+                    "F": {
+                        "s": "Decabuela",
+                        "t": "Abuela 10°"
+                    }
+                }
+            },
+            "descendants": {
+                "1": {
+                    "M": {
+                        "s": "Hijo",
+                        "t": "Grado 1"
+                    },
+                    "F": {
+                        "s": "Hija",
+                        "t": "Grado 1"
+                    }
+                },
+                "2": {
+                    "M": {
+                        "s": "Nieto",
+                        "t": "Nieto 1°"
+                    },
+                    "F": {
+                        "s": "Nieta",
+                        "t": "Nieta 1°"
+                    }
+                },
+                "3": {
+                    "M": {
+                        "s": "Bisnieto",
+                        "t": "Nieto 2°"
+                    },
+                    "F": {
+                        "s": "Bisnieta",
+                        "t": "Nieto 2°"
+                    }
+                },
+                "4": {
+                    "M": {
+                        "s": "Tataranieto",
+                        "t": "Nieto 3°"
+                    },
+                    "F": {
+                        "s": "Tataranieta",
+                        "t": "Nieto 3°"
+                    }
+                },
+                "5": {
+                    "M": {
+                        "s": "Chozno",
+                        "t": "Nieto 4°"
+                    },
+                    "F": {
+                        "s": "Chozna",
+                        "t": "Nieto 4°"
+                    }
+                },
+                "6": {
+                    "M": {
+                        "s": "Bichozno",
+                        "t": "Nieto 5°"
+                    },
+                    "F": {
+                        "s": "Bichozna",
+                        "t": "Nieto 5°"
+                    }
+                },
+                "7": {
+                    "M": {
+                        "s": "Trichozno",
+                        "t": "Nieto 6°"
+                    },
+                    "F": {
+                        "s": "Trichozna",
+                        "t": "Nieto 6°"
+                    }
+                },
+                "8": {
+                    "M": {
+                        "s": "Tetrachozno",
+                        "t": "Nieto 7°"
+                    },
+                    "F": {
+                        "s": "Tetrachozna",
+                        "t": "Nieto 7°"
+                    }
+                },
+                "9": {
+                    "M": {
+                        "s": "Pentachozno",
+                        "t": "Nieto 8°"
+                    },
+                    "F": {
+                        "s": "Pentachozna",
+                        "t": "Nieto 8°"
+                    }
+                },
+                "10": {
+                    "M": {
+                        "s": "Hexachozno",
+                        "t": "Nieto 9°"
+                    },
+                    "F": {
+                        "s": "Hexachozna",
+                        "t": "Nieto 9°"
+                    }
+                },
+                "11": {
+                    "M": {
+                        "s": "Heptachozno",
+                        "t": "Nieto 10°"
+                    },
+                    "F": {
+                        "s": "Heptachozna",
+                        "t": "Nieto 10°"
+                    }
+                }
+            }
+        },
+        "collateral": {
+            "uncles": {
+                "base": {
+                    "M": "Tío",
+                    "F": "Tía"
+                },
+                "map": {
+                    "1": {
+                        "M": {
+                            "s": "Tío",
+                            "t": "Tío 1°"
+                        },
+                        "F": {
+                            "s": "Tía",
+                            "t": "Tía 1°"
+                        }
+                    },
+                    "2": {
+                        "M": {
+                            "s": "Tío abuelo",
+                            "t": "Tío Abuelo 1°"
+                        },
+                        "F": {
+                            "s": "Tía abuela",
+                            "t": "Tía Abuelo 1°"
+                        }
+                    },
+                    "3": {
+                        "M": {
+                            "s": "Tío bisabuelo",
+                            "t": "Tío Abuelo 2°"
+                        },
+                        "F": {
+                            "s": "Tía bisabuela",
+                            "t": "Tío Abuelo 2°"
+                        }
+                    }
+                }
+            },
+            "cousins": {
+                "base": {
+                    "M": "Primo",
+                    "F": "Prima"
+                },
+                "map": {
+                    "1": {
+                        "M": {
+                            "s": "Primo hermano",
+                            "t": "Primo 1°"
+                        },
+                        "F": {
+                            "s": "Prima hermana",
+                            "t": "Prima 1°"
+                        }
+                    },
+                    "2": {
+                        "M": {
+                            "s": "Primo segundo",
+                            "t": "Primo 2°"
+                        },
+                        "F": {
+                            "s": "Prima segunda",
+                            "t": "Prima 2°"
+                        }
+                    }
+                }
+            },
+            "nephews": {
+                "base": {
+                    "M": "Sobrino",
+                    "F": "Sobrina"
+                },
+                "map": {
+                    "1": {
+                        "M": {
+                            "s": "Sobrino",
+                            "t": "Sobrino 1°"
+                        },
+                        "F": {
+                            "s": "Sobrina",
+                            "t": "Sobrina 1°"
+                        }
+                    },
+                    "2": {
+                        "M": {
+                            "s": "Sobrino segundo",
+                            "t": "Sobrino 2°"
+                        },
+                        "F": {
+                            "s": "Sobrina segunda",
+                            "t": "Sobrino 2°"
+                        }
+                    }
+                }
+            }
+        },
+        "special": {
+            "sibling": {
+                "M": "Hermano",
+                "F": "Hermana"
+            },
+            "political_suffix": {
+                "M": "político",
+                "F": "política"
+            },
+            "step_prefix": {
+                "M": "Padrastro",
+                "F": "Madrastra"
+            },
+            "step_child": {
+                "M": "Hijastro",
+                "F": "Hijastra"
+            }
+        }
+    }
+}

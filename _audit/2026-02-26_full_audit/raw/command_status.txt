@@ -1,0 +1,8 @@
+﻿[2026-02-26T07:43:04.6032910-06:00] npm exec tsc --noEmit
+exit_code=0
+[2026-02-26T07:43:10.3948953-06:00] npm test
+exit_code=0
+[2026-02-26T07:43:14.4651716-06:00] npm audit --json
+exit_code=1
+[2026-02-26T07:43:16.0864858-06:00] npm outdated --json
+exit_code=1

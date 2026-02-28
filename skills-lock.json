@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "skills": {
+    "customizing-tauri-windows": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "computedHash": "37bf0dcab3267de6989e7e2930efc480739e8f4f7e1fe74ae66b0ff89250101e"
+    },
+    "d3-viz": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "7bf222fdb6005fc8b802b43b93a5f4db9b40db15ec5c13a646ab5edfa52b94e7"
+    },
+    "disk-hygiene": {
+      "source": "terrylica/cc-skills",
+      "sourceType": "github",
+      "computedHash": "2c41741a789c055e2a48c1d6abaad06c5a5f75c858e0e432e796ea72e3de1423"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "25872a21881a950edc3db1f3329664d60405d539660ce05b3265db2de06a7dfd"
+    },
+    "frontend-design-system": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "computedHash": "a34ea7236bce99d011fcfae4b40c700da019a9950ee8035cd17fe48ef89989ee"
+    },
+    "gtars": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "bd7b0c60fad243bbc211d7a3ae0576e0da585343d1c98c147707951f84997be8"
+    },
+    "infographic-creator": {
+      "source": "antvis/infographic",
+      "sourceType": "github",
+      "computedHash": "fe51505375effb86a6bcc6d9500727cb4420f6647dd05ea3d558aaabb883c4d4"
+    },
+    "interface-design": {
+      "source": "dammyjay93/interface-design",
+      "sourceType": "github",
+      "computedHash": "4d5fe1dacfebc0c1b3837b061405150ed2e4971c096543afc46c23161c5a4f7a"
+    },
+    "javascript-testing-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "eddcc9d11a1ae9628e1b73a3c06dbb200d1be6280ba82a144a0a224141bc4a5f"
+    },
+    "product-changelog": {
+      "source": "skill-zero/s",
+      "sourceType": "github",
+      "computedHash": "263fd4506c580d5eac78209fcb76a0247d7d0a2c611286f3bf85ba9fdc4cdc51"
+    },
+    "report-generator": {
+      "source": "curiouslearner/devkit",
+      "sourceType": "github",
+      "computedHash": "9ccb89027c951cd644884c7a98fae457167fa4d216ef94e51a2b22227e49d9ad"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "e513e29a52533c4dd0aff72964c80d2d43c6fe9619ecb8766aabcd117e2b1acd"
+    },
+    "skill-installer": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "computedHash": "3149149cc0b5ea744420bc01ebcc4e012b908b1af6d28099dc720b2b616e6dba"
+    },
+    "ui-animation": {
+      "source": "mblode/agent-skills",
+      "sourceType": "github",
+      "computedHash": "d03322a1be1a1b7189b6edd6d1615cc4e19767cad79bf42fb0a2e58425607d03"
+    }
+  }
+}

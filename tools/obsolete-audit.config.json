@@ -1,0 +1,41 @@
+{
+    "includeGlobs": [
+        "src/**/*",
+        "docs/**/*",
+        "plans/**/*",
+        "design/**/*",
+        "notes/**/*",
+        "public/**/*",
+        "assets/**/*"
+    ],
+    "excludeGlobs": [
+        "node_modules/**/*",
+        "dist/**/*",
+        "build/**/*",
+        "release-dist/**/*",
+        ".cache/**/*",
+        ".git/**/*",
+        "tsc.log"
+    ],
+    "entrypoints": [
+        "src/main.tsx",
+        "src/index.tsx",
+        "src/App.tsx"
+    ],
+    "docFolders": [
+        "docs",
+        "plans",
+        "design",
+        "notes"
+    ],
+    "keepFiles": [
+        "README.md",
+        "package.json",
+        "tsconfig.json",
+        "vite.config.ts"
+    ],
+    "archiveFolder": "_archive",
+    "thresholds": {
+        "score": 50
+    }
+}

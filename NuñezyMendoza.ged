@@ -1,0 +1,2652 @@
+0 HEAD
+1 FILE NuñezyMendoza.ged
+1 LANG Spanish
+1 SOUR FAMILY_GEM
+2 NAME Family Gem
+2 VERS 1.2
+1 DATE 9 FEB 2026
+2 TIME 23:42:47
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Juan Jesús /Nuñez Mendoza/
+1 FAMC @F1@
+1 SEX M
+1 BIRT
+2 DATE 13 JUL 1994
+2 PLAC Toluca
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 13:28:39
+1 NOTE @T1@
+1 NOTE @T2@
+0 @I2@ INDI
+1 NAME Juan Abel /Nuñez Saucedo/
+1 FAMC @F2@
+1 FAMS @F1@
+1 SEX M
+1 BIRT
+2 DATE 8 MAR 1971
+2 PLAC Tenango del Valle, México
+1 CHAN
+2 DATE 27 JAN 2026
+3 TIME 16:33:02
+0 @I3@ INDI
+1 NAME Ma. Guadalupe /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F1@
+1 SEX F
+1 BIRT
+2 DATE 7 DEC 1971
+2 PLAC Tenango del Valle, México
+1 CHAN
+2 DATE 27 JAN 2026
+3 TIME 16:32:33
+0 @I4@ INDI
+1 NAME Carlos Arturo /Nuñez Mendoza/
+1 FAMC @F1@
+1 BIRT
+2 DATE 15 DEC 1998
+2 PLAC Capuluac
+1 SEX M
+1 CHAN
+2 DATE 9 JUN 2022
+3 TIME 00:24:56
+0 @I5@ INDI
+1 NAME Alejandra /Nuñez Mendoza/
+1 FAMC @F1@
+1 SEX F
+1 BIRT
+2 DATE 4 OCT 2002
+2 PLAC Tenango Del Valle
+1 CHAN
+2 DATE 9 JUN 2022
+3 TIME 00:25:40
+0 @I6@ INDI
+1 NAME Abel /Nuñez Íñiguez/
+1 FAMC @F4@
+1 FAMS @F2@
+1 SEX M
+1 BIRT
+2 DATE 3 JUL 1940
+2 PLAC San Antonio la Isla, México
+1 DEAT
+2 DATE 13 APR 2014
+2 PLAC Tenango del Valle, México
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:33:20
+1 NOTE [28-01-2026] — Recuerdos de Abel Núñez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De mi abuelo Abel Núñez se recuerda una vida marcada desde muy joven. Cuando tenía 13 años mataron a su papá: lo degollaron y nunca se supo por qué. Desde entonces le tocó cargar con responsabilidades
+2 CONC  que no eran para un niño.
+2 CONT 
+2 CONT En esa etapa se dedicó al torno: hacía cosas de madera y su mamá las iba a vender. Con el tiempo dejó el torno (no se sabe por qué) y trabajó en el campo un rato. Después se fue a Estados Unidos y, al
+2 CONC  regresar, se casó con mi abuela (Amelia Saucedo Nava).
+2 CONT 
+2 CONT Más adelante se dedicó principalmente a la conducción. Entró a la “Carta Blanca” como conductor y duró 30 años. En sus últimos 21 años trabajó como conductor de limpia en el ayuntamiento de Tenango de
+2 CONC l Valle, y no dejó de trabajar hasta la noche en que se enfermó.
+2 CONT 
+2 CONT A los 73 años, una noche se puso mal y le diagnosticaron cáncer de colon en fase 4. Hasta ese mismo día todavía estaba fuerte y trabajando; desde esa noche ya no pudo volver por lo rápido que avanzó l
+2 CONC a enfermedad. Murió con la frente en alto: jamás se rindió ante la enfermedad.
+2 CONT 
+2 CONT (Fuente: yo; consenso familiar; contado por el propio Abel en distintas ocasiones y corroborado por familiares)
+0 @I7@ INDI
+1 NAME Amelia /Saucedo Nava/
+1 FAMC @F5@
+1 FAMS @F2@
+1 SEX F
+1 BIRT
+2 DATE 16 SEP 1942
+2 PLAC Tenango del Valle, México
+1 DEAT
+2 DATE 16 NOV 2023
+2 PLAC Tenango del Valle, México
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:33:02
+1 NOTE [28-01-2026] — Recuerdos de Amelia Saucedo Nava
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De mi abuela Amelia Saucedo Nava se recuerda una infancia dura: fue la única hija entre puros hermanos. De joven trabajó con su familia, y cuando se casó se dedicó a su casa y a su familia. También si
+2 CONC guió criando animales, como lo hacía su padre.
+2 CONT 
+2 CONT Más adelante tomó el puesto donde vendía su mamá, y a eso se dedicó el resto de su vida.
+2 CONT 
+2 CONT (Fuente: yo; recuerdos familiares)
+0 @I8@ INDI
+1 NAME Zenon /Mendoza Juarez/
+1 FAMC @F6@
+1 FAMS @F3@
+1 SEX M
+1 BIRT
+2 DATE 3 AUG 1935
+1 DEAT
+2 DATE 13 OCT 2015
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 17:57:46
+1 NOTE [28-01-2026] — Recuerdos de Zenón Mendoza Juárez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De mi abuelo Zenón Mendoza Juárez recuerdo que trabajó en carnicerías, y después se dedicó a ayudar en el molino de mi abuela.
+2 CONT 
+2 CONT Siento que todavía me falta mucho de su historia: necesito hablar con mi mamá y con más familia para conocer mejor su juventud y su vida en general.
+2 CONT 
+2 CONT (Fuente: yo; recuerdos familiares)
+2 CONT 
+2 CONT Tablejero, hasta como los 50 años, aprox.
+0 @I9@ INDI
+1 NAME Modesta /Hernández Jiménez/
+1 FAMC @F10@
+1 FAMS @F3@
+1 SEX F
+1 BIRT
+2 DATE 14 JAN 1941
+2 PLAC San Juan Teneria, Taxco de Alarcón, Guerrero, México
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 23:59:26
+1 NOTE [28-01-2026] — Recuerdos de Modesta Hernández Jiménez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT Mi abuela Modesta Hernández Jiménez es el pilar de la familia, y al momento de esta nota es la única abuela viva. Sé que empezó a trabajar desde muy niña, vendiendo tortillas. Ya casada empezó a traba
+2 CONC jar en un molino de nixtamal y más adelante compró el molino, que fue el proyecto de su vida, aparte de su familia.
+2 CONT 
+2 CONT Trabajó hasta pasados los 70 años. El molino sigue abierto; ahora mi mamá y mi tío están al frente. El molino tiene más de 60 años funcionando.
+2 CONT 
+2 CONT (Fuente: yo; recuerdos familiares)
+2 CONT 
+2 CONT 
+2 CONT Empezó de niña vendía taquitos, luego cuidaba bebés, después trabajo en casa. 
+2 CONT Después de seco y empezó con las tortillas.
+2 CONT Enchiladas, antojitos.
+1 NOTE Hermano
+0 @I10@ INDI
+1 NAME Heriberto /Núñez de la Rosa/
+1 FAMC @F14@
+1 FAMS @F4@
+1 SEX M
+1 DEAT
+2 DATE 27 SEP 1954
+2 PLAC San Antonio la Isla, México
+1 BIRT
+2 DATE 1908
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 15:03:19
+1 SOUR @S1@
+1 NOTE [28-01-2026] — Recuerdos de Heriberto Núñez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De Heriberto Núñez lo que se sabe en la familia es poco. Lo mataron cuando mi abuelo Abel Núñez Íñiguez tenía 13 años. Por eso, de él prácticamente solo conservo el nombre y un año aproximado de su mu
+2 CONC erte, calculado a partir de la edad de mi abuelo en ese momento.
+2 CONT 
+2 CONT (Fuente: yo; consenso familiar; contado por el propio Abel en distintas ocasiones y corroborado por familiares)
+1 NOTE [29-01-2026] — Gran hallazgo sobre Heriberto Núñez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT Puede encontrar el acta de defunción de Heriberto, lo que me llevo a encontrar relaciones hasta sus bisabuelos, aproximadamente a inicios del siglo 19.
+2 CONT 
+2 CONT Fuentes, su acta de defunción.
+0 @I11@ INDI
+1 NAME Isaura /Íñiguez Valdez/
+1 FAMC @F53@
+1 FAMS @F4@
+1 FAMS @F65@
+1 SEX F
+1 DEAT
+2 DATE BET 1978 AND 1984
+2 PLAC San Antonio la Isla, México
+1 BIRT
+2 DATE 5 JUN 1906
+2 PLAC Nayarit, México
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:31:14
+1 OBJE
+2 FILE IMG-20260129-WA0001.jpg
+1 OBJE
+2 FILE IMG-20260129-WA0001 (1).jpg
+2 _PRIM Y
+1 NOTE [28-01-2026] — Recuerdos de Isaura Íñiguez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De Isaura Íñiguez, la mamá de mi abuelo Abel Núñez Íñiguez, lo que se sabe en la familia viene sobre todo de lo que él contaba. Se decía que Isaura era de Nayarit, y que en su juventud se vino a traba
+2 CONC jar a las haciendas en el Estado de México. En San Antonio vivió el resto de su vida.
+2 CONT 
+2 CONT No lo sé de cierto, pero yo siempre he pensado que pudo haberse venido junto con su hermano Manuel.
+2 CONT 
+2 CONT (Fuente: yo; Abel Nuñez Saucedo; consenso familiar)
+0 @I12@ INDI
+1 NAME Clemente /Saucedo Sánchez/
+1 FAMC @F69@
+1 FAMS @F5@
+1 SEX M
+1 DEAT
+2 DATE EST 1975
+2 PLAC Tenango del Valle, México
+1 BIRT
+2 DATE ABT 1899
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 14:28:58
+1 NOTE [28-01-2026] — Recuerdos de Clemente
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De Clemente se cuenta que siempre vivió en Tenango, aunque tenía familia en Tenancingo. Se dedicaba al campo, al trueque y a criar animales, y en la familia se dice que fue un hombre muy duro.
+2 CONT 
+2 CONT Entre las cosas que quedaron de él, también está que compró el terreno donde años después mis papás hicieron su casa, que es donde vivo actualmente (28-01-2026).
+2 CONT 
+2 CONT (Fuente: mi papá, Juan Abel; recuerdos familiares)
+1 NOTE [28-01-2026] — Hijos
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT Hijos:
+2 CONT - Maximino
+2 CONT - Aristeo
+2 CONT - Clemente
+2 CONT - Margarito
+2 CONT - Amelia
+2 CONT - Petra
+2 CONT 
+2 CONT (Fuente: mi papá)
+0 @I13@ INDI
+1 NAME Ricardo /Mendoza González/
+1 FAMS @F6@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 7 DEC 2022
+3 TIME 19:24:01
+0 @I14@ INDI
+1 NAME Petra /Nava Vidal/
+1 FAMC @F70@
+1 FAMS @F5@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE ABT 1904
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 14:32:05
+1 NOTE [28-01-2026] — Recuerdos de (nombre pendiente)
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT Toda su vida fue comerciante, principalmente de papa y botanas como pepitas y cacahuates. También se recuerda que hablaba otro idioma; mi papá cree que pudo haber sido otomí, pero no está seguro.
+2 CONT 
+2 CONT (Fuente: mi papá, Juan Abel; recuerdos familiares)
+0 @I15@ INDI
+1 NAME Roberto /Nuñez Saucedo/
+1 FAMC @F2@
+1 FAMS @F7@
+1 SEX M
+1 BIRT
+2 DATE 21 MAR 1960
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:14:02
+0 @I16@ INDI
+1 NAME Rosa Marta /Nuñez Saucedo/
+1 FAMC @F2@
+1 SEX F
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 01:54:50
+0 @I17@ INDI
+1 NAME Celia /Nuñez Saucedo/
+1 FAMC @F2@
+1 FAMS @F8@
+1 SEX F
+1 BIRT
+2 DATE 8 MAR 1973
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:33:08
+0 @I18@ INDI
+1 NAME Rebeca /Nuñez Saucedo/
+1 FAMC @F2@
+1 FAMS @F9@
+1 SEX F
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:20:44
+0 @I19@ INDI
+1 NAME Juana /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F19@
+1 SEX F
+1 BIRT
+2 DATE 27 FEB 1960
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:37:17
+0 @I20@ INDI
+1 NAME Ricardo /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F22@
+1 FAMS @F32@
+1 SEX M
+1 BIRT
+2 DATE 6 OCT 1962
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:14:25
+0 @I21@ INDI
+1 NAME Mario /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F51@
+1 SEX M
+1 BIRT
+2 DATE 1964
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:42:09
+0 @I22@ INDI
+1 NAME Catalina /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F24@
+1 SEX F
+1 BIRT
+2 DATE 30 APR 1968
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 17:31:24
+0 @I23@ INDI
+1 NAME Antonio /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F25@
+1 FAMS @F48@
+1 SEX M
+1 BIRT
+2 DATE 1967
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:27:03
+0 @I24@ INDI
+1 NAME Margarita /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F26@
+1 SEX F
+1 BIRT
+2 DATE 1969
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:54:13
+0 @I25@ INDI
+1 NAME Rocio /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F27@
+1 SEX F
+1 BIRT
+2 DATE 1972
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:58:24
+0 @I26@ INDI
+1 NAME Claudia /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F28@
+1 SEX F
+1 BIRT
+2 DATE 1976
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 17:32:40
+0 @I27@ INDI
+1 NAME Enrique /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F29@
+1 SEX M
+1 BIRT
+2 DATE 1978
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 17:58:09
+0 @I28@ INDI
+1 NAME Javier /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F30@
+1 SEX M
+1 BIRT
+2 DATE 1978
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:03:50
+0 @I29@ INDI
+1 NAME Fabiola /Mendoza Hernández/
+1 FAMC @F3@
+1 FAMS @F31@
+1 SEX F
+1 BIRT
+2 DATE 1980
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:07:14
+0 @I30@ INDI
+1 NAME Veronica /González/
+1 FAMS @F7@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:30:19
+0 @I31@ INDI
+1 NAME Maria Melania /Nuñez González/
+1 FAMC @F7@
+1 FAMS @F15@
+1 SEX F
+1 BIRT
+2 DATE 1998
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:24:35
+0 @I32@ INDI
+1 NAME Alejandro /Nuñez González/
+1 FAMC @F7@
+1 SEX M
+1 BIRT
+2 DATE 1999
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:15:55
+0 @I33@ INDI
+1 NAME Fernanda /Nuñez González/
+1 FAMC @F7@
+1 FAMS @F17@
+1 SEX F
+1 BIRT
+2 DATE 2004
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:27:28
+0 @I34@ INDI
+1 NAME José Luis /Aldama/
+1 FAMS @F8@
+1 SEX M
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:17:58
+0 @I35@ INDI
+1 NAME Flor De Maria /Aldama Núñez/
+1 FAMC @F8@
+1 FAMS @F18@
+1 SEX F
+1 BIRT
+2 DATE 1996
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:29:26
+0 @I36@ INDI
+1 NAME Maria Del Rosario /Aldama Núñez/
+1 FAMC @F8@
+1 SEX F
+1 BIRT
+2 DATE 1997
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:19:37
+0 @I37@ INDI
+1 NAME Rolando /López/
+1 FAMS @F9@
+1 SEX M
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:20:44
+0 @I38@ INDI
+1 NAME Perla Hazel /López Núñez/
+1 FAMC @F9@
+1 SEX F
+1 BIRT
+2 DATE 2000
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:21:29
+0 @I39@ INDI
+1 NAME Valeria /López Núñez/
+1 FAMC @F9@
+1 BIRT
+2 DATE 2003
+1 SEX F
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:22:39
+0 @I40@ INDI
+1 NAME Lorenzo /Hernández Piña/
+1 FAMC @F11@
+1 FAMS @F10@
+1 SEX M
+1 DEAT
+2 DATE 12 AUG 1989
+2 PLAC Tenango del Valle, México
+1 BIRT
+2 DATE 10 AUG 1912
+2 PLAC San Juan Jiquipilco, México
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 21:34:43
+0 @I41@ INDI
+1 NAME Sotera /Jiménez Hernández/
+1 FAMC @F12@
+1 FAMS @F10@
+1 SEX F
+1 DEAT
+2 DATE 24 DEC 1989
+2 PLAC Tenango del Valle, México
+1 BIRT
+2 DATE 22 APR 1911
+2 PLAC Jiquipilco, México
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 00:30:17
+0 @I42@ INDI
+1 NAME Elodia /Juárez Mendoza/
+1 FAMC @F13@
+1 FAMS @F6@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 20:09:09
+0 @I43@ INDI
+1 NAME José Guillermo Julian /Hernández/
+1 FAMC @F67@
+1 FAMS @F11@
+1 SEX M
+1 DEAT
+2 DATE BEF 1941
+1 BIRT
+2 DATE 10 FEB 1885
+2 PLAC Jiquipilco, México
+1 CHAN
+2 DATE 1 FEB 2026
+3 TIME 00:11:47
+0 @I44@ INDI
+1 NAME Modesta /Piña/
+1 FAMC @F68@
+1 FAMS @F11@
+1 SEX F
+1 DEAT
+2 DATE BEF 1941
+1 CHAN
+2 DATE 1 FEB 2026
+3 TIME 00:12:25
+0 @I45@ INDI
+1 NAME Mecaela /Hernández/
+1 FAMS @F12@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 20:11:36
+0 @I46@ INDI
+1 NAME Pedro /Jiménez/
+1 FAMS @F12@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 20:11:19
+0 @I47@ INDI
+1 NAME Micaela /Mendoza/
+1 FAMS @F13@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 20:10:47
+0 @I48@ INDI
+1 NAME Felix /Nuñez/
+1 FAMC @F57@
+1 FAMS @F14@
+1 SEX M
+1 DEAT Y
+1 BIRT
+2 DATE 1879
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 15:07:49
+1 SOUR @S1@
+2 NOTE Primera referencia a Félix
+1 NOTE [28-01-2026] — Recuerdos de Felix Nuñez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De Felix Nuñez solo tengo un dato, y viene de un recuerdo directo: una vez mi abuelo Abel Nuñez Íñiguez me dijo que su abuelo se llamaba Félix Nuñez. Incluso él mismo decía que no recordaba nada más s
+2 CONC obre su abuelo, así que por ahora esto es lo único que puedo dejar asentado aquí.
+2 CONT 
+2 CONT (Fuente: yo; me lo dijo mi abuelo Abel Núñez Íñiguez directamente)
+1 NOTE [02-02-2026] — Hallazgos de Felix Nuñez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT A partir del acta de defunción de Heriberto, pude seguir la linea de Felix, encontrando cosas como su acta de matrimonio donde salen nombrados hasta sus abuelos, entre otras cosas que dejó en las fuen
+2 CONC tes.
+2 CONT 
+2 CONT Fuente: investigación, actas de registros parroquiales y civiles de San Antonio la isla, México.
+2 SOUR @S1@
+0 @I49@ INDI
+1 NAME Jesús /López/
+1 FAMS @F15@
+1 SEX M
+1 CHAN
+2 DATE 26 JAN 2026
+3 TIME 21:53:10
+0 @I50@ INDI
+1 NAME Jesús Daniel /N. Nuñez/
+1 FAMC @F15@
+1 SEX M
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:25:15
+0 @I51@ INDI
+1 NAME Isabela /N. Nuñez/
+1 FAMC @F15@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:25:30
+0 @I53@ INDI
+1 NAME Fernando
+1 FAMS @F17@
+1 SEX M
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:27:28
+0 @I54@ INDI
+1 NAME Frida /N. Nuñez/
+1 FAMC @F17@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:28:26
+0 @I55@ INDI
+1 NAME Douglas /N. Nuñez/
+1 FAMC @F18@
+1 SEX M
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:29:26
+0 @I56@ INDI
+1 NAME X /N/
+1 FAMS @F18@
+1 SEX M
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:30:02
+0 @I57@ INDI
+1 NAME Sonia /Pastrana Mendoza/
+1 FAMC @F19@
+1 FAMS @F21@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:37:39
+0 @I58@ INDI
+1 NAME Adriana /Miranda Mendoza/
+1 FAMC @F19@
+1 FAMS @F20@
+1 SEX F
+1 DEAT
+2 DATE 18 MAY 2022
+1 BIRT
+2 DATE 5 MAR 1981
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:23:45
+1 NOTE [28-01-2026] — Recuerdos de Adriana Miranda Mendoza
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De Adi me queda el recuerdo de alguien que abrió camino en esta generación. Fue licenciada y, hasta donde sé, la primera profesionista de mis primos. Eso siempre se sintió importante, como un paso ade
+2 CONC lante para la familia.
+2 CONT 
+2 CONT Adi falleció de cáncer. Aunque no tengo aquí más detalles, su ausencia aún duele.
+2 CONT 
+2 CONT (Fuente: yo)
+0 @I59@ INDI
+1 NAME Edrian Sebastián /Miranda Mendoza/
+1 FAMC @F20@
+1 SEX M
+1 BIRT
+2 DATE 5 AUG 2009
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:28:17
+0 @I60@ INDI
+1 NAME Susana /Miranda Mendoza/
+1 FAMC @F19@
+1 FAMS @F44@
+1 SEX F
+1 BIRT
+2 DATE 12 OCT 1984
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:23:07
+0 @I61@ INDI
+1 NAME Ivon /Miranda Mendoza/
+1 FAMC @F19@
+1 FAMS @F45@
+1 SEX F
+1 BIRT
+2 DATE 29 AUG 1993
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:24:57
+0 @I62@ INDI
+1 NAME Guadalupe /Miranda Mendoza/
+1 FAMC @F19@
+1 FAMS @F46@
+1 SEX F
+1 BIRT
+2 DATE 10 DEC 1996
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:25:54
+0 @I63@ INDI
+1 NAME Brisa Thalia /Arriaga Pastrana/
+1 FAMC @F21@
+1 FAMS @F41@
+1 SEX F
+1 BIRT
+2 DATE 9 JUL 1997
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:26:10
+0 @I64@ INDI
+1 NAME Vania /Arriaga Pastrana/
+1 FAMC @F21@
+1 FAMS @F42@
+1 SEX F
+1 BIRT
+2 DATE 4 MAY 1999
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:26:22
+0 @I65@ INDI
+1 NAME Andrea /Arriaga Pastrana/
+1 FAMC @F21@
+1 SEX F
+1 BIRT
+2 DATE 2 DEC 2007
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:27:33
+0 @I66@ INDI
+1 NAME Daneily /Arriaga Pastrana/
+1 FAMC @F21@
+1 SEX F
+1 BIRT
+2 DATE 3 AUG 2011
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:27:49
+0 @I67@ INDI
+1 NAME Ivan /Mendoza Salinas/
+1 FAMC @F22@
+1 SEX M
+1 BIRT
+2 DATE 13 JAN 1985
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:21:16
+0 @I68@ INDI
+1 NAME Ricardo /Mendoza Salinas/
+1 FAMC @F22@
+1 FAMS @F33@
+1 SEX M
+1 BIRT
+2 DATE 24 AUG 1989/90
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:55:25
+0 @I69@ INDI
+1 NAME Gaia /Mendoza/
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:11:35
+0 @I70@ INDI
+1 NAME Gabriel /Vidal/
+1 FAMS @F24@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 16:13:17
+1 NOTE [28-01-2026] — Recuerdos de Gabriel Vidal
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT Mi tío Gabi, fue mi padrino de confirmación y de comunión, junto con mi tía Cata. Además de ser parte de la familia, también fue gran amigo de mi papá, así que siempre lo sentí cercano.
+2 CONT 
+2 CONT Falleció por complicaciones de la diabetes, con la que vivió muchos años.
+2 CONT 
+2 CONT (Fuente: yo)
+0 @I71@ INDI
+1 NAME Gabriela /Vidal Mendoza/
+1 FAMC @F24@
+1 FAMS @F40@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:47:06
+0 @I72@ INDI
+1 NAME Tania /Vidal Mendoza/
+1 FAMC @F24@
+1 FAMS @F39@
+1 FAMS @F56@
+1 SEX F
+1 BIRT
+2 DATE 23 AUG 1990
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 17:31:54
+0 @I73@ INDI
+1 NAME Luis Angel /Vidal Mendoza/
+1 FAMC @F24@
+1 FAMS @F50@
+1 FAMS @F55@
+1 SEX M
+1 BIRT
+2 DATE 16 JUL 1992
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:56:15
+0 @I74@ INDI
+1 NAME Eduardo /Vidal Mendoza/
+1 FAMC @F24@
+1 SEX M
+1 BIRT
+2 DATE 26 MAR 1997
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 17:33:42
+0 @I75@ INDI
+1 NAME Felix /Antúnez/
+1 FAMS @F25@
+1 SEX F
+1 DEAT
+2 DATE 2020/21
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:46:59
+1 NOTE [28-01-2026] — Recuerdo breve Félix Antúnez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT Mi tía, Félix Antúnez, falleció en la época de la pandemia de COVID-19.
+2 CONT 
+2 CONT (Fuente: yo; recuerdos familiares)
+0 @I76@ INDI
+1 NAME Giovanni /Mendoza Antúnez/
+1 FAMC @F25@
+1 FAMS @F38@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:43:36
+0 @I77@ INDI
+1 NAME Alexis /Mendoza Antúnez/
+1 FAMC @F25@
+1 FAMS @F47@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:26:21
+0 @I78@ INDI
+1 NAME Mario /Mendoza Mañon/
+1 FAMS @F26@
+1 SEX M
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:54:13
+0 @I79@ INDI
+1 NAME Erick /Mendoza Mendoza/
+1 FAMC @F26@
+1 FAMS @F37@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:42:05
+0 @I80@ INDI
+1 NAME Ana Laura /Mendoza Mendoza/
+1 FAMC @F26@
+1 FAMS @F35@
+1 FAMS @F36@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:39:51
+0 @I81@ INDI
+1 NAME Mario /Mendoza Mendoza/
+1 FAMC @F26@
+1 SEX M
+1 BIRT
+2 DATE 8 APR 1995
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:56:22
+0 @I82@ INDI
+1 NAME Melisa /Mendoza Mendoza/
+1 FAMC @F26@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:57:01
+0 @I83@ INDI
+1 NAME Daniela /Mendoza Mendoza/
+1 FAMC @F26@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:57:14
+0 @I84@ INDI
+1 NAME Juan /Vergas/
+1 FAMS @F27@
+1 SEX M
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:58:24
+0 @I85@ INDI
+1 NAME Monse /Vergas Mendoza/
+1 FAMC @F27@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:59:33
+0 @I86@ INDI
+1 NAME Fernanda /Vergas Mendoza/
+1 FAMC @F27@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:59:55
+0 @I87@ INDI
+1 NAME Valentina /Mendoza Hernández/
+1 FAMC @F28@
+1 SEX F
+1 BIRT
+2 DATE 3 JUL 2020
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:01:12
+0 @I88@ INDI
+1 NAME Norma /Morales Alcántara/
+1 FAMS @F29@
+1 SEX F
+1 CHAN
+2 DATE 15 JAN 2026
+3 TIME 12:14:35
+0 @I89@ INDI
+1 NAME María José /Mendoza Morales/
+1 FAMC @F29@
+1 SEX F
+1 CHAN
+2 DATE 15 JAN 2026
+3 TIME 12:15:01
+0 @I90@ INDI
+1 NAME Anali /Mendoza Morales/
+1 FAMC @F29@
+1 SEX F
+1 CHAN
+2 DATE 15 JAN 2026
+3 TIME 12:14:53
+0 @I91@ INDI
+1 NAME Abigail /Alva Arriaga/
+1 FAMS @F30@
+1 SEX F
+1 CHAN
+2 DATE 15 JAN 2026
+3 TIME 11:18:30
+0 @I92@ INDI
+1 NAME Bayron /Mendoza Alva/
+1 FAMC @F30@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:31:58
+0 @I93@ INDI
+1 NAME Naomi /Mendoza Alva/
+1 FAMC @F30@
+1 SEX F
+1 CHAN
+2 DATE 15 JAN 2026
+3 TIME 12:17:10
+0 @I94@ INDI
+1 NAME Oscar /Ballesteros Mendoza/
+1 FAMC @F31@
+1 FAMS @F34@
+1 SEX M
+1 BIRT
+2 DATE SEP 2002
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:36:01
+0 @I95@ INDI
+1 NAME Mia Valeria /Ballesteros Mendoza/
+1 FAMC @F31@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:07:35
+0 @I96@ INDI
+1 NAME Sofía /Ballesteros Mendoza/
+1 FAMC @F31@
+1 SEX F
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:08:07
+0 @I97@ INDI
+1 NAME Oscar /Ballesteros/
+1 FAMS @F31@
+1 SEX M
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:08:34
+0 @I98@ INDI
+1 NAME Guadalupe /Salinas/
+1 FAMS @F22@
+1 SEX F
+1 BIRT
+2 DATE 11 OCT 1966
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:01:14
+0 @I99@ INDI
+1 NAME Elisabeth /Hernández/
+1 FAMS @F32@
+1 SEX F
+1 CHAN
+2 DATE 15 JAN 2026
+3 TIME 12:18:38
+0 @I100@ INDI
+1 NAME Joselin /Mendoza Hernández/
+1 FAMC @F32@
+1 SEX F
+1 BIRT
+2 DATE 12 NOV 2012
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:18:34
+0 @I101@ INDI
+1 NAME Fidel /Arriaga/
+1 FAMS @F21@
+1 SEX M
+1 CHAN
+2 DATE 15 JAN 2026
+3 TIME 12:17:27
+0 @I102@ INDI
+1 NAME Gaia Galatea /Mendoza/
+1 FAMC @F33@
+1 SEX F
+1 BIRT
+2 DATE 16 AUG 2025
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:19:21
+0 @I103@ INDI
+1 NAME Desconocido /Ballesteros/
+1 FAMC @F34@
+1 SEX M
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:48:56
+0 @I104@ INDI
+1 NAME Jose Angel /Mendoza Morales/
+1 FAMC @F29@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:31:39
+0 @I105@ INDI
+1 NAME Javier /Gonzalez Mendoza/
+1 FAMC @F35@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:06:29
+0 @I106@ INDI
+1 NAME Eduardo /Bobadilla/
+1 FAMS @F36@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:07:14
+0 @I107@ INDI
+1 NAME Eduardo /Bobadilla Mendoza/
+1 FAMC @F36@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:07:07
+0 @I108@ INDI
+1 NAME Anna Paula /Bobadilla Mendoza/
+1 FAMC @F36@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:06:46
+0 @I109@ INDI
+1 NAME Pablo Armando /Mendoza Gonzalez/
+1 FAMC @F37@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:03:21
+0 @I110@ INDI
+1 NAME Isabella /Mendoza Gonzalez/
+1 FAMC @F37@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:03:45
+0 @I111@ INDI
+1 NAME Ana Victoria /Mendoza Gonzalez/
+1 FAMC @F37@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:04:01
+0 @I112@ INDI
+1 NAME Andrea Romina /Mendoza Pinzon/
+1 FAMC @F38@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:02:05
+0 @I113@ INDI
+1 NAME Fernando Antuan /García Vidal/
+1 FAMC @F39@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:28:46
+0 @I114@ INDI
+1 NAME Iker Calet /García Vidal/
+1 FAMC @F39@
+1 SEX M
+1 BIRT
+2 DATE 19 AUG
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:57:32
+0 @I115@ INDI
+1 NAME León Mauricio /Vidal Mendoza/
+1 FAMC @F56@
+1 SEX M
+1 BIRT
+2 DATE 25 OCT 2022
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:58:49
+0 @I116@ INDI
+1 NAME Daphne Camila /Lopez Vidal/
+1 FAMC @F40@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:56:54
+0 @I117@ INDI
+1 NAME Ximena /Lopez Vidal/
+1 FAMC @F40@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:57:32
+0 @I118@ INDI
+1 NAME Ian /Lopez Vidal/
+1 FAMC @F40@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:57:42
+0 @I119@ INDI
+1 NAME Danijela /Zunic/
+1 FAMS @F33@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:56:22
+0 @I120@ INDI
+1 NAME Karla Juleymy /Hernández Arriaga/
+1 FAMC @F41@
+1 SEX F
+1 BIRT
+2 DATE 8 MAY 2012
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:30:16
+0 @I121@ INDI
+1 NAME Johan Abdiel /Hernández Arriaga/
+1 FAMC @F41@
+1 SEX M
+1 BIRT
+2 DATE 4 MAY 2015
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:30:47
+0 @I122@ INDI
+1 NAME Regina Abigail /Hernández Arriaga/
+1 FAMC @F41@
+1 SEX F
+1 BIRT
+2 DATE 2 JAN 2018
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:31:30
+0 @I123@ INDI
+1 NAME Tadeo Ricardo /Serrano Arriaga/
+1 FAMC @F41@
+1 SEX M
+1 BIRT
+2 DATE 17 FEB 2020
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:32:08
+0 @I124@ INDI
+1 NAME Ian Jesús /Verdeja Arriaga/
+1 FAMC @F42@
+1 SEX M
+1 BIRT
+2 DATE 8 FEB 2021
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:32:41
+0 @I125@ INDI
+1 NAME Lian Ramses /Verdeja Arriaga/
+1 FAMC @F42@
+1 SEX M
+1 BIRT
+2 DATE 8 FEB 2021
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:33:14
+0 @I126@ INDI
+1 NAME Paulina /Arriaga Pastrana/
+1 FAMC @F21@
+1 FAMS @F43@
+1 SEX F
+1 BIRT
+2 DATE 12 OCT 2004
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:27:12
+0 @I127@ INDI
+1 NAME Ariadna Carmelita /Piña Arriaga/
+1 FAMC @F43@
+1 SEX F
+1 BIRT
+2 DATE 28 MAR 2024
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:33:52
+0 @I128@ INDI
+1 NAME Camilo
+1 FAMC @F44@
+1 SEX M
+1 DEAT
+2 DATE 2 JAN 2021
+1 BIRT
+2 DATE 18 DEC 2020
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:24:12
+0 @I129@ INDI
+1 NAME Victor /Alvarez/
+1 FAMS @F45@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:28:38
+0 @I130@ INDI
+1 NAME Natalia /Alvarez Miranda/
+1 FAMC @F46@
+1 SEX F
+1 BIRT
+2 DATE 5 DEC 2025
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:14:47
+0 @I131@ INDI
+1 NAME Luis Angel /Alvarez/
+1 FAMS @F46@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:28:53
+0 @I132@ INDI
+1 NAME Gianna /Mendoza Porcayo/
+1 FAMC @F38@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:01:08
+0 @I133@ INDI
+1 NAME Félix /Mendoza Porcayo/
+1 FAMC @F38@
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 11:01:16
+0 @I134@ INDI
+1 NAME Dylan /Mendoza/
+1 FAMC @F47@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:26:21
+0 @I135@ INDI
+1 NAME Matías /Mendoza/
+1 FAMC @F47@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:26:35
+0 @I136@ INDI
+1 NAME Erika /Mendoza/
+1 FAMC @F48@
+1 FAMS @F49@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:27:29
+0 @I137@ INDI
+1 NAME Desconocido /Desconocido Mendoza/
+1 FAMC @F49@
+1 SEX U
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:53:14
+0 @I138@ INDI
+1 NAME Desconocido /Desconocido Mendoza/
+1 FAMC @F49@
+1 SEX U
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:53:20
+0 @I139@ INDI
+1 NAME Desconocido /Desconocido Mendoza/
+1 FAMC @F49@
+1 SEX U
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:53:26
+0 @I140@ INDI
+1 NAME Yandel /Vidal Desconocido/
+1 FAMC @F50@
+1 SEX M
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:54:50
+0 @I141@ INDI
+1 NAME Karin /Vidal Desconocido/
+1 FAMC @F50@
+1 SEX M
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:54:58
+0 @I142@ INDI
+1 NAME Angela /Vidal Desconocido/
+1 FAMC @F55@
+1 SEX F
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:56:32
+0 @I143@ INDI
+1 NAME Isabel /Gómez/
+1 FAMS @F51@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:42:09
+0 @I144@ INDI
+1 NAME Kristian /Mendoza Gómez/
+1 FAMC @F51@
+1 FAMS @F52@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:43:48
+0 @I145@ INDI
+1 NAME Mariana /Mendoza Gómez/
+1 FAMC @F51@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:42:57
+0 @I146@ INDI
+1 NAME Mayra /Mendoza Gómez/
+1 FAMC @F51@
+1 SEX F
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:43:12
+0 @I147@ INDI
+1 NAME Diego /Mendoza Gómez/
+1 FAMC @F51@
+1 SEX M
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:43:30
+0 @I148@ INDI
+1 NAME Julian /Desconocido Mendoza/
+1 FAMC @F52@
+1 SEX M
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 16:00:56
+0 @I149@ INDI
+1 NAME Desconocido /Desconocido Mendoza/
+1 FAMC @F52@
+1 SEX U
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 16:01:09
+0 @I150@ INDI
+1 NAME Desconocido /Íñiguez/
+1 FAMS @F53@
+1 SEX U
+1 DEAT Y
+1 CHAN
+2 DATE 27 JAN 2026
+3 TIME 16:44:48
+0 @I151@ INDI
+1 NAME Manuel /Íñiguez/
+1 FAMC @F53@
+1 SEX M
+1 DEAT
+2 PLAC San Antonio la Isla, México
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:26:17
+1 NOTE [28-01-2026] — Recuerdos de Manuel Íñiguez
+2 CONT Por: Juan Jesús Nuñez Mendoza
+2 CONT 
+2 CONT De Manuel Íñiguez sé poco, pero lo poco que se cuenta es de lo más llamativo. La historia cuenta que Manuel, tío de mi abuelo Abel, fue a la guerra, solo eso no especifica a cual o en qué año.
+2 CONT 
+2 CONT También se contaba que Manuel se perdió en Japón, y que tuvo que regresar a México por sus propios medios. Logró volver años después, ya de viejo, y contaba cómo había sido ese regreso. Sus últimos añ
+2 CONC os, los pasó como bolero en San Antonio.
+2 CONT 
+2 CONT (Fuente: mi papá; relato transmitido por Abel Núñez Íñiguez, testigo de su regreso)
+0 @I153@ INDI
+1 NAME Ingrid /Desconocido/
+1 FAMS @F34@
+1 SEX F
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:48:38
+0 @I154@ INDI
+1 NAME Javier /Desconocido/
+1 FAMS @F35@
+1 SEX M
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:50:18
+0 @I155@ INDI
+1 NAME Desconocido /Desconocido/
+1 FAMS @F37@
+1 SEX F
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:50:59
+0 @I156@ INDI
+1 NAME Desconocido /Desconocido/
+1 FAMS @F48@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:52:39
+0 @I157@ INDI
+1 NAME Desconocido /Desconocido/
+1 FAMS @F50@
+1 SEX F
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:54:37
+0 @I158@ INDI
+1 NAME Jaquelin /Desconocido/
+1 FAMS @F55@
+1 SEX F
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:56:15
+0 @I159@ INDI
+1 NAME Alfredo /Lopez/
+1 FAMS @F40@
+1 SEX M
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:57:12
+0 @I160@ INDI
+1 NAME Fernando /García/
+1 FAMS @F39@
+1 SEX M
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:59:22
+0 @I161@ INDI
+1 NAME Dolores /de la Rosa/
+1 FAMC @F60@
+1 FAMS @F14@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE 1883
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 01:34:54
+0 @I162@ INDI
+1 NAME Damian /Nuñez/
+1 FAMC @F58@
+1 FAMS @F57@
+1 SEX M
+1 DEAT
+2 DATE 17 MAR 1886
+2 PLAC San Antonio la Isla, México
+1 BIRT
+2 DATE ABT 1841
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 00:50:14
+0 @I163@ INDI
+1 NAME Maria Del Carmen
+1 FAMC @F59@
+1 FAMS @F57@
+1 SEX F
+1 DEAT
+2 DATE BET 1886 AND 1901
+1 BIRT
+2 DATE EST 1851/52
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 15:11:59
+0 @I164@ INDI
+1 NAME José Hermenejildo /Nuñez/
+1 FAMS @F58@
+1 SEX M
+1 DEAT Y
+1 BIRT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 05:56:39
+0 @I165@ INDI
+1 NAME María /Desconocido/
+1 FAMS @F58@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 00:59:22
+0 @I166@ INDI
+1 NAME Victoriano Alejandro
+1 FAMS @F59@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 01:00:03
+0 @I167@ INDI
+1 NAME María Dolores
+1 FAMS @F59@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 01:00:35
+0 @I168@ INDI
+1 NAME Jose /de la Rosa/
+1 FAMC @F61@
+1 FAMS @F60@
+1 SEX M
+1 DEAT
+2 DATE BET 1889 AND 1903
+1 BIRT
+2 DATE 1857
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 00:58:51
+0 @I169@ INDI
+1 NAME Cresencia /Gallarreta/
+1 FAMC @F62@
+1 FAMS @F60@
+1 SEX F
+1 DEAT
+2 DATE BET 1890 AND 1903
+1 BIRT
+2 DATE APR 1851
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:38:45
+0 @I170@ INDI
+1 NAME Agustín /de la Rosa/
+1 FAMS @F61@
+1 SEX M
+1 DEAT Y
+1 BIRT
+2 DATE 1822/23
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 00:11:44
+0 @I171@ INDI
+1 NAME Maria Ana Cleta
+1 FAMS @F61@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE 1827
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 00:13:20
+0 @I172@ INDI
+1 NAME Tomas /Gallarreta/
+1 FAMS @F62@
+1 SEX M
+1 DEAT
+2 DATE BET 1882 AND 1856
+1 BIRT
+2 DATE ABT 1813
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:41:11
+0 @I173@ INDI
+1 NAME Juana /Loza/
+1 FAMS @F62@
+1 SEX F
+1 DEAT
+2 DATE BET 1882 AND 1856
+1 BIRT
+2 DATE ABT 1827
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:42:02
+0 @I174@ INDI
+1 NAME Trinidad /de la Rosa/
+1 FAMC @F60@
+1 FAMS @F66@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE 1888
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 23:45:06
+0 @I175@ INDI
+1 NAME Juan Manuel Máximo /de la Rosa/
+1 FAMC @F60@
+1 SEX M
+1 DEAT
+2 DATE 30 JAN 1911
+1 BIRT
+2 DATE 27 MAY 1890
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 05:47:40
+0 @I176@ INDI
+1 NAME María Isabel /Nuñez/
+1 FAMC @F57@
+1 FAMS @F63@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE 1865
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:42:23
+0 @I177@ INDI
+1 NAME Juan /Nuñez/
+1 FAMC @F57@
+1 FAMS @F64@
+1 SEX M
+1 DEAT Y
+1 BIRT
+2 DATE 1887
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 05:17:47
+0 @I178@ INDI
+1 NAME Francisco /Nuñez/
+1 FAMC @F14@
+1 SEX M
+1 BIRT
+2 DATE 9 MAR 1908
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:21:52
+0 @I179@ INDI
+1 NAME Carmen /Nuñez/
+1 FAMC @F14@
+1 BIRT
+2 DATE 1921
+1 DEAT
+2 DATE 10 DEC 1940
+1 SEX F
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:23:49
+0 @I180@ INDI
+1 NAME Valentín /Colindres/
+1 FAMS @F63@
+1 SEX M
+1 BIRT
+2 DATE 1863
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:42:23
+0 @I181@ INDI
+1 NAME Rita Eladia /Colindres Nuñez/
+1 FAMC @F63@
+1 SEX F
+1 BIRT
+2 DATE 9 MAY 1886
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:43:38
+0 @I182@ INDI
+1 NAME Josefa Severina /Colindres/
+1 FAMC @F63@
+1 SEX F
+1 BIRT
+2 DATE 1891
+1 DEAT
+2 DATE 28 AUG 1891
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:45:01
+0 @I183@ INDI
+1 NAME Elvira /Colindres Nuñez/
+1 FAMC @F63@
+1 SEX F
+1 BIRT
+2 DATE 1907
+1 DEAT
+2 DATE 17 JAN 1972
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:46:31
+0 @I184@ INDI
+1 NAME Juana /Arevalo/
+1 FAMS @F64@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 05:17:47
+0 @I185@ INDI
+1 NAME Dustano /Estrada Íñiguez/
+1 FAMC @F65@
+1 SEX M
+1 DEAT
+2 DATE CAL 1995
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 22:44:45
+0 @I186@ INDI
+1 NAME Guadalupe /Estrada Íñiguez/
+1 FAMC @F65@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 22:45:14
+0 @I187@ INDI
+1 NAME Maximiliano /Estrada/
+1 FAMS @F65@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 22:44:11
+0 @I188@ INDI
+1 NAME José /Florencio/
+1 FAMS @F66@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 23:45:06
+0 @I189@ INDI
+1 NAME Juan /Hernández/
+1 FAMS @F67@
+1 SEX M
+1 DEAT Y
+1 BIRT
+2 DATE CAL 1847
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:09:46
+0 @I190@ INDI
+1 NAME María Guadalupe
+1 FAMS @F67@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE CAL 1849
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:10:16
+0 @I191@ INDI
+1 NAME José /Piña/
+1 FAMS @F68@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 21:30:17
+0 @I192@ INDI
+1 NAME Valente /Saucedo/
+1 FAMS @F69@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:28:22
+1 NOTE @T3@
+0 @I193@ INDI
+1 NAME Lorenza /Sánchez/
+1 FAMS @F69@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE ABT 1885
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 14:30:57
+0 @I194@ INDI
+1 NAME Marcelino /Nava/
+1 FAMC @F71@
+1 FAMS @F70@
+1 SEX M
+1 DEAT Y
+1 BIRT
+2 DATE 1880
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:18:37
+1 NOTE @T3@
+0 @I195@ INDI
+1 NAME Maria /Arana/
+1 FAMS @F68@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 21:30:10
+0 @I196@ INDI
+1 NAME Pascuala /Vidal/
+1 FAMC @F72@
+1 FAMS @F70@
+1 SEX F
+1 DEAT Y
+1 BIRT
+2 DATE 1880
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:20:37
+0 @I197@ INDI
+1 NAME Juan /Nava/
+1 FAMC @F73@
+1 FAMS @F71@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:45:52
+0 @I198@ INDI
+1 NAME Petra /Quintana/
+1 FAMC @F74@
+1 FAMS @F71@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:47:12
+0 @I199@ INDI
+1 NAME Felix /Saldaña/
+1 FAMC @F76@
+1 FAMS @F72@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:52:35
+0 @I200@ INDI
+1 NAME Juan /Vidal/
+1 FAMC @F75@
+1 FAMS @F72@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:50:19
+0 @I201@ INDI
+1 NAME Julio /Nava/
+1 FAMS @F73@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:45:52
+0 @I202@ INDI
+1 NAME María Eulogia
+1 FAMS @F73@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:46:35
+0 @I203@ INDI
+1 NAME Domingo /Quintana/
+1 FAMS @F74@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:47:12
+0 @I204@ INDI
+1 NAME Paula /Mendoza/
+1 FAMS @F74@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:47:38
+0 @I205@ INDI
+1 NAME Hilario /Vidal/
+1 FAMS @F75@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:50:19
+0 @I206@ INDI
+1 NAME María (Gerarda?)
+1 FAMS @F75@
+1 SEX F
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:51:31
+0 @I207@ INDI
+1 NAME Gabino /Hernández/
+1 FAMS @F76@
+1 SEX M
+1 DEAT Y
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:52:35
+0 @I208@ INDI
+1 NAME María (Cevovia???)
+1 FAMS @F76@
+1 SEX F
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:56:15
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I3@
+1 CHIL @I1@
+1 CHIL @I4@
+1 CHIL @I5@
+1 CHAN
+2 DATE 9 JUN 2022
+3 TIME 00:25:40
+0 @F2@ FAM
+1 HUSB @I6@
+1 WIFE @I7@
+1 CHIL @I2@
+1 CHIL @I15@
+1 CHIL @I16@
+1 CHIL @I17@
+1 CHIL @I18@
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 01:56:55
+0 @F3@ FAM
+1 HUSB @I8@
+1 WIFE @I9@
+1 CHIL @I3@
+1 CHIL @I19@
+1 CHIL @I20@
+1 CHIL @I21@
+1 CHIL @I22@
+1 CHIL @I23@
+1 CHIL @I24@
+1 CHIL @I25@
+1 CHIL @I26@
+1 CHIL @I27@
+1 CHIL @I28@
+1 CHIL @I29@
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:12:32
+0 @F4@ FAM
+1 HUSB @I10@
+1 WIFE @I11@
+1 CHIL @I6@
+1 CHAN
+2 DATE 9 JUN 2022
+3 TIME 00:32:28
+0 @F5@ FAM
+1 HUSB @I12@
+1 WIFE @I14@
+1 CHIL @I7@
+1 MARR
+2 DATE 20 FEB 1925
+2 PLAC Tenango Del Valle, México
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 14:27:58
+0 @F6@ FAM
+1 HUSB @I13@
+1 WIFE @I42@
+1 CHIL @I8@
+1 CHAN
+2 DATE 7 DEC 2022
+3 TIME 19:24:36
+0 @F7@ FAM
+1 HUSB @I15@
+1 WIFE @I30@
+1 CHIL @I31@
+1 CHIL @I32@
+1 CHIL @I33@
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:16:25
+0 @F8@ FAM
+1 HUSB @I34@
+1 WIFE @I17@
+1 CHIL @I35@
+1 CHIL @I36@
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:19:37
+0 @F9@ FAM
+1 HUSB @I37@
+1 WIFE @I18@
+1 CHIL @I38@
+1 CHIL @I39@
+1 CHAN
+2 DATE 26 NOV 2022
+3 TIME 02:22:11
+0 @F10@ FAM
+1 HUSB @I40@
+1 WIFE @I41@
+1 CHIL @I9@
+1 CHAN
+2 DATE 7 DEC 2022
+3 TIME 19:23:46
+0 @F11@ FAM
+1 HUSB @I43@
+1 WIFE @I44@
+1 CHIL @I40@
+1 CHAN
+2 DATE 7 DEC 2022
+3 TIME 19:25:20
+0 @F12@ FAM
+1 HUSB @I46@
+1 WIFE @I45@
+1 CHIL @I41@
+1 CHAN
+2 DATE 7 DEC 2022
+3 TIME 19:26:12
+0 @F13@ FAM
+1 WIFE @I47@
+1 CHIL @I42@
+1 CHAN
+2 DATE 7 DEC 2022
+3 TIME 19:26:54
+0 @F14@ FAM
+1 HUSB @I48@
+1 WIFE @I161@
+1 CHIL @I10@
+1 CHIL @I178@
+1 CHIL @I179@
+1 MARR
+2 DATE 7 DEC 1901
+2 PLAC San Antonio la Isla, México
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:22:36
+0 @F15@ FAM
+1 HUSB @I49@
+1 WIFE @I31@
+1 CHIL @I50@
+1 CHIL @I51@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:25:30
+0 @F17@ FAM
+1 HUSB @I53@
+1 WIFE @I33@
+1 CHIL @I54@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:28:26
+0 @F18@ FAM
+1 HUSB @I56@
+1 WIFE @I35@
+1 CHIL @I55@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:29:48
+0 @F19@ FAM
+1 WIFE @I19@
+1 CHIL @I57@
+1 CHIL @I58@
+1 CHIL @I60@
+1 CHIL @I61@
+1 CHIL @I62@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:38:20
+0 @F20@ FAM
+1 WIFE @I58@
+1 CHIL @I59@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:32:36
+0 @F21@ FAM
+1 HUSB @I101@
+1 WIFE @I57@
+1 CHIL @I63@
+1 CHIL @I64@
+1 CHIL @I126@
+1 CHIL @I65@
+1 CHIL @I66@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 10:34:56
+0 @F22@ FAM
+1 HUSB @I20@
+1 WIFE @I98@
+1 CHIL @I67@
+1 CHIL @I68@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:12:30
+0 @F24@ FAM
+1 HUSB @I70@
+1 WIFE @I22@
+1 CHIL @I71@
+1 CHIL @I72@
+1 CHIL @I73@
+1 CHIL @I74@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:44:44
+0 @F25@ FAM
+1 HUSB @I23@
+1 WIFE @I75@
+1 CHIL @I76@
+1 CHIL @I77@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:53:11
+0 @F26@ FAM
+1 HUSB @I78@
+1 WIFE @I24@
+1 CHIL @I79@
+1 CHIL @I80@
+1 CHIL @I81@
+1 CHIL @I82@
+1 CHIL @I83@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:57:14
+0 @F27@ FAM
+1 HUSB @I84@
+1 WIFE @I25@
+1 CHIL @I85@
+1 CHIL @I86@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 22:59:55
+0 @F28@ FAM
+1 WIFE @I26@
+1 CHIL @I87@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:01:12
+0 @F29@ FAM
+1 HUSB @I27@
+1 WIFE @I88@
+1 CHIL @I89@
+1 CHIL @I90@
+1 CHIL @I104@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:37:31
+0 @F30@ FAM
+1 HUSB @I28@
+1 WIFE @I91@
+1 CHIL @I92@
+1 CHIL @I93@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:05:23
+0 @F31@ FAM
+1 HUSB @I97@
+1 WIFE @I29@
+1 CHIL @I94@
+1 CHIL @I95@
+1 CHIL @I96@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:08:34
+0 @F32@ FAM
+1 HUSB @I20@
+1 WIFE @I99@
+1 CHIL @I100@
+1 CHAN
+2 DATE 14 JAN 2026
+3 TIME 23:15:13
+0 @F33@ FAM
+1 HUSB @I68@
+1 WIFE @I119@
+1 CHIL @I102@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:56:22
+0 @F34@ FAM
+1 HUSB @I94@
+1 WIFE @I153@
+1 CHIL @I103@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:48:38
+0 @F35@ FAM
+1 HUSB @I154@
+1 WIFE @I80@
+1 CHIL @I105@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:50:18
+0 @F36@ FAM
+1 HUSB @I106@
+1 WIFE @I80@
+1 CHIL @I107@
+1 CHIL @I108@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 17:41:17
+0 @F37@ FAM
+1 HUSB @I79@
+1 WIFE @I155@
+1 CHIL @I109@
+1 CHIL @I110@
+1 CHIL @I111@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:50:59
+0 @F38@ FAM
+1 HUSB @I76@
+1 CHIL @I112@
+1 CHIL @I132@
+1 CHIL @I133@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:26:04
+0 @F39@ FAM
+1 HUSB @I160@
+1 WIFE @I72@
+1 CHIL @I113@
+1 CHIL @I114@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:59:33
+0 @F40@ FAM
+1 HUSB @I159@
+1 WIFE @I71@
+1 CHIL @I116@
+1 CHIL @I117@
+1 CHIL @I118@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:58:14
+0 @F41@ FAM
+1 WIFE @I63@
+1 CHIL @I120@
+1 CHIL @I121@
+1 CHIL @I122@
+1 CHIL @I123@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:05:23
+0 @F42@ FAM
+1 WIFE @I64@
+1 CHIL @I124@
+1 CHIL @I125@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:21:03
+0 @F43@ FAM
+1 WIFE @I126@
+1 CHIL @I127@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:22:06
+0 @F44@ FAM
+1 WIFE @I60@
+1 CHIL @I128@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:23:13
+0 @F45@ FAM
+1 HUSB @I129@
+1 WIFE @I61@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:23:32
+0 @F46@ FAM
+1 HUSB @I131@
+1 WIFE @I62@
+1 CHIL @I130@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:24:25
+0 @F47@ FAM
+1 HUSB @I77@
+1 CHIL @I134@
+1 CHIL @I135@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:26:35
+0 @F48@ FAM
+1 HUSB @I23@
+1 WIFE @I156@
+1 CHIL @I136@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:52:39
+0 @F49@ FAM
+1 WIFE @I136@
+1 CHIL @I137@
+1 CHIL @I138@
+1 CHIL @I139@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:27:55
+0 @F50@ FAM
+1 HUSB @I73@
+1 WIFE @I157@
+1 CHIL @I140@
+1 CHIL @I141@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:55:43
+0 @F51@ FAM
+1 HUSB @I21@
+1 WIFE @I143@
+1 CHIL @I144@
+1 CHIL @I145@
+1 CHIL @I146@
+1 CHIL @I147@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:43:30
+0 @F52@ FAM
+1 WIFE @I144@
+1 CHIL @I148@
+1 CHIL @I149@
+1 CHAN
+2 DATE 24 JAN 2026
+3 TIME 18:44:04
+0 @F53@ FAM
+1 HUSB @I150@
+1 CHIL @I11@
+1 CHIL @I151@
+1 CHAN
+2 DATE 27 JAN 2026
+3 TIME 16:45:10
+0 @F55@ FAM
+1 HUSB @I73@
+1 WIFE @I158@
+1 CHIL @I142@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 15:56:32
+0 @F56@ FAM
+1 WIFE @I72@
+1 CHIL @I115@
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 16:00:10
+0 @F57@ FAM
+1 HUSB @I162@
+1 WIFE @I163@
+1 CHIL @I176@
+1 CHIL @I48@
+1 CHIL @I177@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:40:28
+0 @F58@ FAM
+1 HUSB @I164@
+1 WIFE @I165@
+1 CHIL @I162@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 00:59:22
+0 @F59@ FAM
+1 HUSB @I166@
+1 WIFE @I167@
+1 CHIL @I163@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 01:00:35
+0 @F60@ FAM
+1 HUSB @I168@
+1 WIFE @I169@
+1 CHIL @I161@
+1 CHIL @I174@
+1 CHIL @I175@
+1 MARR
+2 DATE 1 JUL 1882
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 00:09:18
+0 @F61@ FAM
+1 HUSB @I170@
+1 WIFE @I171@
+1 CHIL @I168@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 01:04:48
+0 @F62@ FAM
+1 HUSB @I172@
+1 WIFE @I173@
+1 CHIL @I169@
+1 MARR
+2 DATE 6 JUN 1846
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 00:34:57
+0 @F63@ FAM
+1 HUSB @I180@
+1 WIFE @I176@
+1 CHIL @I181@
+1 CHIL @I182@
+1 CHIL @I183@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 04:46:31
+0 @F64@ FAM
+1 HUSB @I177@
+1 WIFE @I184@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 05:17:47
+0 @F65@ FAM
+1 HUSB @I187@
+1 WIFE @I11@
+1 CHIL @I185@
+1 CHIL @I186@
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 18:36:09
+0 @F66@ FAM
+1 HUSB @I188@
+1 WIFE @I174@
+1 MARR
+2 DATE 9 JUL 1903
+1 CHAN
+2 DATE 29 JAN 2026
+3 TIME 23:46:06
+0 @F67@ FAM
+1 HUSB @I189@
+1 WIFE @I190@
+1 CHIL @I43@
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 13:50:15
+0 @F68@ FAM
+1 HUSB @I191@
+1 WIFE @I195@
+1 CHIL @I44@
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 21:30:10
+0 @F69@ FAM
+1 HUSB @I192@
+1 WIFE @I193@
+1 CHIL @I12@
+1 CHAN
+2 DATE 30 JAN 2026
+3 TIME 14:26:24
+0 @F70@ FAM
+1 HUSB @I194@
+1 WIFE @I196@
+1 CHIL @I14@
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:23:06
+0 @F71@ FAM
+1 HUSB @I197@
+1 WIFE @I198@
+1 CHIL @I194@
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:19:09
+0 @F72@ FAM
+1 HUSB @I200@
+1 WIFE @I199@
+1 CHIL @I196@
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:21:08
+0 @F73@ FAM
+1 HUSB @I201@
+1 WIFE @I202@
+1 CHIL @I197@
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:46:35
+0 @F74@ FAM
+1 HUSB @I203@
+1 WIFE @I204@
+1 CHIL @I198@
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:47:38
+0 @F75@ FAM
+1 HUSB @I205@
+1 WIFE @I206@
+1 CHIL @I200@
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:51:31
+0 @F76@ FAM
+1 HUSB @I207@
+1 WIFE @I208@
+1 CHIL @I199@
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 01:56:15
+0 @M1@ OBJE
+1 FILE Acta_defuncion_Heriberto_Nuñez.jpg
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 14:40:52
+0 @T1@ NOTE [09-06-2022] — Inicio del árbol
+1 CONT Por: Juan Jesús Nuñez Mendoza
+1 CONT 
+1 CONT Empecé este árbol genealógico la madrugada del 9 de junio de 2022, aproximadamente a las 00:25 h.
+1 CONT 
+1 CONT (Fuente: yo)
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 13:28:29
+0 @T2@ NOTE [28-01-2026] — Cómo he reunido la información y cómo escribiré las notas
+1 CONT Por: Juan Jesús Nuñez Mendoza
+1 CONT 
+1 CONT Desde que inicié este árbol y hasta la fecha, la fuente principal de la información ha sido mi memoria y lo que he ido preguntando a familiares. Más adelante, cuando lo considere necesario, buscaré y 
+1 CONC agregaré fotos y documentos (por ejemplo actas), conforme vaya teniendo acceso a ellos.
+1 CONT 
+1 CONT A partir de hoy también empiezo a agregar “notas” en los nodos para dar contexto familiar. Las escribiré así:
+1 CONT 
+1 CONT """
+1 CONT GUÍA DE NOTAS (para este árbol)
+1 CONT 
+1 CONT Objetivo:
+1 CONT 
+1 CONT Las notas son contexto familiar y humano. Sirven para conservar recuerdos, carácter, anécdotas y la huella que dejó cada persona. No son un documento oficial.
+1 CONT 
+1 CONT Formato (siempre el mismo):
+1 CONT 
+1 CONT [DD-MM-DD] — Título corto (opcional, solo para ubicar de qué va)
+1 CONT 
+1 CONT Por: NOMBRE COMPLETO DEL AUTOR
+1 CONT 
+1 CONT Texto:
+1 CONT Escribe en primera persona, cálido y claro. Puede ser un recuerdo, una descripción general, una anécdota o una actualización del árbol.
+1 CONT 
+1 CONT (Fuente: yo / Nombre-relación, DD-MM-YYYY, contexto / consenso familiar)
+1 CONT 
+1 CONT Reglas:
+1 CONT 
+1 CONT 1) Cada nota lleva autor con nombre completo (si pudiera haber confusión, añade relación o año de nacimiento).
+1 CONT 
+1 CONT 2) No edites notas de otros autores. Si hay nueva información, agrega una nota nueva con tu fecha y tu nombre.
+1 CONT 
+1 CONT 3) La fuente siempre va al final, aunque sea oral o “consenso familiar”.
+1 CONT 
+1 CONT 4) Personas vivas: por defecto sin notas; si se escribe, que sea neutra y respetuosa.
+1 CONT 
+1 CONT 
+1 CONT """ 
+1 CONT 
+1 CONT 
+1 CONT (Fuente: yo)
+1 CHAN
+2 DATE 28 JAN 2026
+3 TIME 13:34:36
+0 @T3@ NOTE Profecion: Jornalero
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 02:28:43
+0 @T4@ NOTE
+1 CHAN
+2 DATE 31 JAN 2026
+3 TIME 03:34:23
+0 @S1@ SOUR
+1 TITL Acta de defunción Heriberto Nuñez
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 14:58:59
+1 OBJE @M1@
+1 NOTE Transcripción:
+2 CONT 
+2 CONT En esta parroquia de San Antonio de la Isla, de la diócesis de Toluca, a los veintisiete días del mes de septiembre del año del Señor de mil novecientos cincuenta y cuatro, yo el Pbro. Joaquín [Melgoz
+2 CONC a?], Párroco de la misma, certifico que Heriberto Núñez, originario y vecino de este pueblo, de cuarenta y seis años de edad, hijo de Félix Núñez y M. Dolores de la Rosa, casado con Isaura Íñiguez, mu
+2 CONC rió en este día repentinamente, sin los auxilios espirituales. En fe de lo cual firmo esta acta en el lugar y fecha indicados.
+1 NOTE Datos:
+2 CONT Fecha: 27-09-1954
+2 CONT Esposa: Isaura Íñiguez
+2 CONT Padre: Félix Nuñez
+2 CONT Madre: Dolores de la Rosa.
+0 @S2@ SOUR
+1 TITL Nosw
+1 CHAN
+2 DATE 2 FEB 2026
+3 TIME 14:44:13
+0 TRLR
