@@ -9,6 +9,10 @@ export function createDefaultAiSettings(): AiSettings {
     fallbackEnabled: true,
     contextPolicy: "adaptive",
     deterministicMode: true,
+    developerBirthRefinementDebug: false,
+    developerBirthRefinementShowRawUnfiltered: false,
+    openAiPreferredApi: "auto",
+    birthRefinementProfile: "balanced",
     geminiFreeTierMode: false,
     providerModels: {
       chatgpt: DEFAULT_CHATGPT_MODEL,
@@ -18,7 +22,8 @@ export function createDefaultAiSettings(): AiSettings {
       extraction: { provider: "chatgpt", model: DEFAULT_CHATGPT_MODEL },
       // Deprecated in runtime v4: resolution is computed in local deterministic engine.
       resolution: { provider: "gemini", model: DEFAULT_GEMINI_MODEL },
-      narration: { provider: "chatgpt", model: DEFAULT_CHATGPT_MODEL }
+      narration: { provider: "chatgpt", model: DEFAULT_CHATGPT_MODEL },
+      birth_refinement: { provider: "chatgpt", model: DEFAULT_CHATGPT_MODEL }
     },
     modelCatalog: {
       chatgpt: [

@@ -17,8 +17,15 @@ async function getDb() {
 
 export class SessionService {
   static async saveAutosession(state: SessionSnapshot): Promise<void> {
-    const db = await getDb();
-    await db.put(STORE_NAME, state, KEY);
+    try {
+      const db = await getDb();
+      await db.put(STORE_NAME, state, KEY);
+      console.log("[SessionService] saveAutosession OK", {
+        docName: state.document?.persons[Object.keys(state.document?.persons || {})[0]]?.name
+      });
+    } catch (err) {
+      console.error("[SessionService] saveAutosession FAILED", err);
+    }
   }
 
   static async restoreAutosession(): Promise<SessionSnapshot | null> {

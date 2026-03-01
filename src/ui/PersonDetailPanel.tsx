@@ -3,6 +3,8 @@ import { uiDateToGedcom, gedcomDateToUi } from "@/utils/date";
 import type { Family, GeneaDocument, PendingRelationType, Person } from "@/types/domain";
 import type { PersonEditorPatch } from "@/types/editor";
 import type { FamilyPatch, FamilyUnionStatus } from "@/core/edit/commands";
+import type { AiSettings } from "@/types/ai";
+import { BirthRangeRefinementCard } from "@/ui/person/BirthRangeRefinementCard";
 
 /** BFS to find oldest ancestor by birth year */
 function bfsOldestAncestor(doc: GeneaDocument, startId: string): { id: string; name: string; year: number } | null {
@@ -68,8 +70,10 @@ type PersonInput = {
 type Props = {
   document: GeneaDocument;
   personId: string;
+  aiSettings: AiSettings;
   onClose: () => void;
   onSelectPerson: (personId: string) => void;
+  onSetAsFocus: (personId: string) => void;
   onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
   onSaveFamily: (familyId: string, patch: FamilyPatch) => void;
   onCreatePerson: (input: PersonInput) => string | null;
@@ -95,15 +99,17 @@ function getPersonLabel(person: Person): string {
 export function PersonDetailPanel({
   document,
   personId,
+  aiSettings,
   onClose,
   onSelectPerson,
+  onSetAsFocus,
   onSavePerson,
   onSaveFamily,
   onCreatePerson,
   onQuickAddRelation
 }: Props) {
   const person = document.persons[personId];
-  const [tab, setTab] = useState<"facts" | "families" | "analysis">("facts");
+  const [tab, setTab] = useState<"facts" | "families" | "timeline" | "history" | "notes" | "analysis">("facts");
 
   const [name, setName] = useState("");
   const [paternalSurname, setPaternalSurname] = useState("");
@@ -114,6 +120,10 @@ export function PersonDetailPanel({
   const [deathDate, setDeathDate] = useState("");
   const [factsMessage, setFactsMessage] = useState("");
   const [factsError, setFactsError] = useState("");
+  const [factsEditMode, setFactsEditMode] = useState(false);
+  const [pendingNotesAppend, setPendingNotesAppend] = useState<string[]>([]);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [notesMessage, setNotesMessage] = useState("");
 
   const [activeFamilyId, setActiveFamilyId] = useState<string | null>(null);
 
@@ -135,11 +145,23 @@ export function PersonDetailPanel({
     setDeathDate(gedcomDateToUi(death?.date));
     setFactsMessage("");
     setFactsError("");
+    setFactsEditMode(false);
+    setPendingNotesAppend([]);
+    const existingNotes = Array.isArray(person.rawTags?.NOTE) ? person.rawTags!.NOTE : [];
+    setNotesDraft(existingNotes.join("\n"));
+    setNotesMessage("");
     setActiveFamilyId(null);
   }, [personId, person]);
 
   if (!person) return null;
 
+  const birthEvent = person.events.find((event) => event.type === "BIRT");
+  const deathEvent = person.events.find((event) => event.type === "DEAT");
+  const displayBirthDate = gedcomDateToUi(birthEvent?.date || person.birthDate);
+  const displayDeathDate = gedcomDateToUi(deathEvent?.date || person.deathDate);
+  const displayBirthPlace = birthEvent?.place || person.birthPlace || "";
+  const displayDeathPlace = deathEvent?.place || person.deathPlace || "";
+  const displayResidence = person.residence || "";
   function handleSaveFacts() {
     if (!name.trim()) {
       setFactsError("Los nombres son obligatorios.");
@@ -157,11 +179,14 @@ export function PersonDetailPanel({
       sex,
       lifeStatus,
       birthDate: uiDateToGedcom(birthDate),
-      deathDate: lifeStatus === "deceased" ? uiDateToGedcom(deathDate) : ""
+      deathDate: lifeStatus === "deceased" ? uiDateToGedcom(deathDate) : "",
+      ...(pendingNotesAppend.length > 0 ? { notesAppend: pendingNotesAppend } : {})
     });
 
     setFactsError("");
     setFactsMessage("Hechos guardados.");
+    setPendingNotesAppend([]);
+    setFactsEditMode(false);
   }
 
   return (
@@ -169,70 +194,158 @@ export function PersonDetailPanel({
       <div className="modal-panel person-detail-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
           <h3>Persona detallada: {getPersonLabel(person)}</h3>
-          <button onClick={onClose}>&times;</button>
+          <div className="person-detail-header-actions">
+            <button
+              className="person-detail-focus-btn"
+              onClick={() => {
+                onSetAsFocus(person.id);
+                onClose();
+              }}
+            >
+              Seleccionar persona
+            </button>
+            <button onClick={onClose}>&times;</button>
+          </div>
         </div>
 
-        <div className="detail-tabs">
+        <div className="detail-tabs detail-tabs--sticky">
           <button className={tab === "facts" ? "detail-tab active" : "detail-tab"} onClick={() => setTab("facts")}>Hechos</button>
           <button className={tab === "families" ? "detail-tab active" : "detail-tab"} onClick={() => setTab("families")}>Familias</button>
+          <button className={tab === "timeline" ? "detail-tab active" : "detail-tab"} onClick={() => setTab("timeline")}>Línea de tiempo</button>
+          <button className={tab === "history" ? "detail-tab active" : "detail-tab"} onClick={() => setTab("history")}>Historia</button>
+          <button className={tab === "notes" ? "detail-tab active" : "detail-tab"} onClick={() => setTab("notes")}>Notas</button>
           <button className={tab === "analysis" ? "detail-tab active" : "detail-tab"} onClick={() => setTab("analysis")}>Análisis</button>
         </div>
+        <div className="person-detail-scroll">
 
-        {tab === "facts" ? (
-          <div className="builder" style={{ marginTop: 12 }}>
+          {tab === "facts" ? (
+            <div className="builder" style={{ marginTop: 12 }}>
             {factsError ? <div className="inline-error">{factsError}</div> : null}
             {factsMessage ? <div className="modal-line warning">{factsMessage}</div> : null}
+            {!factsEditMode ? (
+              <div className="facts-read-view">
+                <div className="facts-grid">
+                  <div className="facts-row">
+                    <span className="facts-label">Nombre completo</span>
+                    <span className="facts-value">{getPersonLabel(person) || "Sin nombre"}</span>
+                  </div>
+                  <div className="facts-row">
+                    <span className="facts-label">Sexo</span>
+                    <span className="facts-value">{sex === "M" ? "Hombre" : sex === "F" ? "Mujer" : "Desconocido"}</span>
+                  </div>
+                  <div className="facts-row">
+                    <span className="facts-label">Estado vital</span>
+                    <span className="facts-value">{person.lifeStatus === "deceased" ? "Fallecido" : "Vivo"}</span>
+                  </div>
+                  <div className="facts-row">
+                    <span className="facts-label">Nacimiento</span>
+                    <span className="facts-value">{displayBirthDate || "Sin dato"}</span>
+                  </div>
+                  <div className="facts-row">
+                    <span className="facts-label">Lugar de nacimiento</span>
+                    <span className="facts-value">{displayBirthPlace || "Sin dato"}</span>
+                  </div>
+                  <div className="facts-row">
+                    <span className="facts-label">Defunción</span>
+                    <span className="facts-value">{displayDeathDate || "Sin dato"}</span>
+                  </div>
+                  <div className="facts-row">
+                    <span className="facts-label">Lugar de defunción</span>
+                    <span className="facts-value">{displayDeathPlace || "Sin dato"}</span>
+                  </div>
+                  <div className="facts-row">
+                    <span className="facts-label">Residencia</span>
+                    <span className="facts-value">{displayResidence || "Sin dato"}</span>
+                  </div>
+                </div>
+                <div className="facts-actions">
+                  <button onClick={() => setFactsEditMode(true)}>Editar hechos</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <label>
+                  Nombre(s)
+                  <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej: Juan Carlos" />
+                </label>
 
-            <label>
-              Nombre(s)
-              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej: Juan Carlos" />
-            </label>
+                <label>
+                  Apellido paterno
+                  <input value={paternalSurname} onChange={(event) => setPaternalSurname(event.target.value)} placeholder="Ej: Perez" />
+                </label>
 
-            <label>
-              Apellido paterno
-              <input value={paternalSurname} onChange={(event) => setPaternalSurname(event.target.value)} placeholder="Ej: Perez" />
-            </label>
+                <label>
+                  Apellido materno
+                  <input value={maternalSurname} onChange={(event) => setMaternalSurname(event.target.value)} placeholder="Ej: Lopez" />
+                </label>
 
-            <label>
-              Apellido materno
-              <input value={maternalSurname} onChange={(event) => setMaternalSurname(event.target.value)} placeholder="Ej: Lopez" />
-            </label>
+                <label>
+                  Sexo
+                  <select value={sex} onChange={(event) => setSex(event.target.value as "M" | "F" | "U")}>
+                    <option value="M">Hombre</option>
+                    <option value="F">Mujer</option>
+                    <option value="U">Desconocido</option>
+                  </select>
+                </label>
 
-            <label>
-              Sexo
-              <select value={sex} onChange={(event) => setSex(event.target.value as "M" | "F" | "U")}>
-                <option value="M">Hombre</option>
-                <option value="F">Mujer</option>
-                <option value="U">Desconocido</option>
-              </select>
-            </label>
+                <label>
+                  Nacimiento
+                  <input value={birthDate} onChange={(event) => setBirthDate(event.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
+                </label>
+                <BirthRangeRefinementCard
+                  document={document}
+                  personId={person.id}
+                  aiSettings={aiSettings}
+                  onApplyBirthGedcom={setBirthDate}
+                  onAppendNote={(note) => setPendingNotesAppend((prev) => [...prev, note])}
+                />
 
-            <label>
-              Nacimiento
-              <input value={birthDate} onChange={(event) => setBirthDate(event.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
-            </label>
+                <label>
+                  Estado de vida
+                  <select value={lifeStatus} onChange={(event) => setLifeStatus(event.target.value as "alive" | "deceased")}>
+                    <option value="alive">Vivo</option>
+                    <option value="deceased">Fallecido</option>
+                  </select>
+                </label>
 
-            <label>
-              Estado de vida
-              <select value={lifeStatus} onChange={(event) => setLifeStatus(event.target.value as "alive" | "deceased")}>
-                <option value="alive">Vivo</option>
-                <option value="deceased">Fallecido</option>
-              </select>
-            </label>
+                {lifeStatus === "deceased" ? (
+                  <label>
+                    Defuncion
+                    <input value={deathDate} onChange={(event) => setDeathDate(event.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
+                  </label>
+                ) : null}
 
-            {lifeStatus === "deceased" ? (
-              <label>
-                Defuncion
-                <input value={deathDate} onChange={(event) => setDeathDate(event.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
-              </label>
-            ) : null}
+                <div className="facts-actions">
+                  <button onClick={handleSaveFacts}>Guardar hechos</button>
+                  <button
+                    className="secondary-ghost"
+                    onClick={() => {
+                      if (!person) return;
+                      const birth = person.events.find((event) => event.type === "BIRT");
+                      const death = person.events.find((event) => event.type === "DEAT");
+                      const surnames = splitSurnames(person.surname);
+                      setName(person.name === "(Sin nombre)" ? "" : person.name);
+                      setPaternalSurname(surnames.paternal);
+                      setMaternalSurname(surnames.maternal);
+                      setSex(person.sex || "U");
+                      setLifeStatus(person.lifeStatus === "deceased" || death ? "deceased" : "alive");
+                      setBirthDate(gedcomDateToUi(birth?.date));
+                      setDeathDate(gedcomDateToUi(death?.date));
+                      setFactsError("");
+                      setPendingNotesAppend([]);
+                      setFactsEditMode(false);
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
+            </div>
+          ) : null}
 
-            <button onClick={handleSaveFacts}>Guardar hechos</button>
-          </div>
-        ) : null}
-
-        {tab === "families" ? (
-          <div className="detail-family-list">
+          {tab === "families" ? (
+            <div className="detail-family-list">
             <section className="builder" style={{ marginTop: 12 }}>
               <h3>Familia de origen</h3>
               <div className="family-quick-actions">
@@ -283,12 +396,76 @@ export function PersonDetailPanel({
                 onSelectPerson={onSelectPerson}
               />
             ) : null}
-          </div>
-        ) : null}
+            </div>
+          ) : null}
 
-        {tab === "analysis" ? (
-          <AnalysisTab document={document} person={person} onSelectPerson={onSelectPerson} />
-        ) : null}
+          {tab === "timeline" ? (
+            <div className="builder" style={{ marginTop: 12 }}>
+            <h3>Línea de tiempo</h3>
+            <div className="detail-placeholder">
+              Próximamente: cronología personal (eventos, hitos y navegación temporal).
+            </div>
+            </div>
+          ) : null}
+
+          {tab === "history" ? (
+            <div className="builder" style={{ marginTop: 12 }}>
+            <h3>Historia</h3>
+            <div className="detail-placeholder">
+              Próximamente: narrativa e historia familiar de la persona.
+            </div>
+            </div>
+          ) : null}
+
+          {tab === "notes" ? (
+            <div className="builder" style={{ marginTop: 12 }}>
+              <h3>Notas GEDCOM</h3>
+              <div className="person-meta">Estas notas se guardan en <code>rawTags.NOTE</code> de la persona.</div>
+              <label>
+                Notas (una por línea)
+                <textarea
+                  value={notesDraft}
+                  onChange={(event) => setNotesDraft(event.target.value)}
+                  rows={8}
+                  placeholder="Ejemplo: Registro familiar confirmado por acta parroquial."
+                />
+              </label>
+              <div className="facts-actions">
+                <button
+                  onClick={() => {
+                    const notes = notesDraft
+                      .split(/\r?\n/)
+                      .map((line) => line.trim())
+                      .filter((line) => line.length > 0);
+                    onSavePerson(person.id, {
+                      name: person.name,
+                      surname: person.surname,
+                      notesReplace: notes
+                    });
+                    setNotesMessage("Notas guardadas.");
+                  }}
+                >
+                  Guardar notas
+                </button>
+                <button
+                  className="secondary-ghost"
+                  onClick={() => {
+                    const existing = Array.isArray(person.rawTags?.NOTE) ? person.rawTags!.NOTE : [];
+                    setNotesDraft(existing.join("\n"));
+                    setNotesMessage("");
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+              {notesMessage ? <div className="modal-line warning">{notesMessage}</div> : null}
+            </div>
+          ) : null}
+
+          {tab === "analysis" ? (
+            <AnalysisTab document={document} person={person} onSelectPerson={onSelectPerson} />
+          ) : null}
+        </div>
       </div>
     </div>
   );

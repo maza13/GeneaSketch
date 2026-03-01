@@ -510,14 +510,85 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
 
             </div>
 
+            <div className="settings-section" style={{ marginTop: 16 }}>
+              <h4 className="settings-section-title">Depuración refinamiento nacimiento</h4>
+              <div className="person-meta" style={{ marginBottom: 8 }}>
+                Solo para desarrollador. No afecta producción si está desactivado.
+              </div>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={draft.developerBirthRefinementDebug === true}
+                  onChange={(event) =>
+                    setDraft((prev) => ({ ...prev, developerBirthRefinementDebug: event.target.checked }))
+                  }
+                />
+                Habilitar debug refinamiento
+              </label>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={draft.developerBirthRefinementShowRawUnfiltered === true}
+                  onChange={(event) =>
+                    setDraft((prev) => ({ ...prev, developerBirthRefinementShowRawUnfiltered: event.target.checked }))
+                  }
+                  disabled={!draft.developerBirthRefinementDebug}
+                />
+                Mostrar salida IA literal sin filtro
+              </label>
+              <label style={{ marginTop: 10 }}>
+                OpenAI API preferida
+                <select
+                  value={draft.openAiPreferredApi || "auto"}
+                  onChange={(event) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      openAiPreferredApi: event.target.value as "auto" | "responses" | "chat_completions"
+                    }))
+                  }
+                >
+                  <option value="auto">Auto (Responses luego Chat)</option>
+                  <option value="responses">Solo Responses</option>
+                  <option value="chat_completions">Solo Chat Completions</option>
+                </select>
+              </label>
+              <label style={{ marginTop: 10 }}>
+                Perfil refinamiento nacimiento
+                <select
+                  value={draft.birthRefinementProfile || "balanced"}
+                  onChange={(event) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      birthRefinementProfile: event.target.value as "balanced" | "max_reliability" | "low_cost"
+                    }))
+                  }
+                >
+                  <option value="balanced">Balanceado</option>
+                  <option value="max_reliability">Máxima fiabilidad</option>
+                  <option value="low_cost">Costo mínimo</option>
+                </select>
+              </label>
+            </div>
+
             <div className="settings-section" style={{ marginTop: 24 }}>
               <h4 className="settings-section-title">Modelos por Caso de Uso</h4>
 
-              {draft.useCaseModels && (["extraction", "resolution", "narration"] as AiUseCase[]).map((useCase) => (
+              {draft.useCaseModels && (["extraction", "resolution", "narration", "birth_refinement"] as AiUseCase[]).map((useCase) => (
                 <div key={useCase} className="use-case-card">
                   <div className="use-case-header">
-                  {useCase === "extraction" ? "1. Extracción (Parsing)" : useCase === "resolution" ? "2. Resolución (sin uso en V4)" : "3. Asistencia (Narration)"}
-                </div>
+                  {useCase === "extraction"
+                    ? "1. Extracción (Parsing)"
+                    : useCase === "resolution"
+                      ? "2. Resolución (sin uso en V4)"
+                      : useCase === "narration"
+                        ? "3. Asistencia (Narration)"
+                        : "4. Refinamiento nacimiento (IA)"}
+                  </div>
+                  {useCase === "birth_refinement" ? (
+                    <div className="person-meta" style={{ marginBottom: 8 }}>
+                      Se usa al presionar “Refinar con IA” en sugerencia de nacimiento.
+                    </div>
+                  ) : null}
                   <label style={{ margin: 0 }}>
                     <select
                       value={`${draft.useCaseModels[useCase].provider}:${draft.useCaseModels[useCase].model}`}
@@ -609,4 +680,3 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
     </div>
   );
 }
-

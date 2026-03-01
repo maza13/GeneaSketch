@@ -38,6 +38,7 @@ describe("ai model catalog normalization", () => {
     const state = useAppStore.getState().aiSettings;
     expect(state.modelCatalog.chatgpt[0].isPreview).toBe(true);
     expect(typeof state.geminiFreeTierMode).toBe("boolean");
+    expect(state.useCaseModels.birth_refinement).toBeDefined();
   });
 
   it("replaces invalid selected model with recommended or first option", () => {
@@ -67,5 +68,6 @@ describe("ai model catalog normalization", () => {
     const state = useAppStore.getState().aiSettings;
     expect(state.providerModels.chatgpt).toBe("gpt-4.1-mini");
     expect(state.providerModels.gemini).toBe("gemini-2.5-pro");
+    expect(state.useCaseModels.birth_refinement.model).toBe("gpt-4.1-mini");
   });
 });

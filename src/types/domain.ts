@@ -1,10 +1,14 @@
 export type SourceFormat = "GED" | "GDZ" | "GSZ";
 export type ViewMode = "fan" | "tree" | "network";
 export type Preset =
+  | "custom"
   | "all_direct_ancestors"
-  | "direct_descendants"
   | "hourglass"
-  | "extended_family";
+  | "family_origin"
+  | "nuclear_family"
+  | "extended_family"
+  | "direct_ancestors"
+  | "direct_descendants";
 
 export type Event = {
   type: "BIRT" | "DEAT" | "MARR" | "DIV" | "OTHER";
@@ -272,6 +276,21 @@ export type ViewConfig = {
   focusFamilyId: string | null;
   homePersonId: string;
   rightPanelView: RightPanelView;
+  timelinePanelOpen?: boolean;
+  rightStack?: {
+    detailsMode: "expanded" | "compact";
+    timelineMode: "expanded" | "compact";
+    detailsAutoCompactedByTimeline?: boolean;
+  };
+  shellPanels?: {
+    leftCollapsed: boolean;
+    rightCollapsed: boolean;
+  };
+  leftSections?: {
+    layersOpen: boolean;
+    treeConfigOpen: boolean;
+    canvasToolsOpen: boolean;
+  };
   timeline: TimelinePanelConfig;
   depth: {
     ancestors: number;

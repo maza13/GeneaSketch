@@ -8,9 +8,20 @@ export type PersonEditorPatch = {
   sex?: "M" | "F" | "U";
   lifeStatus?: "alive" | "deceased";
   photoDataUrl?: string | null;
+  notesAppend?: string[];
+  notesReplace?: string[];
 };
 
 export type PersonRelationInput = PersonEditorPatch;
+
+export type BirthRangeApplySource = "local_algorithm" | "ai_refinement" | "fusion";
+
+export type BirthRangeApplyPayload = {
+  gedcomDate: string;
+  source: BirthRangeApplySource;
+  saveNote: boolean;
+  noteText?: string;
+};
 
 export type TimelineEventType = "BIRT" | "MARR" | "DIV" | "DEAT";
 export type TimelineDateCertainty = "exact" | "estimated_manual" | "inferred_auto" | "undated";
@@ -69,3 +80,18 @@ export type PersonEditorState =
   }
   | { type: "create_standalone" }
   | null;
+
+export type SearchPanelMode = "free" | "children_of" | "parents_of" | "spouse_of";
+
+export type SearchPanelResult = {
+  id: string;
+  name: string;
+  subtitle?: string;
+};
+
+export type SearchPanelState = {
+  open: boolean;
+  query: string;
+  mode: SearchPanelMode;
+  results: SearchPanelResult[];
+};

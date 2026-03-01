@@ -47,43 +47,93 @@ export function expandGraph(document: GeneaDocument, config: ViewConfig): Expand
     ? [focusFamily.husbandId, focusFamily.wifeId].filter(Boolean) as string[]
     : [focusPersonId!];
 
-  const ancestorsByDepth = collectAncestorsForMultiple(indexes, focusRoots, config.depth.ancestors);
+  let finalVisiblePersons = new Set<string>();
 
-  const collateralAncestorDepth = Math.max(config.depth.unclesGreatUncles, config.depth.unclesCousins > 0 ? 1 : 0);
-  const collateralAncestorsByDepth = collectAncestorsForMultiple(indexes, focusRoots, collateralAncestorDepth);
+  if (config.preset === "family_origin") {
+    // Parents + Full Siblings of focus. No grandparents.
+    const parents = new Set<string>();
+    const fullSiblings = new Set<string>();
+    for (const rootId of focusRoots) {
+      const p = indexes.parentsByPerson[rootId] ?? [];
+      for (const id of p) parents.add(id);
 
-  const descendantsByDepth = collectDescendantsForMultiple(indexes, focusRoots, config.depth.descendants);
-
-  const directLine = new Set<string>(focusRoots);
-  for (const ids of ancestorsByDepth.values()) {
-    for (const id of ids) directLine.add(id);
-  }
-  for (const ids of descendantsByDepth.values()) {
-    for (const id of ids) directLine.add(id);
-  }
-
-  const unclesGreatUncles = collectUnclesGreatUncles(indexes, collateralAncestorsByDepth, config.depth.unclesGreatUncles);
-  const siblingsNephews = collectSiblingsNephewsForMultiple(indexes, focusRoots, config.depth.siblingsNephews);
-  const unclesCousins = collectUnclesCousins(indexes, focusRoots, config.depth.unclesCousins);
-
-  const baseVisiblePersons = new Set<string>([
-    ...directLine,
-    ...unclesGreatUncles,
-    ...siblingsNephews,
-    ...unclesCousins
-  ]);
-
-  const finalVisiblePersons = new Set<string>(baseVisiblePersons);
-  if (config.showSpouses) {
-    for (const personId of baseVisiblePersons) {
-      const spouses = indexes.spousesByPerson[personId] ?? [];
-      for (const spouseId of spouses) finalVisiblePersons.add(spouseId);
+      const s = collectFullSiblings(indexes, rootId);
+      for (const id of s) fullSiblings.add(id);
     }
+    finalVisiblePersons = new Set([...focusRoots, ...parents, ...fullSiblings]);
+  } else if (config.preset === "nuclear_family") {
+    // Focus + Parents + Spouses + Children (1 gen up, 1 gen down)
+    const parents = new Set<string>();
+    for (const rootId of focusRoots) {
+      const p = indexes.parentsByPerson[rootId] ?? [];
+      for (const id of p) parents.add(id);
+    }
+    const spouses = new Set<string>();
+    const children = new Set<string>();
+    for (const rootId of focusRoots) {
+      (indexes.spousesByPerson[rootId] ?? []).forEach(s => spouses.add(s));
+      (indexes.childrenByPerson[rootId] ?? []).forEach(c => children.add(c));
+    }
+    finalVisiblePersons = new Set([...focusRoots, ...parents, ...spouses, ...children]);
+  } else if (config.preset === "extended_family") {
+    // 2 generations up + 2 generations down + Spouses of those in direct line
+    const ancestors2 = collectAncestorsForMultiple(indexes, focusRoots, 2);
+    const descendants2 = collectDescendantsForMultiple(indexes, focusRoots, 2);
+    const directLine = new Set(focusRoots);
+    ancestors2.forEach(ids => ids.forEach(id => directLine.add(id)));
+    descendants2.forEach(ids => ids.forEach(id => directLine.add(id)));
+    finalVisiblePersons = new Set(directLine);
+    for (const pId of directLine) {
+      (indexes.spousesByPerson[pId] ?? []).forEach(s => finalVisiblePersons.add(s));
+    }
+  } else if (config.preset === "direct_ancestors") {
+    // All direct ancestors. No collaterals or descendants.
+    const allAncestors = collectAncestorsForMultiple(indexes, focusRoots, 25);
+    finalVisiblePersons = new Set(focusRoots);
+    allAncestors.forEach(ids => ids.forEach(id => finalVisiblePersons.add(id)));
+  } else if (config.preset === "direct_descendants") {
+    // All direct descendants. No collaterals or ancestors.
+    const allDescendants = collectDescendantsForMultiple(indexes, focusRoots, 25);
+    finalVisiblePersons = new Set(focusRoots);
+    allDescendants.forEach(ids => ids.forEach(id => finalVisiblePersons.add(id)));
   } else {
-    // showSpouses OFF: keep only focus roots' spouses
-    for (const root of focusRoots) {
-      const focusSpouses = indexes.spousesByPerson[root] ?? [];
-      for (const spouseId of focusSpouses) finalVisiblePersons.add(spouseId);
+    // Custom logic (the old ways)
+    const collateralAncestorDepth = Math.max(config.depth.unclesGreatUncles, config.depth.unclesCousins > 0 ? 1 : 0);
+    const collateralAncestorsByDepth = collectAncestorsForMultiple(indexes, focusRoots, collateralAncestorDepth);
+
+    const ancestorsByDepth = collectAncestorsForMultiple(indexes, focusRoots, config.depth.ancestors);
+    const descendantsByDepth = collectDescendantsForMultiple(indexes, focusRoots, config.depth.descendants);
+
+    const directLine = new Set<string>(focusRoots);
+    for (const ids of ancestorsByDepth.values()) {
+      for (const id of ids) directLine.add(id);
+    }
+    for (const ids of descendantsByDepth.values()) {
+      for (const id of ids) directLine.add(id);
+    }
+
+    const unclesGreatUncles = collectUnclesGreatUncles(indexes, collateralAncestorsByDepth, config.depth.unclesGreatUncles);
+    const siblingsNephews = collectSiblingsNephewsForMultiple(indexes, focusRoots, config.depth.siblingsNephews);
+    const unclesCousins = collectUnclesCousins(indexes, focusRoots, config.depth.unclesCousins);
+
+    const baseVisiblePersons = new Set<string>([
+      ...directLine,
+      ...unclesGreatUncles,
+      ...siblingsNephews,
+      ...unclesCousins
+    ]);
+
+    finalVisiblePersons = new Set<string>(baseVisiblePersons);
+    if (config.showSpouses) {
+      for (const personId of baseVisiblePersons) {
+        const spouses = indexes.spousesByPerson[personId] ?? [];
+        for (const spouseId of spouses) finalVisiblePersons.add(spouseId);
+      }
+    } else {
+      for (const root of focusRoots) {
+        const focusSpouses = indexes.spousesByPerson[root] ?? [];
+        for (const spouseId of focusSpouses) finalVisiblePersons.add(spouseId);
+      }
     }
   }
 
@@ -403,6 +453,26 @@ function collectUnclesCousins(indexes: RelationIndexes, roots: string[], depth: 
   }
 
   return out;
+}
+
+function collectFullSiblings(indexes: RelationIndexes, personId: string): string[] {
+  const out = new Set<string>();
+  const parents = indexes.parentsByPerson[personId] ?? [];
+  if (parents.length === 0) return [];
+
+  // Get children of ALL parents
+  const childrenPerParent = parents.map(pId => new Set(indexes.childrenByPerson[pId] ?? []));
+
+  // Intersection: only children that are in ALL parent sets
+  const firstSet = childrenPerParent[0];
+  for (const siblingId of firstSet) {
+    if (siblingId === personId) continue;
+    if (childrenPerParent.every(set => set.has(siblingId))) {
+      out.add(siblingId);
+    }
+  }
+
+  return [...out];
 }
 
 function collectSiblings(indexes: RelationIndexes, personId: string): string[] {

@@ -458,9 +458,76 @@ describe("legacy restore normalization", () => {
     await useAppStore.getState().restoreSession();
     expect(useAppStore.getState().mergeDraft).toBeNull();
   });
+
+  it("backfills ai useCase birth_refinement when missing in legacy settings", async () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+
+    restoreValue = {
+      schemaVersion: 4,
+      document: doc,
+      viewConfig: {
+        mode: "tree",
+        preset: "hourglass",
+        focusPersonId: "@I1@",
+        focusFamilyId: null,
+        homePersonId: "@I1@",
+        depth: {
+          ancestors: 2,
+          descendants: 1,
+          unclesGreatUncles: 0,
+          siblingsNephews: 0,
+          unclesCousins: 0
+        },
+        showSpouses: true,
+        rightPanelView: "details",
+        timeline: { scope: "visible", view: "list", scaleZoom: 1, scaleOffset: 0 }
+      },
+      focusHistory: ["@I1@"],
+      focusIndex: 0,
+      aiSettings: {
+        useCaseModels: {
+          extraction: { provider: "chatgpt", model: "gpt-5-nano" },
+          resolution: { provider: "gemini", model: "gemini-2.5-flash" },
+          narration: { provider: "chatgpt", model: "gpt-5-nano" }
+        }
+      } as any
+    };
+
+    await useAppStore.getState().restoreSession();
+    expect(useAppStore.getState().aiSettings.useCaseModels.birth_refinement).toBeDefined();
+    expect(useAppStore.getState().aiSettings.useCaseModels.birth_refinement.provider).toBe("chatgpt");
+  });
 });
 
 describe("timeline contract", () => {
+  it("initializes left panel sections defaults in viewConfig", () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+    useAppStore.getState().setDocument(doc);
+
+    const sections = useAppStore.getState().viewConfig?.leftSections;
+    expect(sections?.layersOpen).toBe(true);
+    expect(sections?.treeConfigOpen).toBe(true);
+    expect(sections?.canvasToolsOpen).toBe(false);
+  });
+
+  it("toggleLeftSection only changes target section", () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+    useAppStore.getState().setDocument(doc);
+
+    const before = useAppStore.getState().viewConfig?.leftSections;
+    useAppStore.getState().toggleLeftSection("canvasTools");
+    const after = useAppStore.getState().viewConfig?.leftSections;
+    expect(after?.layersOpen).toBe(before?.layersOpen);
+    expect(after?.treeConfigOpen).toBe(before?.treeConfigOpen);
+    expect(after?.canvasToolsOpen).toBe(!before?.canvasToolsOpen);
+  });
+
   it("setTimelineStatus persists canonical year config", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
@@ -551,5 +618,149 @@ describe("timeline contract", () => {
     const after = useAppStore.getState().viewConfig?.dtree?.overlays;
     expect(after).toBe(before);
     expect(after).toEqual([]);
+  });
+
+  it("maps legacy rightStack booleans to mode-based rightStack on restore", async () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+
+    restoreValue = {
+      schemaVersion: 4,
+      document: doc,
+      viewConfig: {
+        mode: "tree",
+        preset: "hourglass",
+        focusPersonId: "@I1@",
+        focusFamilyId: null,
+        homePersonId: "@I1@",
+        depth: {
+          ancestors: 2,
+          descendants: 1,
+          unclesGreatUncles: 0,
+          siblingsNephews: 0,
+          unclesCousins: 0
+        },
+        showSpouses: true,
+        rightPanelView: "timeline",
+        timelinePanelOpen: true,
+        rightStack: {
+          detailsExpanded: false,
+          timelineExpanded: true
+        } as unknown as any,
+        timeline: {
+          scope: "visible",
+          view: "list",
+          scaleZoom: 1,
+          scaleOffset: 0
+        }
+      } as unknown as SessionSnapshot["viewConfig"],
+      focusHistory: ["@I1@"],
+      focusIndex: 0
+    };
+
+    await useAppStore.getState().restoreSession();
+    const stack = useAppStore.getState().viewConfig?.rightStack;
+    expect(stack?.detailsMode).toBe("compact");
+    expect(stack?.timelineMode).toBe("expanded");
+  });
+
+  it("auto-compacts details when timeline opens and restores details when timeline closes", () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+    useAppStore.getState().setDocument(doc);
+
+    useAppStore.getState().setTimelinePanelOpen(true);
+    let stack = useAppStore.getState().viewConfig?.rightStack;
+    expect(stack?.detailsMode).toBe("compact");
+    expect(stack?.timelineMode).toBe("expanded");
+    expect(stack?.detailsAutoCompactedByTimeline).toBe(true);
+
+    useAppStore.getState().setTimelineStatus(["@I1@"], [], 1995);
+    expect(
+      useAppStore
+        .getState()
+        .viewConfig?.dtree?.overlays.some((overlay) => overlay.type === "timeline")
+    ).toBe(true);
+
+    useAppStore.getState().setTimelinePanelOpen(false);
+    stack = useAppStore.getState().viewConfig?.rightStack;
+    expect(stack?.timelineMode).toBe("compact");
+    expect(stack?.detailsMode).toBe("expanded");
+    expect(stack?.detailsAutoCompactedByTimeline).toBe(false);
+    expect(
+      useAppStore
+        .getState()
+        .viewConfig?.dtree?.overlays.some((overlay) => overlay.type === "timeline")
+    ).toBe(false);
+  });
+
+  it("clearVisualModes keeps focus/selection while clearing overlays and timeline", () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+    doc.persons["@I2@"] = {
+      id: "@I2@",
+      name: "Second",
+      sex: "U",
+      lifeStatus: "alive",
+      events: [],
+      famc: [],
+      fams: [],
+      mediaRefs: [],
+      sourceRefs: []
+    };
+    useAppStore.getState().setDocument(doc);
+    useAppStore.getState().inspectPerson("@I2@");
+    useAppStore.getState().setTimelinePanelOpen(true);
+    useAppStore.getState().setTimelineStatus(["@I1@"], [], 1995);
+    useAppStore.getState().setOverlay({
+      id: "warnings",
+      type: "layer",
+      priority: 40,
+      config: { layerId: "layer-warnings" }
+    });
+    useAppStore.getState().setFocusFamilyId("@F999@");
+
+    const before = useAppStore.getState();
+    useAppStore.getState().clearVisualModes();
+    const after = useAppStore.getState();
+
+    expect(after.selectedPersonId).toBe(before.selectedPersonId);
+    expect(after.viewConfig?.focusPersonId).toBe(before.viewConfig?.focusPersonId);
+    expect(after.viewConfig?.timelinePanelOpen).toBe(false);
+    expect(after.viewConfig?.focusFamilyId).toBeNull();
+    expect(after.viewConfig?.dtree?.overlays).toEqual([]);
+  });
+
+  it("clearVisualModes restores details to expanded when auto-compacted by timeline", () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+    useAppStore.getState().setDocument(doc);
+    useAppStore.getState().setTimelinePanelOpen(true);
+    const stackBefore = useAppStore.getState().viewConfig?.rightStack;
+    expect(stackBefore?.detailsMode).toBe("compact");
+    expect(stackBefore?.detailsAutoCompactedByTimeline).toBe(true);
+
+    useAppStore.getState().clearVisualModes();
+    const stackAfter = useAppStore.getState().viewConfig?.rightStack;
+    expect(stackAfter?.timelineMode).toBe("compact");
+    expect(stackAfter?.detailsMode).toBe("expanded");
+    expect(stackAfter?.detailsAutoCompactedByTimeline).toBe(false);
+  });
+
+  it("clearVisualModes is idempotent", () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+    useAppStore.getState().setDocument(doc);
+
+    useAppStore.getState().clearVisualModes();
+    const firstRef = useAppStore.getState().viewConfig;
+    useAppStore.getState().clearVisualModes();
+    const secondRef = useAppStore.getState().viewConfig;
+    expect(secondRef).toBe(firstRef);
   });
 });

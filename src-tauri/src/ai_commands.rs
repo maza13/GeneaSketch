@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 const OPENAI_ENDPOINT: &str = "https://api.openai.com/v1/chat/completions";
+const OPENAI_RESPONSES_ENDPOINT: &str = "https://api.openai.com/v1/responses";
 const OPENAI_MODELS_ENDPOINT: &str = "https://api.openai.com/v1/models";
 const GEMINI_ENDPOINT_BASE: &str = "https://generativelanguage.googleapis.com/v1beta/models";
 const AI_HTTP_TIMEOUT_SECS: u64 = 45;
@@ -64,6 +65,7 @@ pub struct AiInvokeProviderRequest {
     pub user_prompt: String,
     pub max_output_tokens: u32,
     pub temperature: Option<f32>,
+    pub preferred_api: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -72,6 +74,10 @@ pub struct AiInvokeProviderResponse {
     pub text: String,
     pub provider: String,
     pub model: String,
+    pub raw_body: Option<String>,
+    pub api_used: Option<String>,
+    pub finish_reason: Option<String>,
+    pub provider_warnings: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -142,11 +148,105 @@ struct OpenAiResponse {
 #[derive(Debug, Deserialize)]
 struct OpenAiChoice {
     message: Option<OpenAiMessage>,
+    finish_reason: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct OpenAiMessage {
-    content: Option<String>,
+    content: Option<Value>,
+    refusal: Option<String>,
+}
+
+fn extract_openai_message_text(message: &OpenAiMessage) -> Option<String> {
+    if let Some(content) = &message.content {
+        match content {
+            Value::String(s) => {
+                if !s.trim().is_empty() {
+                    return Some(s.clone());
+                }
+            }
+            Value::Array(items) => {
+                let mut chunks: Vec<String> = Vec::new();
+                for item in items {
+                    if let Value::Object(obj) = item {
+                        if let Some(Value::String(text)) = obj.get("text") {
+                            if !text.trim().is_empty() {
+                                chunks.push(text.clone());
+                            }
+                        }
+                    }
+                }
+                if !chunks.is_empty() {
+                    return Some(chunks.join("\n"));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if let Some(refusal) = &message.refusal {
+        if !refusal.trim().is_empty() {
+            return Some(format!("REFUSAL: {refusal}"));
+        }
+    }
+
+    None
+}
+
+fn extract_responses_text(parsed: &Value) -> (String, Option<String>) {
+    let finish_reason = parsed
+        .get("status")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    if let Some(output_text) = parsed.get("output_text") {
+        if let Some(text) = output_text.as_str() {
+            if !text.trim().is_empty() {
+                return (text.to_string(), finish_reason);
+            }
+        }
+    }
+
+    if let Some(output) = parsed.get("output").and_then(|v| v.as_array()) {
+        let mut chunks: Vec<String> = Vec::new();
+        for node in output {
+            if let Some(content) = node.get("content").and_then(|v| v.as_array()) {
+                for part in content {
+                    if let Some(text) = part.get("text").and_then(|v| v.as_str()) {
+                        if !text.trim().is_empty() {
+                            chunks.push(text.to_string());
+                        }
+                    }
+                    if let Some(refusal) = part.get("refusal").and_then(|v| v.as_str()) {
+                        if !refusal.trim().is_empty() {
+                            chunks.push(format!("REFUSAL: {refusal}"));
+                        }
+                    }
+                }
+            }
+        }
+        if !chunks.is_empty() {
+            return (chunks.join("\n"), finish_reason);
+        }
+    }
+
+    (String::new(), finish_reason)
+}
+
+fn parse_status_code(message: &str) -> Option<u16> {
+    let marker = "HTTP_";
+    let idx = message.find(marker)?;
+    let rest = &message[idx + marker.len()..];
+    let digits: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
+    digits.parse::<u16>().ok()
+}
+
+fn is_openai_responses_compat_error(message: &str) -> bool {
+    let lower = message.to_ascii_lowercase();
+    matches!(parse_status_code(message), Some(400) | Some(404) | Some(422))
+        || lower.contains("unsupported")
+        || lower.contains("unknown")
+        || lower.contains("not found")
 }
 
 #[derive(Debug, Deserialize)]
@@ -397,6 +497,16 @@ fn is_openai_text_model(model_id: &str) -> bool {
 fn is_preview_model(model_id: &str, label: &str) -> bool {
     let lower = format!(
         "{} {}",
+        model_id.to_ascii_lowercase(),
+        label.to_ascii_lowercase()
+    );
+    lower.contains("preview")
+        || lower.contains("experimental")
+        || lower.contains("exp-")
+        || lower.contains("-exp")
+        || lower.contains("beta")
+}
+
 fn enrich_model_metadata(entry: &mut AiModelCatalogEntry) {
     let id = entry.id.to_ascii_lowercase();
     match id.as_str() {
@@ -557,6 +667,10 @@ async fn list_openai_models(client: &Client, api_key: &str) -> Result<Vec<AiMode
                 label: id,
                 recommended: false,
                 is_preview,
+                price: None,
+                price_out: None,
+                intelligence: None,
+                is_reasoning: None,
             }
         })
         .collect::<Vec<_>>();
@@ -619,6 +733,10 @@ async fn list_gemini_models(client: &Client, api_key: &str) -> Result<Vec<AiMode
                 label,
                 recommended: false,
                 is_preview,
+                price: None,
+                price_out: None,
+                intelligence: None,
+                is_reasoning: None,
             })
         })
         .collect::<Vec<_>>();
@@ -635,11 +753,11 @@ async fn list_gemini_models(client: &Client, api_key: &str) -> Result<Vec<AiMode
     ))
 }
 
-async fn invoke_openai(
+async fn invoke_openai_chat_completions(
     client: &Client,
     api_key: &str,
     req: &AiInvokeProviderRequest,
-) -> Result<String, String> {
+) -> Result<AiInvokeProviderResponse, String> {
     let mut payload = json!({
         "model": req.model,
         "messages": [
@@ -681,21 +799,121 @@ async fn invoke_openai(
     if let Some(choices) = parsed.choices {
         if let Some(choice) = choices.get(0) {
             if let Some(message) = &choice.message {
-                if let Some(content) = &message.content {
-                    return Ok(content.clone());
+                if let Some(content) = extract_openai_message_text(message) {
+                    return Ok(AiInvokeProviderResponse {
+                        text: content,
+                        provider: "chatgpt".to_string(),
+                        model: req.model.clone(),
+                        raw_body: Some(body),
+                        api_used: Some("chat_completions".to_string()),
+                        finish_reason: choice.finish_reason.clone(),
+                        provider_warnings: None,
+                    });
                 }
+            }
+            if let Some(reason) = &choice.finish_reason {
+                return Err(format!(
+                    "OPENAI_EMPTY_RESPONSE: finish_reason={reason}; body={body}"
+                ));
             }
         }
     }
 
-    Err("OPENAI_EMPTY_RESPONSE".to_string())
+    Err(format!("OPENAI_EMPTY_RESPONSE: body={body}"))
+}
+
+async fn invoke_openai_responses(
+    client: &Client,
+    api_key: &str,
+    req: &AiInvokeProviderRequest,
+) -> Result<AiInvokeProviderResponse, String> {
+    let mut payload = json!({
+        "model": req.model,
+        "input": [
+            { "role": "system", "content": req.system_prompt },
+            { "role": "user", "content": req.user_prompt }
+        ],
+        "max_output_tokens": req.max_output_tokens
+    });
+    if let Some(t) = req.temperature {
+        if let Some(obj) = payload.as_object_mut() {
+            obj.insert("temperature".to_string(), json!(t));
+        }
+    }
+
+    let response = client
+        .post(OPENAI_RESPONSES_ENDPOINT)
+        .bearer_auth(api_key)
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|err| format!("NETWORK: {err}"))?;
+
+    let status = response.status();
+    let body = response.text().await.unwrap_or_default();
+    if !status.is_success() {
+        return Err(format_provider_http_error("chatgpt", status.as_u16(), &body));
+    }
+
+    let parsed: Value =
+        serde_json::from_str(&body).map_err(|err| format!("PARSE_OPENAI_RESPONSES: {err}. body={body}"))?;
+    let (text, finish_reason) = extract_responses_text(&parsed);
+    Ok(AiInvokeProviderResponse {
+        text,
+        provider: "chatgpt".to_string(),
+        model: req.model.clone(),
+        raw_body: Some(body),
+        api_used: Some("responses".to_string()),
+        finish_reason,
+        provider_warnings: None,
+    })
+}
+
+async fn invoke_openai(
+    client: &Client,
+    api_key: &str,
+    req: &AiInvokeProviderRequest,
+) -> Result<AiInvokeProviderResponse, String> {
+    let preferred = req
+        .preferred_api
+        .as_deref()
+        .unwrap_or("auto")
+        .to_ascii_lowercase();
+
+    if preferred == "chat_completions" {
+        return invoke_openai_chat_completions(client, api_key, req).await;
+    }
+    if preferred == "responses" {
+        return invoke_openai_responses(client, api_key, req).await;
+    }
+
+    match invoke_openai_responses(client, api_key, req).await {
+        Ok(response) => {
+            if !response.text.trim().is_empty() {
+                return Ok(response);
+            }
+            let mut fallback = invoke_openai_chat_completions(client, api_key, req).await?;
+            fallback.provider_warnings = Some(vec!["responses_empty_output_fallback_to_chat_completions".to_string()]);
+            Ok(fallback)
+        }
+        Err(err) => {
+            if is_openai_responses_compat_error(&err) {
+                let mut fallback = invoke_openai_chat_completions(client, api_key, req).await?;
+                fallback.provider_warnings =
+                    Some(vec![format!("responses_fallback_reason:{err}")]);
+                Ok(fallback)
+            } else {
+                Err(err)
+            }
+        }
+    }
 }
 
 async fn invoke_gemini(
     client: &Client,
     api_key: &str,
     req: &AiInvokeProviderRequest,
-) -> Result<String, String> {
+) -> Result<AiInvokeProviderResponse, String> {
     let endpoint = format!(
         "{}/{model}:generateContent?key={key}",
         GEMINI_ENDPOINT_BASE,
@@ -739,7 +957,15 @@ async fn invoke_gemini(
                     for part in parts {
                         if let Some(text) = part.text {
                             if !text.trim().is_empty() {
-                                return Ok(text);
+                                return Ok(AiInvokeProviderResponse {
+                                    text,
+                                    provider: "gemini".to_string(),
+                                    model: req.model.clone(),
+                                    raw_body: Some(body),
+                                    api_used: Some("gemini_generate_content".to_string()),
+                                    finish_reason: None,
+                                    provider_warnings: None,
+                                });
                             }
                         }
                     }
@@ -748,7 +974,7 @@ async fn invoke_gemini(
         }
     }
 
-    Err("GEMINI_EMPTY_RESPONSE".to_string())
+    Err(format!("GEMINI_EMPTY_RESPONSE: body={body}"))
 }
 
 #[tauri::command]
@@ -860,9 +1086,10 @@ pub async fn ai_validate_credentials(
         user_prompt: "ping".to_string(),
         max_output_tokens: 16,
         temperature: if is_restricted { None } else { Some(0.0) },
+        preferred_api: Some("auto".to_string()),
     };
 
-    let result = if provider == "chatgpt" {
+    let result: Result<AiInvokeProviderResponse, String> = if provider == "chatgpt" {
         invoke_openai(&client, &key, &ping_request).await
     } else {
         invoke_gemini(&client, &key, &ping_request).await
@@ -920,7 +1147,7 @@ pub async fn ai_invoke_provider(
     let provider = request.provider.to_lowercase();
     let client = build_http_client()?;
 
-    let text = if provider == "chatgpt" {
+    let mut response = if provider == "chatgpt" {
         let key = credentials
             .openai_api_key
             .ok_or_else(|| "MISSING_CREDENTIALS: OpenAI key no configurada.".to_string())?;
@@ -934,11 +1161,9 @@ pub async fn ai_invoke_provider(
         return Err("Proveedor no soportado.".to_string());
     };
 
-    Ok(AiInvokeProviderResponse {
-        text,
-        provider: provider.to_string(),
-        model: request.model,
-    })
+    response.provider = provider.to_string();
+    response.model = request.model;
+    Ok(response)
 }
 
 #[cfg(test)]
@@ -961,4 +1186,3 @@ mod tests {
         assert_eq!(reason.as_deref(), Some("resource_exhausted"));
     }
 }
-

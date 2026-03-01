@@ -107,7 +107,81 @@ export async function webAiInvokeProvider(request: AiInvokeProviderRequest): Pro
     }
 }
 
-async function invokeOpenAi(req: AiInvokeProviderRequest, apiKey: string): Promise<AiInvokeProviderResponse> {
+function extractChatCompletionsText(data: any): { text: string; finishReason?: string } {
+    const choice = data?.choices?.[0];
+    const finishReason = typeof choice?.finish_reason === "string" ? choice.finish_reason : undefined;
+    const content = choice?.message?.content;
+    if (typeof content === "string" && content.trim().length > 0) {
+        return { text: content, finishReason };
+    }
+    if (Array.isArray(content)) {
+        const text = content
+            .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
+            .filter((chunk: string) => chunk.trim().length > 0)
+            .join("\n");
+        if (text.trim().length > 0) {
+            return { text, finishReason };
+        }
+    }
+    if (typeof choice?.message?.refusal === "string" && choice.message.refusal.trim().length > 0) {
+        return { text: `REFUSAL: ${choice.message.refusal}`, finishReason };
+    }
+    return { text: "", finishReason };
+}
+
+function extractResponsesText(data: any): { text: string; finishReason?: string } {
+    if (typeof data?.output_text === "string" && data.output_text.trim().length > 0) {
+        return { text: data.output_text, finishReason: data?.status };
+    }
+    if (Array.isArray(data?.output_text)) {
+        const joined = data.output_text
+            .map((item: any) => (typeof item === "string" ? item : ""))
+            .join("\n")
+            .trim();
+        if (joined.length > 0) {
+            return { text: joined, finishReason: data?.status };
+        }
+    }
+    if (Array.isArray(data?.output)) {
+        const chunks: string[] = [];
+        for (const node of data.output) {
+            if (!Array.isArray(node?.content)) continue;
+            for (const part of node.content) {
+                if (typeof part?.text === "string" && part.text.trim().length > 0) {
+                    chunks.push(part.text);
+                    continue;
+                }
+                if (typeof part?.refusal === "string" && part.refusal.trim().length > 0) {
+                    chunks.push(`REFUSAL: ${part.refusal}`);
+                }
+            }
+        }
+        const text = chunks.join("\n").trim();
+        if (text.length > 0) return { text, finishReason: data?.status };
+    }
+    return { text: "", finishReason: data?.status };
+}
+
+function parseHttpCode(message: string): number | null {
+    const match = message.match(/HTTP_(\d{3})/);
+    if (!match) return null;
+    const code = Number(match[1]);
+    return Number.isFinite(code) ? code : null;
+}
+
+function isResponsesCompatError(message: string): boolean {
+    const lower = message.toLowerCase();
+    const code = parseHttpCode(message);
+    if (code === 400 || code === 404 || code === 422) return true;
+    return lower.includes("unsupported") || lower.includes("unknown") || lower.includes("not found");
+}
+
+function isRestrictedTemperatureModel(model: string): boolean {
+    const normalized = model.trim().toLowerCase();
+    return normalized.startsWith("gpt-5") || normalized.startsWith("o");
+}
+
+async function invokeOpenAiChatCompletions(req: AiInvokeProviderRequest, apiKey: string): Promise<AiInvokeProviderResponse> {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -125,19 +199,88 @@ async function invokeOpenAi(req: AiInvokeProviderRequest, apiKey: string): Promi
         })
     });
 
+    const rawBody = await response.text();
     if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`HTTP_${response.status}: OpenAI error: ${errorBody}`);
+        throw new Error(`HTTP_${response.status}: OpenAI error: ${rawBody}`);
     }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content || "";
+    const data = JSON.parse(rawBody);
+    const parsed = extractChatCompletionsText(data);
 
     return {
-        text,
+        text: parsed.text,
         model: req.model,
-        provider: "chatgpt"
+        provider: "chatgpt",
+        rawBody,
+        apiUsed: "chat_completions",
+        finishReason: parsed.finishReason
     };
+}
+
+async function invokeOpenAiResponses(req: AiInvokeProviderRequest, apiKey: string): Promise<AiInvokeProviderResponse> {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: req.model,
+            input: [
+                { role: "system", content: req.systemPrompt },
+                { role: "user", content: req.userPrompt }
+            ],
+            max_output_tokens: req.maxOutputTokens,
+            ...(req.temperature !== undefined ? { temperature: req.temperature } : {})
+        })
+    });
+
+    const rawBody = await response.text();
+    if (!response.ok) {
+        throw new Error(`HTTP_${response.status}: OpenAI error: ${rawBody}`);
+    }
+    const data = JSON.parse(rawBody);
+    const parsed = extractResponsesText(data);
+    return {
+        text: parsed.text,
+        model: req.model,
+        provider: "chatgpt",
+        rawBody,
+        apiUsed: "responses",
+        finishReason: parsed.finishReason
+    };
+}
+
+async function invokeOpenAi(req: AiInvokeProviderRequest, apiKey: string): Promise<AiInvokeProviderResponse> {
+    const preferred = req.preferredApi || "auto";
+    const effectiveReq: AiInvokeProviderRequest = {
+        ...req,
+        temperature: isRestrictedTemperatureModel(req.model) ? undefined : req.temperature
+    };
+    if (preferred === "chat_completions") {
+        return invokeOpenAiChatCompletions(effectiveReq, apiKey);
+    }
+    if (preferred === "responses") {
+        return invokeOpenAiResponses(effectiveReq, apiKey);
+    }
+    try {
+        const response = await invokeOpenAiResponses(effectiveReq, apiKey);
+        if (response.text.trim().length > 0) return response;
+        const fallback = await invokeOpenAiChatCompletions(effectiveReq, apiKey);
+        return {
+            ...fallback,
+            providerWarnings: ["responses_empty_output_fallback_to_chat_completions"]
+        };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (isResponsesCompatError(message)) {
+            const fallback = await invokeOpenAiChatCompletions(effectiveReq, apiKey);
+            return {
+                ...fallback,
+                providerWarnings: [`responses_fallback_reason:${message}`]
+            };
+        }
+        throw error;
+    }
 }
 
 async function invokeGemini(req: AiInvokeProviderRequest, apiKey: string): Promise<AiInvokeProviderResponse> {
@@ -157,18 +300,20 @@ async function invokeGemini(req: AiInvokeProviderRequest, apiKey: string): Promi
         })
     });
 
+    const rawBody = await response.text();
     if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`HTTP_${response.status}: Gemini error: ${errorBody}`);
+        throw new Error(`HTTP_${response.status}: Gemini error: ${rawBody}`);
     }
 
-    const data = await response.json();
+    const data = JSON.parse(rawBody);
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     return {
         text,
         model: req.model,
-        provider: "gemini"
+        provider: "gemini",
+        rawBody,
+        apiUsed: "gemini_generate_content"
     };
 }
 
@@ -182,7 +327,8 @@ export async function webAiValidateCredentials(request: AiValidateRequest): Prom
             systemPrompt: "You are a health-check endpoint. Return exactly PONG.",
             userPrompt: "ping",
             maxOutputTokens: 16,
-            temperature: isRestricted ? undefined : 0.0
+            temperature: isRestricted ? undefined : 0.0,
+            preferredApi: "auto"
         });
         return { valid: true, message: "Conexión OK.", statusCode: 200 };
     } catch (error) {

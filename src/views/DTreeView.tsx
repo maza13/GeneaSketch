@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
 import { calculateGeneticHeatmap, findKinship, getLineagePath, getLifeOverlapInfo } from "@/core/graph/kinship";
+import { consanguinityAlphaFromIntensity, normalizeConsanguinityIntensity } from "@/core/graph/endogamyVisual";
 import { analyzeGeneaDocument } from "@/core/diagnostics/analyzer";
 import { computeLayout } from "@/core/layout";
 import type { ExpandedGraph, GeneaDocument } from "@/types/domain";
@@ -30,14 +31,11 @@ type Props = {
 };
 
 function interpolateHeatmapColor(val: number, mode: "vibrant" | "monochromatic" = "vibrant"): string {
-    // We use a power scale to ensure lower values (like 3% or 12%) still stand out
-    // Use aggressive power scaling to make tiny percentages (e.g., 0.0001) visible
-    const scaledVal = Math.pow(Math.min(val, 1), 0.2);
+    const scaledVal = normalizeConsanguinityIntensity(val);
 
     if (mode === "monochromatic") {
         // Monochromatic/Thematic: uses d3.interpolateBlues
-        // Shift range to [0.3, 1] so lowest values aren't completely white
-        return d3.interpolateBlues(0.3 + scaledVal * 0.7);
+        return d3.interpolateBlues(0.2 + scaledVal * 0.8);
     } else {
         // Vibrant: uses d3.interpolateTurbo
         return d3.interpolateTurbo(scaledVal);
@@ -206,11 +204,18 @@ export function DTreeView({
                 const kinship = findKinship(document, fam.husbandId!, fam.wifeId!);
                 if (!kinship) return;
 
-                // Refined Bicromatic scale: Vibrant Yellow to Deep Red
-                // We use a power curve (0.6) so that small consanguinity (e.g. 2nd cousins) 
-                // is already a clear gold/orange and doesn't look washed out.
-                const dnaFactor = Math.pow(Math.min(kinship.sharedDnaPercentage / 0.5, 1.0), 0.6);
-                const caseColor = d3.interpolateHcl("#FFEA00", "#D50000")(dnaFactor);
+                const dnaFactor = normalizeConsanguinityIntensity(kinship.sharedDnaPercentage);
+                const caseScale = d3
+                    .scaleLinear<string>()
+                    .domain([0, 0.55, 1])
+                    .range(["#64748b", "#f59e0b", "#dc2626"])
+                    .interpolate(d3.interpolateHcl);
+                const baseColor = caseScale(dnaFactor);
+                const colorWithAlpha = d3.color(baseColor);
+                if (colorWithAlpha) {
+                    colorWithAlpha.opacity = consanguinityAlphaFromIntensity(dnaFactor);
+                }
+                const caseColor = colorWithAlpha ? colorWithAlpha.formatRgb() : baseColor;
 
                 const mrcas = kinship.pathPersonIds.filter(id => {
                     const p = document.persons[id];
@@ -1508,7 +1513,7 @@ export function DTreeView({
                                                             {
                                                                 label: 'Coincidencia hereditaria',
                                                                 value: getPercentageLabel(inbreeding),
-                                                                tone: 'warn'
+                                                                tone: inbreeding < 0.001 ? 'muted' : 'warn'
                                                             }
                                                         ]}
                                                     />

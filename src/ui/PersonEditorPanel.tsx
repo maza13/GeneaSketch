@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { uiDateToGedcom, gedcomDateToUi } from "@/utils/date";
 import type { PendingRelationType } from "@/types/domain";
 import type { GeneaDocument } from "@/types/domain";
 import type { PersonEditorPatch, PersonEditorState, PersonRelationInput } from "@/types/editor";
-import { estimatePersonBirthYear } from "@/core/inference/dateInference";
-import { InferenceResult } from "@/core/inference/types";
+import type { AiSettings } from "@/types/ai";
+import { BirthRangeRefinementCard } from "@/ui/person/BirthRangeRefinementCard";
 
 type Props = {
   editorState: PersonEditorState;
   document: GeneaDocument | null;
+  aiSettings: AiSettings;
   onClose: () => void;
   onSaveEdit: (personId: string, patch: PersonEditorPatch) => void;
   onSaveRelation: (anchorId: string, type: PendingRelationType, input: PersonRelationInput) => void;
@@ -45,7 +46,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, onSaveRelation, onCreateStandalone }: Props) {
+export function PersonEditorPanel({ editorState, document, aiSettings, onClose, onSaveEdit, onSaveRelation, onCreateStandalone }: Props) {
   const [name, setName] = useState("");
   const [paternalSurname, setPaternalSurname] = useState("");
   const [maternalSurname, setMaternalSurname] = useState("");
@@ -63,9 +64,7 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
   const [initialPhotoUrl, setInitialPhotoUrl] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [relationType, setRelationType] = useState<PendingRelationType>("child");
-
-  // Inferencia de fechas
-  const [birthInference, setBirthInference] = useState<InferenceResult | null>(null);
+  const [pendingNotesAppend, setPendingNotesAppend] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragStartRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
@@ -113,7 +112,7 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
     setPhotoOffset({ x: 0, y: 0 });
     setImgDim({ w: 0, h: 0 });
     setFormError("");
-    setBirthInference(null);
+    setPendingNotesAppend([]);
   }, [editorState, document]);
 
   useEffect(() => {
@@ -141,7 +140,6 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
   }, [isDraggingPhoto]);
 
   if (!editorState) return null;
-
   async function applyPhotoFile(file: File) {
     if (!isImageFile(file)) {
       setFormError("Archivo no compatible. Usa una imagen valida.");
@@ -222,7 +220,8 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
       birthDate: bDateGed,
       deathDate: dDateGed,
       lifeStatus,
-      ...(finalPhoto !== undefined && { photoDataUrl: finalPhoto })
+      ...(finalPhoto !== undefined && { photoDataUrl: finalPhoto }),
+      ...(editorState.type === "edit" && pendingNotesAppend.length > 0 ? { notesAppend: pendingNotesAppend } : {})
     };
 
     if (editorState.type === "edit") onSaveEdit(editorState.personId, payload);
@@ -232,7 +231,7 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
     onClose();
   }
 
-  const title = editorState.type === "edit" ? "Modificar Persona" : editorState.type === "create_standalone" ? "Crear Persona Nueva" : "Agregar Familiar";
+  const title = editorState.type === "edit" ? "Edición rápida" : editorState.type === "create_standalone" ? "Crear Persona nueva" : "Agregar familiar";
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -241,7 +240,8 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
           <h3>{title}</h3>
           <button onClick={onClose}>&times;</button>
         </div>
-        <div className="builder" style={{ marginTop: 10 }}>
+        <div className="modal-body modal-body--tight">
+        <div className="builder" style={{ marginTop: 0 }}>
           {formError && <div className="inline-error">{formError}</div>}
 
           {editorState.type === "add_relation" && (
@@ -283,90 +283,18 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
 
           <label>
             Birth date (nacimiento)
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" style={{ flex: 1 }} />
-              {editorState.type === "edit" && document && (
-                <button
-                  type="button"
-                  title="Sugerir año estimado basado en familiares"
-                  style={{ width: 'auto', padding: '6px 10px', fontSize: 13, background: 'var(--bg-card)', border: '1px solid var(--accent)', color: 'var(--accent)' }}
-                  onClick={() => {
-                    const res = estimatePersonBirthYear(editorState.personId, document);
-                    setBirthInference(res);
-                  }}
-                >
-                  ✨ Sugerir
-                </button>
-              )}
-            </div>
+            <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
           </label>
 
-          {birthInference && (
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--line)', borderRadius: 6, padding: 12, marginBottom: 12, fontSize: 13 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <strong style={{ color: 'var(--accent-strong)' }}>
-                  {birthInference.isImpossible ? "❌ Sugerencia Imposible" : "📊 Inferencia de Nacimiento"}
-                </strong>
-                <button type="button" onClick={() => setBirthInference(null)} style={{ background: 'transparent', border: 'none', padding: 0, fontSize: 16, cursor: 'pointer', color: 'var(--ink-muted)' }}>&times;</button>
-              </div>
-
-              {birthInference.suggestedRange || birthInference.suggestedYear ? (
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ marginBottom: 4 }}>
-                    Estimación estadística recomendada:{' '}
-                    <strong>
-                      {birthInference.suggestedRange
-                        ? `Entre ${birthInference.suggestedRange[0]} y ${birthInference.suggestedRange[1]}`
-                        : `~${birthInference.suggestedYear}`}
-                    </strong>
-                  </div>
-
-                  {(birthInference.minYear !== undefined || birthInference.maxYear !== undefined) && (
-                    <div style={{ color: 'var(--ink-muted)', fontSize: 12, marginBottom: 8 }}>
-                      Límite termodinámico/biológico absoluto: {birthInference.minYear ?? '...'} - {birthInference.maxYear ?? '...'}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    {birthInference.suggestedRange && (
-                      <button
-                        type="button"
-                        onClick={() => setBirthDate(`BET ${birthInference.suggestedRange![0]} AND ${birthInference.suggestedRange![1]}`)}
-                        style={{ padding: '4px 12px', fontSize: 12, background: 'var(--accent-soft)', color: 'var(--accent-strong)', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 500 }}
-                      >
-                        Aplicar Rango (BET {birthInference.suggestedRange[0]} AND {birthInference.suggestedRange[1]})
-                      </button>
-                    )}
-                    {birthInference.suggestedYear && (
-                      <button
-                        type="button"
-                        onClick={() => setBirthDate(`EST ${birthInference.suggestedYear}`)}
-                        style={{ padding: '4px 12px', fontSize: 12, background: 'transparent', color: 'var(--ink-1)', border: '1px solid var(--line)', borderRadius: 4, cursor: 'pointer' }}
-                      >
-                        Usar Punto Medio (EST {birthInference.suggestedYear})
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div style={{ color: 'var(--ink-muted)', fontStyle: 'italic', marginBottom: 8 }}>No hay suficientes datos biológicos exactos para sugerir. Asegúrate de que los parientes cercanos tienen años exactos.</div>
-              )}
-
-              {birthInference.evidences.length > 0 && (
-                <div>
-                  <div style={{ fontWeight: 500, color: 'var(--ink-1)', marginBottom: 4, fontSize: 12 }}>Evidencias consideradas:</div>
-                  <ul style={{ margin: 0, paddingLeft: 16, color: 'var(--ink-muted)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {birthInference.evidences.map((e, idx) => (
-                      <li key={idx} style={e.type === "info" ? { opacity: 0.8, fontStyle: 'italic' } : undefined}>
-                        {e.type === "strict_limit" ? "⚠️ " : e.type === "info" ? "ℹ️ " : "💡 "} {e.message}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
+          {editorState.type === "edit" && document ? (
+            <BirthRangeRefinementCard
+              document={document}
+              personId={editorState.personId}
+              aiSettings={aiSettings}
+              onApplyBirthGedcom={setBirthDate}
+              onAppendNote={(note) => setPendingNotesAppend((prev) => [...prev, note])}
+            />
+          ) : null}
           <label>
             Living status
             <select value={lifeStatus} onChange={(e) => setLifeStatus(e.target.value as "alive" | "deceased")}>
@@ -497,7 +425,10 @@ export function PersonEditorPanel({ editorState, document, onClose, onSaveEdit, 
             Guardar
           </button>
         </div>
+        </div>
       </div>
     </div >
   );
 }
+
+

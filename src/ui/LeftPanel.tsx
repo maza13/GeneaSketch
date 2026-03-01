@@ -1,77 +1,181 @@
-﻿import { useMemo, useState } from "react";
-import type { GeneaDocument } from "@/types/domain";
+import type { GeneaDocument, ViewConfig, VisualConfig } from "@/types/domain";
 import { LayerPanel } from "./LayerPanel";
 
 type Props = {
   document: GeneaDocument | null;
-  selectedPersonId: string | null;
-  onSelectPerson: (id: string) => void;
-  onCreatePerson: () => void;
+  viewConfig: ViewConfig | null;
+  visualConfig: VisualConfig;
+  sections?: ViewConfig["leftSections"];
+  onToggleSection: (section: "layers" | "treeConfig" | "canvasTools") => void;
+  onSetSections: (patch: Partial<NonNullable<ViewConfig["leftSections"]>>) => void;
+  onDTreeOrientation: (isVertical: boolean) => void;
+  onPreset: (preset: ViewConfig["preset"]) => void;
+  onDepth: (kind: keyof ViewConfig["depth"], depth: number) => void;
+  onInclude: (k: "spouses", v: boolean) => void;
+  onGridEnabled: (enabled: boolean) => void;
+  onClearPositions: () => void;
 };
 
-type SortField = "id" | "name" | "surname" | "birth";
-
-export function LeftPanel({ document, selectedPersonId, onSelectPerson, onCreatePerson }: Props) {
-  const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<SortField>("id");
-  const [sortDesc, setSortDesc] = useState(false);
-
-  const people = useMemo(() => {
-    if (!document) return [];
-    const q = query.toLowerCase().trim();
-    let list = Object.values(document.persons).filter(
-      (p) => !q || p.name.toLowerCase().includes(q) || (p.surname?.toLowerCase() ?? "").includes(q)
-    );
-    list.sort((a, b) => {
-      let cmp = 0;
-      if (sortBy === "id") {
-        const numA = parseInt(a.id.replace(/\D/g, ""), 10) || 0;
-        const numB = parseInt(b.id.replace(/\D/g, ""), 10) || 0;
-        cmp = numA - numB;
-      } else if (sortBy === "name") {
-        cmp = a.name.localeCompare(b.name);
-      } else if (sortBy === "surname") {
-        cmp = (a.surname || "").localeCompare(b.surname || "");
-      } else if (sortBy === "birth") {
-        const dateA = a.events.find(e => e.type === "BIRT")?.date || "";
-        const dateB = b.events.find(e => e.type === "BIRT")?.date || "";
-        cmp = dateA.localeCompare(dateB);
-      }
-      return sortDesc ? -cmp : cmp;
-    });
-    return list;
-  }, [document, query, sortBy, sortDesc]);
+export function LeftPanel({
+  document,
+  viewConfig,
+  visualConfig,
+  sections,
+  onToggleSection,
+  onSetSections,
+  onDTreeOrientation,
+  onPreset,
+  onDepth,
+  onInclude,
+  onGridEnabled,
+  onClearPositions
+}: Props) {
+  const positionCount = Object.keys(visualConfig.nodePositions).length;
+  const layersOpen = sections?.layersOpen ?? true;
+  const treeConfigOpen = sections?.treeConfigOpen ?? true;
+  const canvasToolsOpen = sections?.canvasToolsOpen ?? false;
+  const anyClosed = !layersOpen || !treeConfigOpen || !canvasToolsOpen;
 
   return (
     <aside className="panel panel-left" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <LayerPanel document={document} />
+      <div className="panel-left-inner">
+        <div className="panel-header-row">
+          <h2>Capas y árbol</h2>
+          <div className="panel-header-actions">
+            <button
+              className="panel-icon-btn"
+              onClick={() => onSetSections({ layersOpen: true, treeConfigOpen: true, canvasToolsOpen: true })}
+              title="Expandir todas las secciones"
+              disabled={!anyClosed}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button
+              className="panel-icon-btn"
+              onClick={() => onSetSections({ layersOpen: false, treeConfigOpen: false, canvasToolsOpen: false })}
+              title="Contraer todas las secciones"
+              disabled={anyClosed}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Personas</h2>
-        <button onClick={onCreatePerson} title="Crear nueva persona" style={{ padding: "4px 8px", fontSize: "1.2em", lineHeight: 1 }}>➕</button>
-      </div>
+        <section className="left-section">
+          <header className="left-section__header">
+            <h3>Capas de análisis</h3>
+            <button className="panel-icon-btn" onClick={() => onToggleSection("layers")} title={layersOpen ? "Contraer sección" : "Expandir sección"}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: layersOpen ? "rotate(0deg)" : "rotate(180deg)" }}>
+                <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </header>
+          {layersOpen ? <LayerPanel document={document} hideHeader /> : null}
+        </section>
 
-      <input id="person-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar (Ctrl+K)" />
+        {viewConfig ? (
+          <section className="left-section">
+            <header className="left-section__header">
+              <h3>Configuración del árbol</h3>
+              <button className="panel-icon-btn" onClick={() => onToggleSection("treeConfig")} title={treeConfigOpen ? "Contraer sección" : "Expandir sección"}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: treeConfigOpen ? "rotate(0deg)" : "rotate(180deg)" }}>
+                  <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </header>
+            {treeConfigOpen ? (
+              <div className="builder builder--tree">
+                {viewConfig.dtree && (
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={viewConfig.dtree.isVertical}
+                      onChange={(event) => onDTreeOrientation(event.target.checked)}
+                    />
+                    Distribución vertical
+                  </label>
+                )}
+                <label>
+                  Preset
+                  <select value={viewConfig.preset} onChange={(event) => onPreset(event.target.value as ViewConfig["preset"])}>
+                    <option value="custom">Personalizado</option>
+                    <option value="family_origin">Familia de origen</option>
+                    <option value="nuclear_family">Familia nuclear</option>
+                    <option value="extended_family">Familia ampliada</option>
+                    <option value="direct_ancestors">Ancestros directos</option>
+                    <option value="direct_descendants">Descendientes directos</option>
+                  </select>
+                </label>
+                <div className="depth-control">
+                  <div className="label-row">
+                    <span>1. Ancestros</span>
+                    <span className="value-bubble">{viewConfig.depth.ancestors}</span>
+                  </div>
+                  <input type="range" min={0} max={25} step={1} value={viewConfig.depth.ancestors} onChange={(event) => onDepth("ancestors", Number(event.target.value))} />
+                </div>
+                <div className="depth-control">
+                  <div className="label-row">
+                    <span>2. Descendientes</span>
+                    <span className="value-bubble">{viewConfig.depth.descendants}</span>
+                  </div>
+                  <input type="range" min={0} max={25} step={1} value={viewConfig.depth.descendants} onChange={(event) => onDepth("descendants", Number(event.target.value))} />
+                </div>
+                <div className="builder-subsection">
+                  <h4>Ramas colaterales</h4>
+                  <div className="depth-control">
+                    <div className="label-row">
+                      <span>A. Tíos (de ancestros)</span>
+                      <span className="value-bubble">{viewConfig.depth.unclesGreatUncles}</span>
+                    </div>
+                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.unclesGreatUncles} onChange={(event) => onDepth("unclesGreatUncles", Number(event.target.value))} />
+                  </div>
+                  <div className="depth-control">
+                    <div className="label-row">
+                      <span>B. Hermanos y descendientes</span>
+                      <span className="value-bubble">{viewConfig.depth.siblingsNephews}</span>
+                    </div>
+                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.siblingsNephews} onChange={(event) => onDepth("siblingsNephews", Number(event.target.value))} />
+                  </div>
+                  <div className="depth-control">
+                    <div className="label-row">
+                      <span>C. Tíos directos y descendientes</span>
+                      <span className="value-bubble">{viewConfig.depth.unclesCousins}</span>
+                    </div>
+                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.unclesCousins} onChange={(event) => onDepth("unclesCousins", Number(event.target.value))} />
+                  </div>
+                </div>
+                <label className="toggle">
+                  <input type="checkbox" checked={viewConfig.showSpouses} onChange={(event) => onInclude("spouses", event.target.checked)} />
+                  Mostrar parejas
+                </label>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
-      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortField)} style={{ flex: 1 }}>
-          <option value="id">Orden ID (Creacion)</option>
-          <option value="name">Nombres</option>
-          <option value="surname">Apellidos</option>
-          <option value="birth">Fecha de nacimiento</option>
-        </select>
-        <button onClick={() => setSortDesc(p => !p)} title="Invertir orden" style={{ padding: "8px 10px" }}>
-          {sortDesc ? "⬇️ Desc" : "⬆️ Asc"}
-        </button>
-      </div>
-
-      <div className="list">
-        {people.map((p) => (
-          <button key={p.id} className={selectedPersonId === p.id ? "list-item active" : "list-item"} onClick={() => onSelectPerson(p.id)}>
-            <strong>{p.name} {p.surname ? p.surname : ""}</strong>
-            <span>{p.id}</span>
-          </button>
-        ))}
+        <section className="left-section">
+          <header className="left-section__header">
+            <h3>Herramientas de lienzo</h3>
+            <button className="panel-icon-btn" onClick={() => onToggleSection("canvasTools")} title={canvasToolsOpen ? "Contraer sección" : "Expandir sección"}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: canvasToolsOpen ? "rotate(0deg)" : "rotate(180deg)" }}>
+                <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </header>
+          {canvasToolsOpen ? (
+            <div className="builder builder--tools">
+              <label className="toggle">
+                <input type="checkbox" checked={visualConfig.gridEnabled} onChange={(event) => onGridEnabled(event.target.checked)} />
+                Cuadrícula
+              </label>
+              {positionCount > 0 ? <button onClick={onClearPositions}>Limpiar posiciones ({positionCount})</button> : null}
+            </div>
+          ) : null}
+        </section>
       </div>
     </aside>
   );

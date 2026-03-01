@@ -17,6 +17,9 @@ type Props = {
   onTimelineScaleOffset: (offset: number) => void;
   onTimelineHighlight: (payload: { sourceItemId: string; primaryPersonId: string | null; secondaryPersonIds: string[] } | null) => void;
   onTimelineStatus: (livingIds: string[], deceasedIds: string[], year: number, eventPersonIds: string[]) => void;
+  timelineMode: "expanded" | "compact";
+  onToggleTimelineExpanded: () => void;
+  onClosePanel?: () => void;
 };
 
 type HoverState =
@@ -31,8 +34,12 @@ export function TimelineRightPanel({
   onTimelineScaleZoom,
   onTimelineScaleOffset,
   onTimelineHighlight,
-  onTimelineStatus
+  onTimelineStatus,
+  timelineMode,
+  onToggleTimelineExpanded,
+  onClosePanel
 }: Props) {
+  const timelineExpanded = timelineMode === "expanded";
   const [isPlaying, setIsPlaying] = useState(false);
   const [hover, setHover] = useState<HoverState | null>(null);
   const [livingMode, setLivingMode] = useState<"year" | "decade">("year");
@@ -140,148 +147,177 @@ export function TimelineRightPanel({
   }, [timelineOverlay?.config.livingIds]);
 
   return (
-    <aside className="panel panel-right timeline-panel">
-      <h2>Timeline</h2>
-      <div className="timeline-summary">
-        <span>{items.length} eventos</span>
-        <span>Alcance: {scopeLabel}</span>
-      </div>
-
-      <div className="timeline-tabs">
-        <button
-          className={timelineView === "list" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
-          onClick={() => onTimelineView("list")}
-        >
-          Lista
-        </button>
-        <button
-          className={timelineView === "scale" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
-          onClick={() => onTimelineView("scale")}
-        >
-          Escala
-        </button>
-        <button
-          className="timeline-tab timeline-tab--ghost"
-          onClick={() => onTimelineHighlight(null)}
-          disabled={!activeItemId}
-        >
-          Limpiar resaltado
-        </button>
-      </div>
-
-      <div className="timeline-living-controls">
-        <div className="timeline-living-title">Vivos por periodo (inferido)</div>
-        <div className="timeline-living-row timeline-living-mode">
+    <aside className="panel panel-right timeline-panel timeline-panel--embedded">
+      <div className="panel-header-row">
+        <h2>Timeline</h2>
+        <div className="panel-header-actions">
           <button
-            className={livingMode === "year" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
-            onClick={() => {
-              setLivingMode("year");
-              setLivingEnabled(true);
-            }}
+            className="panel-icon-btn"
+            onClick={onToggleTimelineExpanded}
+            title={timelineExpanded ? "Contraer timeline" : "Expandir timeline"}
           >
-            {"A\u00f1o"}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: timelineExpanded ? "rotate(0deg)" : "rotate(180deg)" }}>
+              <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-          <button
-            className={livingMode === "decade" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
-            onClick={() => {
-              setLivingMode("decade");
-              setLivingValue(Math.floor(livingValue / 10) * 10);
-              setLivingEnabled(true);
-            }}
-          >
-            {"D\u00e9cada"}
-          </button>
+          {onClosePanel ? (
+            <button
+              className="panel-icon-btn"
+              onClick={onClosePanel}
+              title="Cerrar timeline"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          ) : null}
         </div>
-        <div className="timeline-living-row">
-          <label className="timeline-living-switch">
-            <input
-              type="checkbox"
-              checked={livingEnabled}
-              onChange={(event) => setLivingEnabled(event.target.checked)}
-            />
-            Resaltar vivos
-          </label>
-          <div className="timeline-living-value">
-            {livingMode === "year" ? `${effectiveValue}` : `${effectiveValue}s`}
+      </div>
+      <div className={timelineExpanded ? "panel-section-body panel-section-body--expanded timeline-body" : "panel-section-body panel-section-body--compact timeline-body"}>
+        {!timelineExpanded ? <div className="timeline-collapsed-hint">Timeline contraido. Usa "Expandir" para ver eventos.</div> : null}
+        {timelineExpanded ? (
+          <div className="timeline-body-content">
+            <div className="timeline-summary">
+              <span>{items.length} eventos</span>
+              <span>Alcance: {scopeLabel}</span>
+            </div>
+
+            <div className="timeline-tabs">
+              <button
+                className={timelineView === "list" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
+                onClick={() => onTimelineView("list")}
+              >
+                Lista
+              </button>
+              <button
+                className={timelineView === "scale" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
+                onClick={() => onTimelineView("scale")}
+              >
+                Escala
+              </button>
+              <button
+                className="timeline-tab timeline-tab--ghost"
+                onClick={() => onTimelineHighlight(null)}
+                disabled={!activeItemId}
+              >
+                Limpiar resaltado
+              </button>
+            </div>
+
+            <div className="timeline-living-controls">
+              <div className="timeline-living-title">Vivos por periodo (inferido)</div>
+              <div className="timeline-living-row timeline-living-mode">
+                <button
+                  className={livingMode === "year" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
+                  onClick={() => {
+                    setLivingMode("year");
+                    setLivingEnabled(true);
+                  }}
+                >
+                  {"A\u00f1o"}
+                </button>
+                <button
+                  className={livingMode === "decade" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
+                  onClick={() => {
+                    setLivingMode("decade");
+                    setLivingValue(Math.floor(livingValue / 10) * 10);
+                    setLivingEnabled(true);
+                  }}
+                >
+                  {"D\u00e9cada"}
+                </button>
+              </div>
+              <div className="timeline-living-row">
+                <label className="timeline-living-switch">
+                  <input
+                    type="checkbox"
+                    checked={livingEnabled}
+                    onChange={(event) => setLivingEnabled(event.target.checked)}
+                  />
+                  Resaltar vivos
+                </label>
+                <div className="timeline-living-value">
+                  {livingMode === "year" ? `${effectiveValue}` : `${effectiveValue}s`}
+                </div>
+                <button
+                  onClick={() => {
+                    setLivingEnabled(false);
+                    onTimelineStatus([], [], livingValue, []);
+                  }}
+                  disabled={livingCount === 0}
+                >
+                  Quitar
+                </button>
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  style={{ fontWeight: "bold", color: isPlaying ? "var(--danger-text)" : "var(--accent)" }}
+                >
+                  {isPlaying ? "|| Pausar" : "> Reproducir"}
+                </button>
+              </div>
+              <input
+                className="timeline-year-slider"
+                type="range"
+                min={bounds.min}
+                max={bounds.max}
+                step={livingMode === "year" ? 1 : 10}
+                value={effectiveValue}
+                onChange={(event) => {
+                  const raw = Number(event.target.value);
+                  if (!Number.isFinite(raw)) return;
+                  setLivingValue(livingMode === "year" ? Math.floor(raw) : Math.floor(raw / 10) * 10);
+                  setLivingEnabled(true);
+                }}
+              />
+              <div className="timeline-living-meta">
+                {livingMode === "year"
+                  ? `${livingCount} personas vivas en ${effectiveValue}`
+                  : `${livingCount} personas vivas en la decada de ${effectiveValue}`}
+              </div>
+            </div>
+
+            <div className="timeline-content">
+              {timelineView === "scale" ? (
+                <TimelineScaleView
+                  items={items}
+                  zoom={viewConfig?.timeline.scaleZoom ?? 1}
+                  offset={viewConfig?.timeline.scaleOffset ?? 0}
+                  activeItemId={activeItemId}
+                  onZoomChange={onTimelineScaleZoom}
+                  onOffsetChange={onTimelineScaleOffset}
+                  onItemClick={onItemClick}
+                  onItemHover={(item, event) => setHover({ kind: "item", item, x: event.clientX, y: event.clientY })}
+                  onGroupHover={(groupItems, event) => setHover({ kind: "group", items: groupItems, x: event.clientX, y: event.clientY })}
+                  onItemLeave={() => setHover(null)}
+                  cursorEnabled={livingEnabled}
+                  cursorMode={livingMode}
+                  cursorValue={effectiveValue}
+                  followCursor={livingEnabled}
+                />
+              ) : (
+                <TimelineListView
+                  items={items}
+                  activeItemId={activeItemId}
+                  onItemClick={onItemClick}
+                  onItemHover={(item, event) => setHover({ kind: "item", item, x: event.clientX, y: event.clientY })}
+                  onItemLeave={() => setHover(null)}
+                  cursorEnabled={livingEnabled}
+                  cursorMode={livingMode}
+                  cursorValue={effectiveValue}
+                />
+              )}
+            </div>
+
+            {hover ? (
+              hover.kind === "item" ? (
+                <TimelineEventTooltip item={hover.item} x={hover.x} y={hover.y} />
+              ) : (
+                <TimelineEventTooltip items={hover.items} x={hover.x} y={hover.y} />
+              )
+            ) : null}
           </div>
-          <button
-            onClick={() => {
-              setLivingEnabled(false);
-              onTimelineStatus([], [], livingValue, []);
-            }}
-            disabled={livingCount === 0}
-          >
-            Quitar
-          </button>
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            style={{ fontWeight: "bold", color: isPlaying ? "var(--danger-text)" : "var(--accent)" }}
-          >
-            {isPlaying ? "|| Pausar" : "> Reproducir"}
-          </button>
-        </div>
-        <input
-          className="timeline-year-slider"
-          type="range"
-          min={bounds.min}
-          max={bounds.max}
-          step={livingMode === "year" ? 1 : 10}
-          value={effectiveValue}
-          onChange={(event) => {
-            const raw = Number(event.target.value);
-            if (!Number.isFinite(raw)) return;
-            setLivingValue(livingMode === "year" ? Math.floor(raw) : Math.floor(raw / 10) * 10);
-            setLivingEnabled(true);
-          }}
-        />
-        <div className="timeline-living-meta">
-          {livingMode === "year"
-            ? `${livingCount} personas vivas en ${effectiveValue}`
-            : `${livingCount} personas vivas en la decada de ${effectiveValue}`}
-        </div>
+        ) : null}
       </div>
-
-      <div className="timeline-content">
-        {timelineView === "scale" ? (
-          <TimelineScaleView
-            items={items}
-            zoom={viewConfig?.timeline.scaleZoom ?? 1}
-            offset={viewConfig?.timeline.scaleOffset ?? 0}
-            activeItemId={activeItemId}
-            onZoomChange={onTimelineScaleZoom}
-            onOffsetChange={onTimelineScaleOffset}
-            onItemClick={onItemClick}
-            onItemHover={(item, event) => setHover({ kind: "item", item, x: event.clientX, y: event.clientY })}
-            onGroupHover={(groupItems, event) => setHover({ kind: "group", items: groupItems, x: event.clientX, y: event.clientY })}
-            onItemLeave={() => setHover(null)}
-            cursorEnabled={livingEnabled}
-            cursorMode={livingMode}
-            cursorValue={effectiveValue}
-            followCursor={livingEnabled}
-          />
-        ) : (
-          <TimelineListView
-            items={items}
-            activeItemId={activeItemId}
-            onItemClick={onItemClick}
-            onItemHover={(item, event) => setHover({ kind: "item", item, x: event.clientX, y: event.clientY })}
-            onItemLeave={() => setHover(null)}
-            cursorEnabled={livingEnabled}
-            cursorMode={livingMode}
-            cursorValue={effectiveValue}
-          />
-        )}
-      </div>
-
-      {hover ? (
-        hover.kind === "item" ? (
-          <TimelineEventTooltip item={hover.item} x={hover.x} y={hover.y} />
-        ) : (
-          <TimelineEventTooltip items={hover.items} x={hover.x} y={hover.y} />
-        )
-      ) : null}
     </aside>
   );
 }
-
-

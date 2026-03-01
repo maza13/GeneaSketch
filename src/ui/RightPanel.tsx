@@ -1,5 +1,5 @@
 ﻿
-import type { GeneaDocument, PendingRelationType, ViewConfig, VisualConfig } from "@/types/domain";
+import type { GeneaDocument, PendingRelationType } from "@/types/domain";
 
 function IconEye() {
   return (
@@ -36,42 +36,30 @@ function IconUnlink() {
 
 type Props = {
   document: GeneaDocument | null;
-  viewConfig: ViewConfig | null;
-  visualConfig: VisualConfig;
   selectedPersonId: string | null;
-  onDTreeOrientation: (isVertical: boolean) => void;
-  onPreset: (preset: ViewConfig["preset"]) => void;
-  onDepth: (kind: keyof ViewConfig["depth"], depth: number) => void;
-  onInclude: (k: "spouses", v: boolean) => void;
+  detailsMode: "expanded" | "compact";
+  onToggleDetailsExpanded: () => void;
   onEditPerson: (personId: string) => void;
   onViewPersonDetail: (personId: string) => void;
   onAddRelation: (anchorId: string, type: PendingRelationType) => void;
   onLinkExistingRelation: (anchorId: string, type: PendingRelationType) => void;
   onUnlinkRelation: (personId: string, relatedId: string, type: "parent" | "child" | "spouse") => void;
-  onGridEnabled: (enabled: boolean) => void;
-  onClearPositions: () => void;
 };
 export function RightPanel({
   document,
-  viewConfig,
-  visualConfig,
   selectedPersonId,
-  onDTreeOrientation,
-  onPreset,
-  onDepth,
-  onInclude,
+  detailsMode,
+  onToggleDetailsExpanded,
   onEditPerson,
   onViewPersonDetail,
   onAddRelation,
   onLinkExistingRelation,
-  onUnlinkRelation,
-  onGridEnabled,
-  onClearPositions
+  onUnlinkRelation
 }: Props) {
+  const detailsExpanded = detailsMode === "expanded";
   const person = selectedPersonId && document ? document.persons[selectedPersonId] : null;
   const birth = person?.events.find((event) => event.type === "BIRT")?.date;
   const death = person?.events.find((event) => event.type === "DEAT")?.date;
-  const positionCount = Object.keys(visualConfig.nodePositions).length;
 
   const parents: { id: string; name: string }[] = [];
   const spouses: { id: string; name: string }[] = [];
@@ -123,250 +111,154 @@ export function RightPanel({
 
   return (
     <aside className="panel panel-right">
-      <h2>Detalles</h2>
-      <div className="detail-stack">
-        <div className="person-card person-card--primary">
-          {person ? (
-            <>
-              <div className="person-header">
-                <div>
-                  <div className="person-name">{person.name}</div>
-                  {person.surname ? <div className="person-surname">{person.surname}</div> : null}
-                </div>
-                <div className="primary-actions">
-                  <button onClick={() => onViewPersonDetail(person.id)} className="icon-button" title="Ver persona detallada" aria-label="Ver persona detallada"><IconEye /></button>
-                  <button onClick={() => onEditPerson(person.id)} className="icon-button" title="Editar persona" aria-label="Editar persona"><IconEdit /></button>
-                </div>
-              </div>
-              <div className="person-meta">{person.id}</div>
-              <div className="person-meta">Sexo: {person.sex}</div>
-              <div className="person-meta">
-                {birth ? `nac.${birth} ` : "nac. ?"} - {person.lifeStatus === "deceased" ? `def.${death ?? "?"} ` : "vivo"}
-              </div>
-              {familySummary ? (
-                <div className="person-meta">
-                  👨‍👩‍👧‍👦 {familySummary.parents} padres · 💍 {familySummary.spouses} parejas · 👶 {familySummary.children} hijos
-                </div>
-              ) : null}
-              {familySummary ? (
-                <div className="person-meta">
-                  {familySummary.originFamilies} familias de origen · {familySummary.ownFamilies} familias propias
-                </div>
-              ) : null}
-              {person.isPlaceholder ? <div className="person-warn">Nodo raiz vacio. Completa nombre para activarlo.</div> : null}
-            </>
-          ) : (
-            <div className="person-meta">🗄️ Sin selección</div>
-          )}
-
-          {person ? (
-            <details className="panel-disclosure minimal" open>
-              <summary>
-                Familiares <span className="badge-count">{parents.length + spouses.length + children.length}</span>
-              </summary>
-
-              <div className="relation-section">
-                <div className="relation-title">
-                  Padres <span className="badge-count">{parents.length}</span>
-                </div>
-                <div className="relation-actions">
-                  <button onClick={() => onAddRelation(person.id, "father")}>👨➕ Agregar padre</button>
-                  <button onClick={() => onLinkExistingRelation(person.id, "father")} title="Vincular padre existente" className="icon-button" aria-label="Vincular padre existente"><IconLink /></button>
-                  <button onClick={() => onAddRelation(person.id, "mother")}>👩➕ Agregar madre</button>
-                  <button onClick={() => onLinkExistingRelation(person.id, "mother")} title="Vincular madre existente" className="icon-button" aria-label="Vincular madre existente"><IconLink /></button>
-                </div>
-                {parents.length > 0 ? (
-                  <div className="relation-list">
-                    {parents.map((p) => (
-                      <div key={p.id} className="relation-row">
-                        <span title={p.id}>{p.name}</span>
-                        <div className="row-actions">
-                          <button onClick={() => onViewPersonDetail(p.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
-                          <button onClick={() => onEditPerson(p.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
-                          <button onClick={() => onUnlinkRelation(person.id, p.id, "parent")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="person-meta">👨‍👩‍👦 Sin padres registrados.</div>
-                )}
-              </div>
-
-              <div className="relation-section">
-                <div className="relation-title">
-                  Parejas <span className="badge-count">{spouses.length}</span>
-                </div>
-                <div className="relation-actions">
-                  <button onClick={() => onAddRelation(person.id, "spouse")}>💍➕ Agregar pareja</button>
-                  <button onClick={() => onLinkExistingRelation(person.id, "spouse")} title="Vincular pareja existente" className="icon-button" aria-label="Vincular pareja existente"><IconLink /></button>
-                  <button onClick={() => onAddRelation(person.id, "sibling")}>👦👧➕ Agregar hermano</button>
-                  <button onClick={() => onLinkExistingRelation(person.id, "sibling")} title="Vincular hermano existente" className="icon-button" aria-label="Vincular hermano existente"><IconLink /></button>
-                </div>
-                {spouses.length > 0 ? (
-                  <div className="relation-list">
-                    {spouses.map((s) => (
-                      <div key={s.id} className="relation-row">
-                        <span title={s.id}>{s.name}</span>
-                        <div className="row-actions">
-                          <button onClick={() => onViewPersonDetail(s.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
-                          <button onClick={() => onEditPerson(s.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
-                          <button onClick={() => onUnlinkRelation(person.id, s.id, "spouse")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="person-meta">💍 Sin parejas registradas.</div>
-                )}
-              </div>
-
-              <div className="relation-section">
-                <div className="relation-title">
-                  Hijos <span className="badge-count">{children.length}</span>
-                </div>
-                <div className="relation-actions">
-                  <button onClick={() => onAddRelation(person.id, "child")}>👶➕ Agregar hijo</button>
-                  <button onClick={() => onLinkExistingRelation(person.id, "child")} title="Vincular hijo existente" className="icon-button" aria-label="Vincular hijo existente"><IconLink /></button>
-                </div>
-                {children.length > 0 ? (
-                  <div className="relation-list">
-                    {children.map((c) => (
-                      <div key={c.id} className="relation-row">
-                        <span title={c.id}>{c.name}</span>
-                        <div className="row-actions">
-                          <button onClick={() => onViewPersonDetail(c.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
-                          <button onClick={() => onEditPerson(c.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
-                          <button onClick={() => onUnlinkRelation(person.id, c.id, "child")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="person-meta">👶 Sin hijos registrados.</div>
-                )}
-              </div>
-            </details>
-          ) : null}
-        </div>
-      </div>
-
-      {viewConfig ? (
-        <div className="builder">
-          <h3>Vista</h3>
-          {viewConfig.dtree && (
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={viewConfig.dtree.isVertical}
-                onChange={(e) => onDTreeOrientation(e.target.checked)}
-              />
-              Distribucion Vertical
-            </label>
-          )}
-          <label>
-            Preset
-            <select value={viewConfig.preset} onChange={(e) => onPreset(e.target.value as ViewConfig["preset"])}>
-              <option value="all_direct_ancestors">All Direct Ancestors</option>
-              <option value="direct_descendants">Direct Descendants</option>
-              <option value="hourglass">Hourglass</option>
-              <option value="extended_family">Extended Family</option>
-            </select>
-          </label>
-          <div className="depth-control">
-            <div className="label-row">
-              <span>1. Ancestros</span>
-              <span className="value-bubble">{viewConfig.depth.ancestors}</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={25}
-              step={1}
-              value={viewConfig.depth.ancestors}
-              onChange={(e) => onDepth("ancestors", Number(e.target.value))}
-            />
-          </div>
-          <div className="depth-control">
-            <div className="label-row">
-              <span>2. Descendientes</span>
-              <span className="value-bubble">{viewConfig.depth.descendants}</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={25}
-              step={1}
-              value={viewConfig.depth.descendants}
-              onChange={(e) => onDepth("descendants", Number(e.target.value))}
-            />
-          </div>
-          <div className="builder">
-            <h3>Ramas colaterales del foco</h3>
-            <div className="depth-control">
-              <div className="label-row">
-                <span>A. Tios (de ancestros) hacia arriba</span>
-                <span className="value-bubble">{viewConfig.depth.unclesGreatUncles}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={6}
-                step={1}
-                value={viewConfig.depth.unclesGreatUncles}
-                onChange={(e) => onDepth("unclesGreatUncles", Number(e.target.value))}
-              />
-            </div>
-            <div className="depth-control">
-              <div className="label-row">
-                <span>B. Hermanos y descendientes</span>
-                <span className="value-bubble">{viewConfig.depth.siblingsNephews}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={6}
-                step={1}
-                value={viewConfig.depth.siblingsNephews}
-                onChange={(e) => onDepth("siblingsNephews", Number(e.target.value))}
-              />
-            </div>
-            <div className="depth-control">
-              <div className="label-row">
-                <span>C. Tios directos y descendientes</span>
-                <span className="value-bubble">{viewConfig.depth.unclesCousins}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={6}
-                step={1}
-                value={viewConfig.depth.unclesCousins}
-                onChange={(e) => onDepth("unclesCousins", Number(e.target.value))}
-              />
-            </div>
-          </div>
-
-
-          <label className="toggle">
-            <input type="checkbox" checked={viewConfig.showSpouses} onChange={(e) => onInclude("spouses", e.target.checked)} />
-            6. Parejas
-          </label>
-        </div>
-      ) : null}
-
-      <div className="builder">
-        <h3>Herramientas</h3>
-        <label className="toggle">
-          <input type="checkbox" checked={visualConfig.gridEnabled} onChange={(e) => onGridEnabled(e.target.checked)} />
-          Cuadricula
-        </label>
-        {positionCount > 0 ? (
-          <button onClick={onClearPositions}>
-            Limpiar posiciones ({positionCount})
+      <div className="panel-header-row">
+        <h2>Detalles</h2>
+        <div className="panel-header-actions">
+          <button
+            className="panel-icon-btn"
+            onClick={onToggleDetailsExpanded}
+            title={detailsExpanded ? "Contraer detalles" : "Expandir detalles"}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: detailsExpanded ? "rotate(0deg)" : "rotate(180deg)" }}>
+              <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-        ) : null}
+        </div>
       </div>
+      <div className={detailsExpanded ? "panel-section-body panel-section-body--expanded" : "panel-section-body panel-section-body--compact"}>
+        <div className="detail-stack">
+          <div className="person-card person-card--primary">
+            {person ? (
+              <>
+                <div className="person-header">
+                  <div>
+                    <div className="person-name">{person.name}</div>
+                    {person.surname ? <div className="person-surname">{person.surname}</div> : null}
+                  </div>
+                  <div className="primary-actions">
+                    <button onClick={() => onViewPersonDetail(person.id)} className="icon-button" title="Ver persona detallada" aria-label="Ver persona detallada"><IconEye /></button>
+                    <button onClick={() => onEditPerson(person.id)} className="icon-button" title="Editar persona" aria-label="Editar persona"><IconEdit /></button>
+                  </div>
+                </div>
+                <div className="person-meta">{person.id}</div>
+                <div className="person-meta">Sexo: {person.sex}</div>
+                <div className="person-meta">
+                  {birth ? `nac.${birth} ` : "nac. ?"} - {person.lifeStatus === "deceased" ? `def.${death ?? "?"} ` : "vivo"}
+                </div>
+                {familySummary ? (
+                  <div className="person-meta">
+                    👨‍👩‍👧‍👦 {familySummary.parents} padres · 💍 {familySummary.spouses} parejas · 👶 {familySummary.children} hijos
+                  </div>
+                ) : null}
+                {familySummary ? (
+                  <div className="person-meta">
+                    {familySummary.originFamilies} familias de origen · {familySummary.ownFamilies} familias propias
+                  </div>
+                ) : null}
+                {person.isPlaceholder ? <div className="person-warn">Nodo raiz vacio. Completa nombre para activarlo.</div> : null}
+              </>
+            ) : (
+              <div className="person-meta">🗄️ Sin selección</div>
+            )}
+
+            {person && detailsExpanded ? (
+              <details className="panel-disclosure minimal" open>
+                <summary>
+                  Familiares <span className="badge-count">{parents.length + spouses.length + children.length}</span>
+                </summary>
+
+                <div className="relation-section">
+                  <div className="relation-title">
+                    Padres <span className="badge-count">{parents.length}</span>
+                  </div>
+                  <div className="relation-actions">
+                    <button onClick={() => onAddRelation(person.id, "father")}>👨➕ Agregar padre</button>
+                    <button onClick={() => onLinkExistingRelation(person.id, "father")} title="Vincular padre existente" className="icon-button" aria-label="Vincular padre existente"><IconLink /></button>
+                    <button onClick={() => onAddRelation(person.id, "mother")}>👩➕ Agregar madre</button>
+                    <button onClick={() => onLinkExistingRelation(person.id, "mother")} title="Vincular madre existente" className="icon-button" aria-label="Vincular madre existente"><IconLink /></button>
+                  </div>
+                  {parents.length > 0 ? (
+                    <div className="relation-list">
+                      {parents.map((p) => (
+                        <div key={p.id} className="relation-row">
+                          <span title={p.id}>{p.name}</span>
+                          <div className="row-actions">
+                            <button onClick={() => onViewPersonDetail(p.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
+                            <button onClick={() => onEditPerson(p.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
+                            <button onClick={() => onUnlinkRelation(person.id, p.id, "parent")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="person-meta">👨‍👩‍👦 Sin padres registrados.</div>
+                  )}
+                </div>
+
+                <div className="relation-section">
+                  <div className="relation-title">
+                    Parejas <span className="badge-count">{spouses.length}</span>
+                  </div>
+                  <div className="relation-actions">
+                    <button onClick={() => onAddRelation(person.id, "spouse")}>💍➕ Agregar pareja</button>
+                    <button onClick={() => onLinkExistingRelation(person.id, "spouse")} title="Vincular pareja existente" className="icon-button" aria-label="Vincular pareja existente"><IconLink /></button>
+                    <button onClick={() => onAddRelation(person.id, "sibling")}>👦👧➕ Agregar hermano</button>
+                    <button onClick={() => onLinkExistingRelation(person.id, "sibling")} title="Vincular hermano existente" className="icon-button" aria-label="Vincular hermano existente"><IconLink /></button>
+                  </div>
+                  {spouses.length > 0 ? (
+                    <div className="relation-list">
+                      {spouses.map((s) => (
+                        <div key={s.id} className="relation-row">
+                          <span title={s.id}>{s.name}</span>
+                          <div className="row-actions">
+                            <button onClick={() => onViewPersonDetail(s.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
+                            <button onClick={() => onEditPerson(s.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
+                            <button onClick={() => onUnlinkRelation(person.id, s.id, "spouse")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="person-meta">💍 Sin parejas registradas.</div>
+                  )}
+                </div>
+
+                <div className="relation-section">
+                  <div className="relation-title">
+                    Hijos <span className="badge-count">{children.length}</span>
+                  </div>
+                  <div className="relation-actions">
+                    <button onClick={() => onAddRelation(person.id, "child")}>👶➕ Agregar hijo</button>
+                    <button onClick={() => onLinkExistingRelation(person.id, "child")} title="Vincular hijo existente" className="icon-button" aria-label="Vincular hijo existente"><IconLink /></button>
+                  </div>
+                  {children.length > 0 ? (
+                    <div className="relation-list">
+                      {children.map((c) => (
+                        <div key={c.id} className="relation-row">
+                          <span title={c.id}>{c.name}</span>
+                          <div className="row-actions">
+                            <button onClick={() => onViewPersonDetail(c.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
+                            <button onClick={() => onEditPerson(c.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
+                            <button onClick={() => onUnlinkRelation(person.id, c.id, "child")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="person-meta">👶 Sin hijos registrados.</div>
+                  )}
+                </div>
+              </details>
+            ) : null}
+            {person && !detailsExpanded ? (
+              <div className="person-meta" style={{ opacity: 0.7, fontSize: "11px", marginTop: "10px", fontStyle: "italic" }}>
+                Sección contraída. Usa "Expandir" para ver detalles y familiares.
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
     </aside>
   );
 }

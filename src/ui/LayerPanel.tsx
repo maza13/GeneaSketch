@@ -1,7 +1,7 @@
 ﻿import type { GeneaDocument } from "@/types/domain";
 import { useAppStore } from "@/state/store";
 
-export function LayerPanel({ document }: { document: GeneaDocument | null }) {
+export function LayerPanel({ document, hideHeader = false }: { document: GeneaDocument | null; hideHeader?: boolean }) {
     const { viewConfig, setOverlay, clearOverlayType } = useAppStore();
 
     if (!document) return null;
@@ -20,7 +20,10 @@ export function LayerPanel({ document }: { document: GeneaDocument | null }) {
     const toggleLayer = (layerId: string) => {
         if (activeLayerId === layerId) {
             clearOverlayType('layer');
-            if (layerId === 'layer-timeline') clearOverlayType('timeline');
+            if (layerId === 'layer-timeline') {
+                clearOverlayType('timeline');
+                useAppStore.getState().setTimelinePanelOpen(false);
+            }
         } else {
             setOverlay({
                 id: 'active-layer',
@@ -29,7 +32,8 @@ export function LayerPanel({ document }: { document: GeneaDocument | null }) {
                 config: { layerId }
             });
             if (layerId === 'layer-timeline') {
-                // Use the store's dedicated method to initialize timeline status
+                // Open the timeline panel and initialize timeline status.
+                useAppStore.getState().setTimelinePanelOpen(true);
                 useAppStore.getState().setTimelineStatus([], [], new Date().getFullYear(), []);
             }
         }
@@ -37,10 +41,12 @@ export function LayerPanel({ document }: { document: GeneaDocument | null }) {
 
     return (
         <div style={{ background: "var(--bg-panel)", padding: 12, borderRadius: 6, border: "1px solid var(--line)", marginBottom: 12 }}>
-            <h3 style={{ margin: "0 0 12px 0", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>layers</span>
-                Capas de Analisis
-            </h3>
+            {!hideHeader ? (
+                <h3 style={{ margin: "0 0 12px 0", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>layers</span>
+                    Capas de Analisis
+                </h3>
+            ) : null}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {layers.map((layer) => (
                     <label key={layer.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", opacity: activeLayerId === layer.id ? 1 : 0.7 }}>

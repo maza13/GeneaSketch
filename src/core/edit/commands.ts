@@ -185,6 +185,8 @@ export function updatePerson(
     isPlaceholder?: boolean;
     sex?: "M" | "F" | "U";
     photoDataUrl?: string | null;
+    notesAppend?: string[];
+    notesReplace?: string[];
   }
 ): GeneaDocument {
   const next = cloneDoc(doc);
@@ -237,6 +239,29 @@ export function updatePerson(
         next.media[mediaId] = { id: mediaId, fileName: patch.photoDataUrl };
         person.mediaRefs = [mediaId, ...person.mediaRefs];
       }
+    }
+  }
+
+  if (Array.isArray(patch.notesReplace)) {
+    const cleaned = patch.notesReplace
+      .map((note) => (typeof note === "string" ? note.trim() : ""))
+      .filter((note) => note.length > 0);
+    if (cleaned.length > 0) {
+      person.rawTags = { ...(person.rawTags || {}), NOTE: cleaned };
+    } else if (person.rawTags?.NOTE) {
+      const nextRaw = { ...(person.rawTags || {}) };
+      delete nextRaw.NOTE;
+      person.rawTags = Object.keys(nextRaw).length > 0 ? nextRaw : undefined;
+    }
+  }
+
+  if (Array.isArray(patch.notesAppend) && patch.notesAppend.length > 0) {
+    const additions = patch.notesAppend
+      .map((note) => (typeof note === "string" ? note.trim() : ""))
+      .filter((note) => note.length > 0);
+    if (additions.length > 0) {
+      const currentNotes = Array.isArray(person.rawTags?.NOTE) ? [...person.rawTags!.NOTE] : [];
+      person.rawTags = { ...(person.rawTags || {}), NOTE: [...currentNotes, ...additions] };
     }
   }
 

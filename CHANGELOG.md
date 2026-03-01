@@ -2,6 +2,23 @@
 
 Todos los cambios notables en **GeneaSketch** serÃ¡n documentados en este archivo.
 
+## 28 de febrero de 2026 - 0.3.6 (Buscador Avanzado y Refinamiento IA)
+
+### Para usuarios (resumen rápido)
+- **Buscador Semántico Central** — Nueva interfaz de búsqueda que permite consultas en lenguaje natural (ej: "hijos de...", "padres de...") y autocompletado inteligente.
+- **Ordenación de Resultados** — Ahora puedes ordenar la lista de personas por ID, Nombre o Apellido en orden ascendente y descendente.
+- **Refinamiento de Nacimientos con IA** — Mejora en la precisión de fechas y lugares de nacimiento mediante un nuevo motor de inferencia y ranking de hechos.
+
+### Detalle técnico
+- **Motor de Búsqueda Desacoplado** — Implementación de `searchEngine.ts` y `searchQueryParser.ts` para separar la lógica de filtrado y parsing de la UI.
+- **Gestión de Estado de Visualización** — Nuevas acciones en el store (`clearVisualModes`) para resetear paneles y overlays de forma determinista.
+- **Aumentación de Notas** — Soporte para `notesAppend` y `notesReplace` en las mutaciones de personas para una mejor integración con el asistente IA.
+
+### Compatibilidad
+- Desktop (Tauri) Windows.
+- Canal visible: beta.
+- Codename: ia-assistant.
+
 ## 27 de February de 2026 - 0.3.5 (Beta IA Assistant, Desktop)
 
 ### Para usuarios (resumen rapido)

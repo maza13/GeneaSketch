@@ -2,10 +2,12 @@
 
 export type AiExecutionMode = "hybrid" | "chatgpt_only" | "gemini_only";
 export type AiProvider = "chatgpt" | "gemini";
+export type OpenAiPreferredApi = "auto" | "responses" | "chat_completions";
+export type BirthRefinementProfile = "balanced" | "max_reliability" | "low_cost";
 export type AiContextPolicy = "adaptive" | "minimal" | "full";
 export type AiStage = "extraction" | "resolution";
 // "resolution" is deprecated in runtime v4 (kept for snapshot compatibility).
-export type AiUseCase = "extraction" | "resolution" | "narration";
+export type AiUseCase = "extraction" | "resolution" | "narration" | "birth_refinement";
 
 export type AiUseCaseModel = {
   provider: AiProvider;
@@ -44,6 +46,10 @@ export type AiSettings = {
   fallbackEnabled: boolean;
   contextPolicy: AiContextPolicy; // Deprecated in deterministic v3, preserved for backward compatibility
   deterministicMode: boolean;
+  developerBirthRefinementDebug: boolean;
+  developerBirthRefinementShowRawUnfiltered: boolean;
+  openAiPreferredApi?: OpenAiPreferredApi;
+  birthRefinementProfile?: BirthRefinementProfile;
   geminiFreeTierMode?: boolean;
   providerModels: Record<AiProvider, string>; // Legacy model mapping by provider
   useCaseModels: Record<AiUseCase, AiUseCaseModel>; // New specific mapping
@@ -51,6 +57,56 @@ export type AiSettings = {
   tokenLimits: AiTokenLimits;
   retryPolicy: AiRetryPolicy;
   costFlags: AiCostFlags;
+};
+
+export type AiBirthRangeRefinementFact = {
+  personId: string;
+  personLabel: string;
+  relationToFocus: "focus" | "parent" | "child" | "spouse" | "sibling" | "other";
+  eventType: "BIRT" | "DEAT" | "MARR" | "DIV" | "NOTE";
+  date?: string;
+  place?: string;
+  reference: string;
+};
+
+export type AiBirthRangeRefinementFactsRequest = {
+  focusPersonId: string;
+  focusPersonLabel: string;
+  focusSex: "M" | "F" | "U";
+  focusBirthDateCurrent?: string;
+  facts: AiBirthRangeRefinementFact[];
+};
+
+export type AiBirthRangeRefinementResult = {
+  minYear: number;
+  maxYear: number;
+  confidence: number;
+  verdict: string;
+  notes: string[];
+  rawResponseText?: string;
+  parseError?: string;
+  model: string;
+  provider: AiProvider;
+  usedFallbackLocal: boolean;
+  debugTrace?: AiBirthRefinementDebugTrace;
+};
+
+export type AiBirthRefinementDebugTrace = {
+  requestFactsCount: number;
+  inputFactsCount: number;
+  inputFactsUsed: number;
+  provider: "chatgpt" | "gemini";
+  model: string;
+  apiUsed?: "responses" | "chat_completions" | "gemini_generate_content";
+  finishReason?: string;
+  tokenBudget: number;
+  retryCount: number;
+  retryReason?: "length" | "empty_output" | "parse_failure";
+  rawResponseText: string;
+  parsed: boolean;
+  parseError?: string;
+  startedAt: string;
+  elapsedMs: number;
 };
 
 export type AiInputContext =
@@ -443,12 +499,17 @@ export type AiInvokeProviderRequest = {
   userPrompt: string;
   maxOutputTokens: number;
   temperature?: number;
+  preferredApi?: "auto" | "responses" | "chat_completions";
 };
 
 export type AiInvokeProviderResponse = {
   text: string;
   model: string;
   provider: AiProvider;
+  rawBody?: string;
+  apiUsed?: "responses" | "chat_completions" | "gemini_generate_content";
+  finishReason?: string;
+  providerWarnings?: string[];
 };
 
 export type AiDiagnosticEntry = {

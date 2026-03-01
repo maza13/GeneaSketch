@@ -1,4 +1,4 @@
-﻿import type { AiInputContext } from "@/types/ai";
+import type { AiBirthRangeRefinementFactsRequest, AiInputContext } from "@/types/ai";
 
 export function buildExtractionPromptsLocal(
   userText: string,
@@ -82,4 +82,72 @@ export function buildGeneGraphPrompts(): { system: string; user: string } {
 
 export function buildGlobalAnchorDetectorPrompts(userText: string): { system: string; user: string } {
   return buildExtractionPromptsGlobalFocusOnly(userText);
+}
+
+export function buildBirthRangeRefinementPrompt(
+  request: AiBirthRangeRefinementFactsRequest
+): { system: string; user: string } {
+  const system = [
+    "You refine genealogical birth year ranges using factual context from a family tree.",
+    "Respond in Spanish.",
+    "Return ONLY valid JSON. No markdown. No extra text.",
+    "Output EXACT shape: {\"minYear\": number, \"maxYear\": number, \"confidence\": number, \"verdict\": string, \"notes\": string[]}",
+    "Never return a single-year-only decision; always return a range.",
+    "If evidence is weak, still return your best coarse range and explain uncertainty in verdict/notes.",
+    "Use only the provided tree facts as anchors. You may use general demographic/historical reasoning.",
+    "Do not invent new people, IDs, or fictional events.",
+    "Ensure minYear <= maxYear.",
+    "confidence must be between 0 and 1.",
+    "Keep verdict short (one sentence).",
+    "Verdict style must be justificative: explain briefly WHY that range is the most plausible."
+  ].join("\n");
+
+  const user = JSON.stringify(
+    {
+      focusPerson: {
+        id: request.focusPersonId,
+        label: request.focusPersonLabel,
+        sex: request.focusSex,
+        currentBirthDateGedcom: request.focusBirthDateCurrent || null
+      },
+      facts: request.facts,
+      task: "Infer a plausible birth range for the focus person using these facts and demographic/historical reasoning."
+    },
+    null,
+    2
+  );
+
+  return { system, user };
+}
+
+export function buildBirthRangeRefinementCompactPrompt(
+  request: AiBirthRangeRefinementFactsRequest
+): { system: string; user: string } {
+  const system = [
+    "You refine genealogical birth ranges from factual tree context.",
+    "Respond in Spanish.",
+    "Return ONLY valid JSON. No markdown. No prose.",
+    "Output EXACT shape: {\"minYear\": number, \"maxYear\": number, \"confidence\": number, \"verdict\": string, \"notes\": string[]}",
+    "If token budget is tight, prioritize valid JSON over explanation detail.",
+    "verdict must be one justificative line (why this range is plausible).",
+    "notes must contain at most 3 short items.",
+    "Ensure minYear <= maxYear and confidence between 0 and 1."
+  ].join("\n");
+
+  const user = JSON.stringify(
+    {
+      focusPerson: {
+        id: request.focusPersonId,
+        label: request.focusPersonLabel,
+        sex: request.focusSex,
+        currentBirthDateGedcom: request.focusBirthDateCurrent || null
+      },
+      facts: request.facts,
+      task: "Infer best birth range and output strict JSON only."
+    },
+    null,
+    0
+  );
+
+  return { system, user };
 }
