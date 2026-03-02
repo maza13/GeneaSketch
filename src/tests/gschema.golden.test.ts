@@ -8,7 +8,6 @@
  * 3. GedcomBridge round-trip (GeneaDocument ↔ GSchemaGraph)
  * 4. Serialization/deserialization (toData / fromData)
  * 5. Journal replay (replayJournal produces identical graph)
- * 6. LegacyMigrator projection fidelity
  *
  * These should ALWAYS pass before any merge into main.
  */
@@ -130,7 +129,7 @@ function makeMinimalDoc(): GeneaDocument {
             }
         },
         media: {},
-        metadata: { sourceFormat: "GEDCOM", gedVersion: "5.5.1" },
+        metadata: { sourceFormat: "GED" as const, gedVersion: "5.5.1" },
     };
 }
 
@@ -151,12 +150,9 @@ describe("GSchemaGraph — core CRUD", () => {
         expect(graph.journalLength).toBe(0);
     });
 
-    it("should add a PersonNode and retriee it", () => {
-        const nodeInput = {
-            uid: uid(), type: "Person" as const,
-            sex: "M" as const, isLiving: false,
-        };
-        graph.addNode(nodeInput);
+    it("should add a PersonNode and retrieve it", () => {
+        const nodeInput = { uid: uid(), type: "Person" as const, sex: "M" as const, isLiving: false };
+        graph.addPersonNode(nodeInput);
         const node = graph.node(nodeInput.uid);
         expect(node).toBeTruthy();
         expect(node?.type).toBe("Person");
@@ -165,7 +161,7 @@ describe("GSchemaGraph — core CRUD", () => {
 
     it("should add a Claim and retrieve it as preferred", () => {
         const personUid = uid();
-        graph.addNode({ uid: personUid, type: "Person", sex: "F", isLiving: true });
+        graph.addPersonNode({ uid: personUid, type: "Person", sex: "F", isLiving: true });
         graph.addClaim({
             uid: uid(),
             nodeUid: personUid,
@@ -183,7 +179,7 @@ describe("GSchemaGraph — core CRUD", () => {
 
     it("should enforce single preferred claim per predicate", () => {
         const personUid = uid();
-        graph.addNode({ uid: personUid, type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: personUid, type: "Person", sex: "M", isLiving: false });
 
         const c1Id = uid();
         const c2Id = uid();
@@ -199,7 +195,6 @@ describe("GSchemaGraph — core CRUD", () => {
             status: "raw", isPreferred: true, createdAt: ""
         });
 
-        // The second claim should be preferred and first should be unset
         const claims = graph.getClaims(personUid, PersonPredicates.NAME_FULL);
         const preferredClaims = claims.filter(c => c.isPreferred);
         expect(preferredClaims).toHaveLength(1);
@@ -208,17 +203,17 @@ describe("GSchemaGraph — core CRUD", () => {
 
     it("should soft-delete a node (not actually remove)", () => {
         const personUid = uid();
-        graph.addNode({ uid: personUid, type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: personUid, type: "Person", sex: "M", isLiving: false });
         graph.softDeleteNode(personUid, "test deletion");
 
-        expect(graph.node(personUid)).toBeUndefined(); // not visible
+        expect(graph.node(personUid)).toBeUndefined();
         expect(graph.nodeCount).toBe(0);
-        expect(graph.journalLength).toBe(2); // ADD_NODE + SOFT_DELETE_NODE
+        expect(graph.journalLength).toBe(2);
     });
 
     it("should retract a claim without removing it", () => {
         const personUid = uid();
-        graph.addNode({ uid: personUid, type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: personUid, type: "Person", sex: "M", isLiving: false });
         const claimId = uid();
         graph.addClaim({
             uid: claimId, nodeUid: personUid, predicate: PersonPredicates.NAME_FULL,
@@ -228,17 +223,17 @@ describe("GSchemaGraph — core CRUD", () => {
         graph.retractClaim(claimId, "incorrect name");
 
         const preferred = graph.getPreferred(personUid, PersonPredicates.NAME_FULL);
-        expect(preferred).toBeNull(); // retracted, so no preferred
+        expect(preferred).toBeNull();
     });
 
     it("should correctly return edges from/to nodes", () => {
         const p1 = uid(); const p2 = uid(); const u1 = uid();
-        graph.addNode({ uid: p1, type: "Person", sex: "M", isLiving: false });
-        graph.addNode({ uid: p2, type: "Person", sex: "F", isLiving: false });
-        graph.addNode({ uid: u1, type: "Union", unionType: "MARR" });
+        graph.addPersonNode({ uid: p1, type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: p2, type: "Person", sex: "F", isLiving: false });
+        graph.addUnionNode({ uid: u1, type: "Union", unionType: "MARR" });
 
-        graph.addEdge({ uid: uid(), type: "Member", fromUid: p1, toUid: u1, role: "HUSB" });
-        graph.addEdge({ uid: uid(), type: "Member", fromUid: p2, toUid: u1, role: "WIFE" });
+        graph.addMemberEdge({ uid: uid(), type: "Member", fromUid: p1, toUid: u1, role: "HUSB" });
+        graph.addMemberEdge({ uid: uid(), type: "Member", fromUid: p2, toUid: u1, role: "WIFE" });
 
         expect(graph.edgesFrom(p1)).toHaveLength(1);
         expect(graph.edgesFrom(p2)).toHaveLength(1);
@@ -262,8 +257,8 @@ describe("validateGSchemaGraph", () => {
     it("should detect orphaned edge (toUid not in nodes)", () => {
         const graph = GSchemaGraph.create();
         const p1 = uid();
-        graph.addNode({ uid: p1, type: "Person", sex: "M", isLiving: false });
-        graph.addEdge({
+        graph.addPersonNode({ uid: p1, type: "Person", sex: "M", isLiving: false });
+        graph.addMemberEdge({
             uid: uid(), type: "Member", fromUid: p1, toUid: "non-existent-uid", role: "HUSB"
         });
         const result = validateGSchemaGraph(graph.toData());
@@ -275,9 +270,8 @@ describe("validateGSchemaGraph", () => {
     it("should warn when multiple preferred claims conflict", () => {
         const graph = GSchemaGraph.create();
         const nodeUid = uid();
-        graph.addNode({ uid: nodeUid, type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: nodeUid, type: "Person", sex: "M", isLiving: false });
 
-        // Manually inject two preferred claims (bypass engine enforcement)
         const data = graph.toData();
         data.claims[nodeUid] = {
             [PersonPredicates.NAME_FULL]: [
@@ -311,16 +305,12 @@ describe("GedcomBridge — round trip", () => {
         const { graph, xrefMap, quarantineCount } = documentToGSchema(doc, "5.5.1");
 
         expect(quarantineCount).toBe(0);
-        expect(Object.keys(xrefMap)).toHaveLength(4); // 3 persons + 1 family
+        expect(Object.keys(xrefMap)).toHaveLength(4);
 
-        // Persons
         expect(graph.allNodes().filter(n => n.type === "Person")).toHaveLength(3);
-        // Unions
         expect(graph.allNodes().filter(n => n.type === "Union")).toHaveLength(1);
-        // Members in union (father + mother)
         const unions = graph.allNodes().filter(n => n.type === "Union");
         expect(graph.getMembers(unions[0].uid)).toHaveLength(2);
-        // Children
         const fathers = graph.allNodes().filter(n => n.type === "Person" && graph.getChildren(n.uid).length > 0);
         expect(fathers.length).toBeGreaterThan(0);
     });
@@ -378,7 +368,7 @@ describe("Journal — serialization and replay", () => {
     it("should serialize and deserialize journal as JSONL", () => {
         const graph = GSchemaGraph.create();
         const nodeUid = uid();
-        graph.addNode({ uid: nodeUid, type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: nodeUid, type: "Person", sex: "M", isLiving: false });
         graph.addClaim({
             uid: uid(), nodeUid,
             predicate: PersonPredicates.NAME_FULL,
@@ -396,10 +386,10 @@ describe("Journal — serialization and replay", () => {
         expect(parsed[1].type).toBe("ADD_CLAIM");
     });
 
-    it("replayJournal should produce a graph with the same claims", () => {
+    it("replayJournal should produce a graph with the same node count", () => {
         const graph = GSchemaGraph.create();
         const nodeUid = uid();
-        graph.addNode({ uid: nodeUid, type: "Person", sex: "F", isLiving: true });
+        graph.addPersonNode({ uid: nodeUid, type: "Person", sex: "F", isLiving: true });
         graph.addClaim({
             uid: uid(), nodeUid,
             predicate: PersonPredicates.NAME_FULL,
@@ -409,9 +399,6 @@ describe("Journal — serialization and replay", () => {
         });
 
         const journalOps = [...graph.getJournal()];
-        const replayed = replayJournal(journalOps.filter(op => op.type !== "ADD_NODE") as any);
-        // Replayed graph should have the claim (even without the node, claims are added)
-        // Full replay test: use the full journal
         const fullReplayed = replayJournal(journalOps);
         expect(fullReplayed.nodeCount).toBe(1);
     });
@@ -425,7 +412,7 @@ describe("GSchemaGraph — toData / fromData", () => {
     it("should serialize and deserialize a graph preserving all nodes and claims", () => {
         const graph = GSchemaGraph.create();
         const nodeUid = uid();
-        graph.addNode({ uid: nodeUid, type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: nodeUid, type: "Person", sex: "M", isLiving: false });
         graph.addClaim({
             uid: uid(), nodeUid, predicate: PersonPredicates.NAME_FULL,
             value: "Carlos /Ruiz/",

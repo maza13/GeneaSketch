@@ -2,6 +2,15 @@
 
 Todos los cambios notables en **GeneaSketch** se documentan en este archivo.
 
+## 2 de marzo de 2026 - 0.4.0 (GSchema: El Salto de Paradigma)
+
+### Novedades Principales
+- **Motor GSchema (v0.1.x)**: Transición a un modelo de datos basado en grafos semánticos y afirmaciones (claims).
+- **Journal de Operaciones**: Cada cambio se registra ahora de forma atómica y auditable, permitiendo el despliegue de futuras funciones de sincronización y deshacer multinivel.
+- **Formato Nativo .gsk**: Introducción del paquete GeneaSketch (.gsk), un archivo comprimido que agrupa el grafo, el historial de operaciones, las imágenes y la configuración de la interfaz.
+- **Migrador Automático**: Los archivos .ged y .gsz de versiones anteriores se convierten automáticamente al nuevo formato al abrirse.
+- **Proyección en Tiempo Real**: El motor genera una vista compatible con la interfaz actual, garantizando que todas las herramientas sigan funcionando sin cambios.
+
 ## 2 de marzo de 2026 - 0.3.7 (Refactorización del Store y Estabilidad)
 
 ### Para usuarios (resumen rápido)

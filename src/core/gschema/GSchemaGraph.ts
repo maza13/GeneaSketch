@@ -267,6 +267,16 @@ export class GSchemaGraph {
         return node;
     }
 
+    /** Typed convenience wrapper for adding a PersonNode. */
+    addPersonNode(input: Omit<import("./types").PersonNode, "createdAt">, actorId = "system"): import("./types").PersonNode {
+        return this.addNode(input, actorId) as import("./types").PersonNode;
+    }
+
+    /** Typed convenience wrapper for adding a UnionNode. */
+    addUnionNode(input: Omit<import("./types").UnionNode, "createdAt">, actorId = "system"): import("./types").UnionNode {
+        return this.addNode(input, actorId) as import("./types").UnionNode;
+    }
+
     addEdge(edgeInput: Omit<GSchemaEdge, "createdAt">, actorId = "system"): GSchemaEdge {
         const edge: GSchemaEdge = { ...edgeInput, createdAt: nowIso() } as GSchemaEdge;
         this._edges.set(edge.uid, edge);
@@ -278,6 +288,11 @@ export class GSchemaGraph {
         };
         this._journal.push(op);
         return edge;
+    }
+
+    /** Typed convenience wrapper for adding a MemberEdge (Person → Union). */
+    addMemberEdge(input: Omit<import("./types").MemberEdge, "createdAt">, actorId = "system"): import("./types").MemberEdge {
+        return this.addEdge(input, actorId) as import("./types").MemberEdge;
     }
 
     /**

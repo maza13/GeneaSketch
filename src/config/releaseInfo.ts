@@ -9,9 +9,9 @@ export type ReleaseInfo = {
 };
 
 export const RELEASE_INFO: ReleaseInfo = {
-  technicalVersion: "0.3.5",
+  technicalVersion: "0.4.0",
   channel: "beta",
-  codename: "ia-assistant",
-  displayLabel: "Beta IA Assistant",
-  releaseTag: "v0.3.5-beta-ia-assistant"
+  codename: "gschema",
+  displayLabel: "Beta GSchema",
+  releaseTag: "v0.4.0-beta-gschema"
 };

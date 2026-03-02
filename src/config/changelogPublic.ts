@@ -6,6 +6,16 @@ export type PublicChangelogEntry = {
 
 export const PUBLIC_CHANGELOG: PublicChangelogEntry[] = [
   {
+    "heading": "2 de marzo de 2026 - 0.4.0 (GSchema: Cambio de Paradigma)",
+    "technicalVersion": "0.4.0",
+    "userChanges": [
+      "**GSchema Engine** — Nuevo motor de datos basado en grafos que permite registrar cada cambio de forma auditable y granular.",
+      "**Formato .gsk** — Nuevo archivo nativo superpotente que guarda todo tu árbol, imágenes y configuración en un solo paquete.",
+      "**Journaling** — Historial de operaciones integrado para mayor seguridad y futura sincronización.",
+      "**Migración Transparente** — Tus archivos antiguos se convierten automáticamente al nuevo motor sin perder un solo dato."
+    ]
+  },
+  {
     "heading": "27 de February de 2026 - 0.3.5 (Beta IA Assistant, Desktop)",
     "technicalVersion": "0.3.5",
     "userChanges": [
