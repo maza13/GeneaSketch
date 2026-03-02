@@ -7,3 +7,4 @@ export * from "./validation";
 export { GSchemaGraph } from "./GSchemaGraph";
 export * from "./Journal";
 export * from "./GedcomBridge";
+export * from "./GskPackage";
