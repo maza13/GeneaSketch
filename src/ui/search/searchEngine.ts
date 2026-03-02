@@ -43,7 +43,18 @@ function searchByName(document: GeneaDocument, target: string): Person[] {
   if (!target) return [];
   return Object.values(document.persons).filter((person) => {
     const label = normalizeSearchText(personLabel(person));
-    return label.includes(target) || normalizeSearchText(person.id).includes(target);
+    const birthPlace = normalizeSearchText(person.birthPlace ?? "");
+    const deathPlace = normalizeSearchText(person.deathPlace ?? "");
+    const birthDate = normalizeSearchText(person.birthDate ?? "");
+    const deathDate = normalizeSearchText(person.deathDate ?? "");
+    return (
+      label.includes(target) ||
+      normalizeSearchText(person.id).includes(target) ||
+      birthPlace.includes(target) ||
+      deathPlace.includes(target) ||
+      birthDate.includes(target) ||
+      deathDate.includes(target)
+    );
   });
 }
 
@@ -53,13 +64,18 @@ function scoreFreeQuery(person: Person, target: string): number {
   const name = normalizeSearchText(person.name);
   const surname = normalizeSearchText(person.surname ?? "");
   const full = normalizeSearchText(personLabel(person));
+  const birthPlace = normalizeSearchText(person.birthPlace ?? "");
+  const deathPlace = normalizeSearchText(person.deathPlace ?? "");
 
   if (id === target || full === target) return 100;
   if (name === target || surname === target) return 95;
+  if (birthPlace === target || deathPlace === target) return 90;
   if (full.startsWith(target)) return 85;
   if (name.startsWith(target) || surname.startsWith(target)) return 80;
+  if (birthPlace.startsWith(target) || deathPlace.startsWith(target)) return 75;
   if (full.includes(target)) return 70;
   if (id.includes(target)) return 60;
+  if (birthPlace.includes(target) || deathPlace.includes(target)) return 50;
   return 0;
 }
 

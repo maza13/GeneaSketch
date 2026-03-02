@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { GeneaDocument, PendingRelationType } from "@/types/domain";
+import { StandardModal } from "@/ui/common/StandardModal";
 
 type Props = {
     document: GeneaDocument;
@@ -12,7 +13,7 @@ type Props = {
 export function PersonPickerModal({ document, anchorId, relationType, onLink, onClose }: Props) {
     const [query, setQuery] = useState("");
 
-    const title = relationType === "kinship" ? "Calcular parentesco con:" : `Vincular: ${relationType}`;
+    const title = relationType === "kinship" ? "Calcular parentesco con" : `Vincular: ${relationType}`;
 
     const people = useMemo(() => {
         const q = query.toLowerCase().trim();
@@ -29,49 +30,88 @@ export function PersonPickerModal({ document, anchorId, relationType, onLink, on
     }, [document, query, anchorId]);
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-panel" style={{ width: 450, maxHeight: "80vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3>{title}</h3>
-                    <button onClick={onClose}>&times;</button>
-                </div>
-
-                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12, flex: 1, overflow: "hidden" }}>
+        <StandardModal
+            open={true}
+            title={title}
+            onClose={onClose}
+            size="md"
+        >
+            <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: 16, height: '100%' }}>
+                <div style={{ position: 'relative' }}>
+                    <span
+                        className="material-symbols-outlined"
+                        style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }}
+                    >
+                        search
+                    </span>
                     <input
                         autoFocus
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Buscar persona por nombre o apellido..."
-                        style={{ width: "100%", padding: 8 }}
+                        placeholder="Buscar por nombre o apellido..."
+                        style={{
+                            width: '100%',
+                            padding: '12px 12px 12px 40px',
+                            borderRadius: 12,
+                            border: '1px solid var(--modal-border)',
+                            background: 'var(--bg-elev-1)',
+                            fontSize: '15px'
+                        }}
                     />
+                </div>
 
-                    <div className="list" style={{ flex: 1, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 8 }}>
-                        {people.length === 0 ? (
-                            <div style={{ padding: 16, textAlign: "center", color: "var(--text-muted)" }}>No hay coincidencias</div>
-                        ) : (
-                            people.map(p => (
-                                <button
-                                    key={p.id}
-                                    className="list-item"
-                                    onClick={() => {
-                                        onLink(p.id);
-                                        onClose();
-                                    }}
-                                    style={{ textAlign: "left", width: "100%", borderBottom: "1px solid var(--border-light)", background: "none" }}
-                                >
-                                    <strong>{p.name} {p.surname || ""}</strong>
-                                    <span style={{ fontSize: "0.85em", color: "var(--text-muted)", marginLeft: 8 }}>{p.id}</span>
-                                    {p.events.find(e => e.type === "BIRT")?.date && (
-                                        <div style={{ fontSize: "0.8em", color: "var(--text-muted)" }}>
-                                            Nac: {p.events.find(e => e.type === "BIRT")?.date}
-                                        </div>
-                                    )}
-                                </button>
-                            ))
-                        )}
-                    </div>
+                <div
+                    className="gs-custom-scrollbar"
+                    style={{
+                        flex: 1,
+                        maxHeight: '400px',
+                        overflowY: 'auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        paddingRight: 4
+                    }}
+                >
+                    {people.length === 0 ? (
+                        <div className="gs-alert gs-alert--info" style={{ textAlign: 'center', padding: '30px 20px' }}>
+                            No se han encontrado coincidencias
+                        </div>
+                    ) : (
+                        people.map(p => (
+                            <button
+                                key={p.id}
+                                className="secondary-ghost"
+                                onClick={() => {
+                                    onLink(p.id);
+                                    onClose();
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'flex-start',
+                                    padding: '12px 16px',
+                                    textAlign: 'left',
+                                    width: '100%',
+                                    borderRadius: 12,
+                                    height: 'auto',
+                                    gap: 4
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                    <span style={{ fontWeight: 600, fontSize: '15px' }}>{p.name} {p.surname || ""}</span>
+                                    <span style={{ fontSize: '11px', opacity: 0.5, fontFamily: 'monospace' }}>{p.id}</span>
+                                </div>
+                                {p.events.find(e => e.type === "BIRT")?.date && (
+                                    <div style={{ fontSize: '12px', opacity: 0.6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>event</span>
+                                        Nac: {p.events.find(e => e.type === "BIRT")?.date}
+                                    </div>
+                                )}
+                            </button>
+                        ))
+                    )}
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 }

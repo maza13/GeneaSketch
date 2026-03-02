@@ -4,6 +4,9 @@ export type AiExecutionMode = "hybrid" | "chatgpt_only" | "gemini_only";
 export type AiProvider = "chatgpt" | "gemini";
 export type OpenAiPreferredApi = "auto" | "responses" | "chat_completions";
 export type BirthRefinementProfile = "balanced" | "max_reliability" | "low_cost";
+export type BirthEstimatorVersion = "v2" | "legacy";
+export type AiBirthRefinementLevel = "simple" | "balanced" | "complex";
+export type AiBirthRefinementNotesScope = "none" | "focus_only" | "focus_parents_children";
 export type AiContextPolicy = "adaptive" | "minimal" | "full";
 export type AiStage = "extraction" | "resolution";
 // "resolution" is deprecated in runtime v4 (kept for snapshot compatibility).
@@ -49,14 +52,34 @@ export type AiSettings = {
   developerBirthRefinementDebug: boolean;
   developerBirthRefinementShowRawUnfiltered: boolean;
   openAiPreferredApi?: OpenAiPreferredApi;
-  birthRefinementProfile?: BirthRefinementProfile;
+  birthRefinementProfile?: BirthRefinementProfile; // Deprecated: replaced by birthRefinementLevel.
+  birthRefinementLevel?: AiBirthRefinementLevel;
+  birthEstimatorVersion?: BirthEstimatorVersion;
   geminiFreeTierMode?: boolean;
   providerModels: Record<AiProvider, string>; // Legacy model mapping by provider
   useCaseModels: Record<AiUseCase, AiUseCaseModel>; // New specific mapping
+  birthRefinementModel: AiUseCaseModel;
+  birthRefinementIncludeNotes: boolean;
+  birthRefinementNotesScope: AiBirthRefinementNotesScope;
+  birthRefinementLevelModels?: Record<AiBirthRefinementLevel, AiUseCaseModel>;
+  birthRefinementIncludeNotesByLevel?: Record<AiBirthRefinementLevel, boolean>;
+  birthRefinementNotesScopeByLevel?: Record<AiBirthRefinementLevel, AiBirthRefinementNotesScope>;
   modelCatalog: Record<AiProvider, AiModelCatalogEntry[]>;
   tokenLimits: AiTokenLimits;
   retryPolicy: AiRetryPolicy;
   costFlags: AiCostFlags;
+  usageHistory?: AiUsageRecord[];
+};
+
+export type AiUsageRecord = {
+  id: string;
+  timestamp: string;
+  provider: AiProvider;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cost: number;
+  useCase?: AiUseCase;
 };
 
 export type AiBirthRangeRefinementFact = {
@@ -66,15 +89,28 @@ export type AiBirthRangeRefinementFact = {
   eventType: "BIRT" | "DEAT" | "MARR" | "DIV" | "NOTE";
   date?: string;
   place?: string;
+  value?: string;
+  sourceKind?: "event" | "raw_note" | "residence" | "family_event" | "family_note";
+  relatedEntityId?: string;
   reference: string;
+  layer?: 1 | 2 | 3;
+  relationPath?: string[];
+  dateKind?: "exact" | "approximate" | "range" | "unknown";
+  dateYearSpan?: [number, number];
 };
 
 export type AiBirthRangeRefinementFactsRequest = {
   focusPersonId: string;
   focusPersonLabel: string;
   focusSex: "M" | "F" | "U";
-  focusBirthDateCurrent?: string;
   facts: AiBirthRangeRefinementFact[];
+  contextStats?: {
+    factsCount: number;
+    notesCount: number;
+    layer1Count?: number;
+    layer2Count?: number;
+    layer3Count?: number;
+  };
 };
 
 export type AiBirthRangeRefinementResult = {
@@ -83,6 +119,7 @@ export type AiBirthRangeRefinementResult = {
   confidence: number;
   verdict: string;
   notes: string[];
+  rangeValidity?: "valid" | "invalid";
   rawResponseText?: string;
   parseError?: string;
   model: string;
@@ -101,7 +138,14 @@ export type AiBirthRefinementDebugTrace = {
   finishReason?: string;
   tokenBudget: number;
   retryCount: number;
-  retryReason?: "length" | "empty_output" | "parse_failure";
+  retryReason?: "length" | "empty_output" | "parse_failure" | "invalid_format" | "invalid_year_domain" | "inverted_range";
+  selectedLevel?: AiBirthRefinementLevel;
+  recommendedLevel?: AiBirthRefinementLevel;
+  layersUsed?: Array<1 | 2 | 3>;
+  contextPolicyVersion?: "v2_level_context";
+  selectionSummary?: string[];
+  notesIncluded?: boolean;
+  notesScopeApplied?: AiBirthRefinementNotesScope;
   rawResponseText: string;
   parsed: boolean;
   parseError?: string;
@@ -510,6 +554,11 @@ export type AiInvokeProviderResponse = {
   apiUsed?: "responses" | "chat_completions" | "gemini_generate_content";
   finishReason?: string;
   providerWarnings?: string[];
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 };
 
 export type AiDiagnosticEntry = {
@@ -544,4 +593,3 @@ export type AiReadDiagnosticLogResponse = {
   path: string;
   contents: string;
 };
-

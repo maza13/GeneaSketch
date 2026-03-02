@@ -498,6 +498,13 @@ describe("legacy restore normalization", () => {
     await useAppStore.getState().restoreSession();
     expect(useAppStore.getState().aiSettings.useCaseModels.birth_refinement).toBeDefined();
     expect(useAppStore.getState().aiSettings.useCaseModels.birth_refinement.provider).toBe("chatgpt");
+    expect(useAppStore.getState().aiSettings.birthEstimatorVersion).toBe("v2");
+    expect(useAppStore.getState().aiSettings.birthRefinementLevelModels?.simple.model).toBe("gpt-5-nano");
+    expect(useAppStore.getState().aiSettings.birthRefinementLevelModels?.balanced.model).toBe("gpt-5-nano");
+    expect(useAppStore.getState().aiSettings.birthRefinementLevelModels?.complex.model).toBe("gpt-5-nano");
+    expect(useAppStore.getState().aiSettings.birthRefinementIncludeNotesByLevel?.simple).toBe(false);
+    expect(useAppStore.getState().aiSettings.birthRefinementIncludeNotesByLevel?.balanced).toBe(true);
+    expect(useAppStore.getState().aiSettings.birthRefinementNotesScopeByLevel?.balanced).toBe("focus_only");
   });
 });
 

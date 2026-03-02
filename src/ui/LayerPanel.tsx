@@ -11,7 +11,7 @@ export function LayerPanel({ document, hideHeader = false }: { document: GeneaDo
 
     const layers = [
         { id: "layer-symmetry", label: "Completitud y Simetria", icon: "🟢", desc: "Evalua falta de fechas y progenitores en ramas." },
-        { id: "layer-places", label: "Coloreo Geografico", icon: "🌍", desc: "Muestra gradientes en base a los lugares de nacimiento." },
+        { id: "layer-places", label: "Coloreo Geografico", icon: "🌍", desc: "Muestro inteligente: Prioriza residencia, nacimiento y defunción." },
         { id: "layer-warnings", label: "Diagnostico Critico", icon: "🟠", desc: "Ilumina en rojo posibles errores logicos, incestos y fechas cronologicas imposibles." },
         { id: "layer-endogamy", label: "Colapso Consanguineo", icon: "🟣", desc: "Traza aristas especiales senalando familias con progenitores ciclicos." },
         { id: "layer-timeline", label: "Linea de Tiempo", icon: "🕒", desc: "Simulacion visual de vitalidad y eventos a traves de los años." }
@@ -69,7 +69,45 @@ export function LayerPanel({ document, hideHeader = false }: { document: GeneaDo
             </div>
             {activeLayerId && (
                 <div style={{ marginTop: 12, padding: 8, background: "var(--accent-soft)", borderRadius: 4, color: "var(--accent-strong)", fontSize: 12 }}>
-                    Capa aplicada al lienzo actual.
+                    {activeLayerId === 'layer-places' ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            <div style={{ fontWeight: 600, fontSize: 11, color: "var(--accent-strong)" }}>MODO DE MUESTREO:</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                                {[
+                                    { id: 'intelligent', label: 'Auto' },
+                                    { id: 'birth', label: 'Nacimiento' },
+                                    { id: 'residence', label: 'Residencia' },
+                                    { id: 'death', label: 'Defunción' }
+                                ].map(m => (
+                                    <button
+                                        key={m.id}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOverlay({
+                                                id: 'active-layer',
+                                                type: 'layer',
+                                                priority: 50,
+                                                config: { ...activeOverlay?.config, mode: m.id }
+                                            });
+                                        }}
+                                        style={{
+                                            padding: "2px 6px",
+                                            fontSize: 10,
+                                            borderRadius: 3,
+                                            border: "1px solid var(--accent-strong)",
+                                            background: (activeOverlay?.config?.mode || 'intelligent') === m.id ? "var(--accent-strong)" : "transparent",
+                                            color: (activeOverlay?.config?.mode || 'intelligent') === m.id ? "var(--white)" : "var(--accent-strong)",
+                                            cursor: "pointer"
+                                        }}
+                                    >
+                                        {m.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        "Capa aplicada al lienzo actual."
+                    )}
                 </div>
             )}
         </div>

@@ -5,6 +5,8 @@ import type { GeneaDocument } from "@/types/domain";
 import type { PersonEditorPatch, PersonEditorState, PersonRelationInput } from "@/types/editor";
 import type { AiSettings } from "@/types/ai";
 import { BirthRangeRefinementCard } from "@/ui/person/BirthRangeRefinementCard";
+import { SuggestionInput } from "@/ui/components/SuggestionInput";
+import { getNameSuggestions, getPlaceSuggestions, getSurnameSuggestions, normalizePlace } from "@/core/edit/suggestions";
 
 type Props = {
   editorState: PersonEditorState;
@@ -53,7 +55,10 @@ export function PersonEditorPanel({ editorState, document, aiSettings, onClose, 
   const [sex, setSex] = useState<"M" | "F" | "U">("U");
   const [lifeStatus, setLifeStatus] = useState<"alive" | "deceased">("alive");
   const [birthDate, setBirthDate] = useState("");
+  const [birthPlace, setBirthPlace] = useState("");
   const [deathDate, setDeathDate] = useState("");
+  const [deathPlace, setDeathPlace] = useState("");
+  const [residence, setResidence] = useState("");
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [photoSourceDataUrl, setPhotoSourceDataUrl] = useState<string | null>(null);
   const [photoZoom, setPhotoZoom] = useState(1);
@@ -84,7 +89,10 @@ export function PersonEditorPanel({ editorState, document, aiSettings, onClose, 
       setSex(p.sex || "U");
       setLifeStatus(p.lifeStatus === "deceased" || deatEvent ? "deceased" : "alive");
       setBirthDate(gedcomDateToUi(birtEvent?.date));
+      setBirthPlace(p.birthPlace || birtEvent?.place || "");
       setDeathDate(gedcomDateToUi(deatEvent?.date));
+      setDeathPlace(p.deathPlace || deatEvent?.place || "");
+      setResidence(p.residence || p.events.find(e => e.type === "RESI")?.place || "");
 
       const mId = p.mediaRefs?.[0];
       const currentPhoto = (mId && document?.media?.[mId]) ? (document.media[mId].dataUrl || document.media[mId].fileName || mId) : null;
@@ -93,19 +101,32 @@ export function PersonEditorPanel({ editorState, document, aiSettings, onClose, 
       setInitialPhotoUrl(currentPhoto);
     } else {
       setName("");
-      setPaternalSurname("");
-      setMaternalSurname("");
       setSex("U");
       setLifeStatus("alive");
       setBirthDate("");
+      setBirthPlace("");
       setDeathDate("");
+      setDeathPlace("");
+      setResidence("");
       setPhotoDataUrl(null);
       setPhotoSourceDataUrl(null);
       setInitialPhotoUrl(null);
-    }
 
-    if (editorState.type === "add_relation") {
-      setRelationType(editorState.relationType);
+      // Suggestions for new relative
+      if (editorState.type === "add_relation") {
+        setRelationType(editorState.relationType);
+        const sugs = getSurnameSuggestions(document, editorState.anchorId, editorState.relationType);
+        if (sugs.length > 0) {
+          setPaternalSurname(sugs[0].paternal);
+          setMaternalSurname(sugs[0].maternal);
+        } else {
+          setPaternalSurname("");
+          setMaternalSurname("");
+        }
+      } else {
+        setPaternalSurname("");
+        setMaternalSurname("");
+      }
     }
 
     setPhotoZoom(1);
@@ -218,7 +239,10 @@ export function PersonEditorPanel({ editorState, document, aiSettings, onClose, 
       surname: fullSurname,
       sex,
       birthDate: bDateGed,
+      birthPlace: birthPlace.trim(),
       deathDate: dDateGed,
+      deathPlace: deathPlace.trim(),
+      residence: residence.trim(),
       lifeStatus,
       ...(finalPhoto !== undefined && { photoDataUrl: finalPhoto }),
       ...(editorState.type === "edit" && pendingNotesAppend.length > 0 ? { notesAppend: pendingNotesAppend } : {})
@@ -233,6 +257,11 @@ export function PersonEditorPanel({ editorState, document, aiSettings, onClose, 
 
   const title = editorState.type === "edit" ? "Edición rápida" : editorState.type === "create_standalone" ? "Crear Persona nueva" : "Agregar familiar";
 
+  // Get dynamic suggestions for surnames based on relation type
+  const surnameSugs = editorState.type === "add_relation"
+    ? getSurnameSuggestions(document, editorState.anchorId, relationType)
+    : [];
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-panel" style={{ width: 460 }} onClick={(e) => e.stopPropagation()}>
@@ -241,190 +270,253 @@ export function PersonEditorPanel({ editorState, document, aiSettings, onClose, 
           <button onClick={onClose}>&times;</button>
         </div>
         <div className="modal-body modal-body--tight">
-        <div className="builder" style={{ marginTop: 0 }}>
-          {formError && <div className="inline-error">{formError}</div>}
+          <div className="builder" style={{ marginTop: 0 }}>
+            {formError && <div className="inline-error">{formError}</div>}
 
-          {editorState.type === "add_relation" && (
+            {editorState.type === "add_relation" && (
+              <label>
+                Parentesco que se va a crear *
+                <select value={relationType} onChange={(e) => {
+                  const newType = e.target.value as PendingRelationType;
+                  setRelationType(newType);
+                  const sugs = getSurnameSuggestions(document, editorState.anchorId, newType);
+                  if (sugs.length > 0) {
+                    setPaternalSurname(sugs[0].paternal);
+                    setMaternalSurname(sugs[0].maternal);
+                  }
+                }}>
+                  <option value="father">Padre</option>
+                  <option value="mother">Madre</option>
+                  <option value="spouse">Pareja / Esposo(a)</option>
+                  <option value="child">Hijo(a)</option>
+                  <option value="sibling">Hermano(a)</option>
+                </select>
+              </label>
+            )}
+
             <label>
-              Parentesco que se va a crear *
-              <select value={relationType} onChange={(e) => setRelationType(e.target.value as PendingRelationType)}>
-                <option value="father">Padre</option>
-                <option value="mother">Madre</option>
-                <option value="spouse">Pareja / Esposo(a)</option>
-                <option value="child">Hijo(a)</option>
-                <option value="sibling">Hermano(a)</option>
+              Name(s) (nombres) *
+              <SuggestionInput
+                value={name}
+                onChange={setName}
+                suggestions={getNameSuggestions(document, name)}
+                placeholder="Ej: Juan Carlos"
+              />
+            </label>
+
+            <label>
+              Paternal surname (apellido paterno) *
+              <SuggestionInput
+                value={paternalSurname}
+                onChange={setPaternalSurname}
+                suggestions={[
+                  ...surnameSugs.map(s => s.paternal),
+                  // General suggestions from tree if relation sugs are exhausted or irrelevant
+                  ...getSurnameSuggestions(document, null, null).map(s => s.paternal)
+                ].filter(Boolean)}
+                placeholder="Ej: Perez"
+              />
+            </label>
+
+            <label>
+              Maternal surname (apellido materno)
+              <SuggestionInput
+                value={maternalSurname}
+                onChange={setMaternalSurname}
+                suggestions={[
+                  ...surnameSugs.map(s => s.maternal),
+                ].filter(Boolean)}
+                placeholder="Ej: Lopez (opcional)"
+              />
+            </label>
+
+            <label>
+              Sex/Gender *
+              <select value={sex} onChange={(e) => setSex(e.target.value as "M" | "F" | "U")}>
+                <option value="M">Hombre</option>
+                <option value="F">Mujer</option>
+                <option value="U">Desconocido</option>
               </select>
             </label>
-          )}
 
-          <label>
-            Name(s) (nombres) *
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Juan Carlos" />
-          </label>
-
-          <label>
-            Paternal surname (apellido paterno) *
-            <input value={paternalSurname} onChange={(e) => setPaternalSurname(e.target.value)} placeholder="Ej: Perez" />
-          </label>
-
-          <label>
-            Maternal surname (apellido materno)
-            <input value={maternalSurname} onChange={(e) => setMaternalSurname(e.target.value)} placeholder="Ej: Lopez (opcional)" />
-          </label>
-
-          <label>
-            Sex/Gender *
-            <select value={sex} onChange={(e) => setSex(e.target.value as "M" | "F" | "U")}>
-              <option value="M">Hombre</option>
-              <option value="F">Mujer</option>
-              <option value="U">Desconocido</option>
-            </select>
-          </label>
-
-          <label>
-            Birth date (nacimiento)
-            <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
-          </label>
-
-          {editorState.type === "edit" && document ? (
-            <BirthRangeRefinementCard
-              document={document}
-              personId={editorState.personId}
-              aiSettings={aiSettings}
-              onApplyBirthGedcom={setBirthDate}
-              onAppendNote={(note) => setPendingNotesAppend((prev) => [...prev, note])}
-            />
-          ) : null}
-          <label>
-            Living status
-            <select value={lifeStatus} onChange={(e) => setLifeStatus(e.target.value as "alive" | "deceased")}>
-              <option value="alive">Vivo</option>
-              <option value="deceased">Fallecido</option>
-            </select>
-          </label>
-
-          {lifeStatus === "deceased" ? (
             <label>
-              Death date (defuncion)
-              <input value={deathDate} onChange={(e) => setDeathDate(e.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
+              Birth date (nacimiento)
+              <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
             </label>
-          ) : null}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10, fontWeight: 500, fontSize: 13, color: "var(--ink-muted)" }}>
-            <span style={{ color: "var(--ink-1)", marginBottom: 4 }}>Foto</span>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.heic,.heif"
-              style={{ display: "none" }}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void applyPhotoFile(file);
-                e.target.value = "";
-              }}
-            />
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragOverPhoto(true);
-              }}
-              onDragLeave={() => setIsDragOverPhoto(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDragOverPhoto(false);
-                const file = e.dataTransfer.files?.[0];
-                if (file) void applyPhotoFile(file);
-              }}
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                border: `1px dashed ${isDragOverPhoto ? "var(--accent)" : "var(--line)"}`,
-                borderRadius: 10,
-                padding: "10px 12px",
-                background: isDragOverPhoto ? "var(--accent-soft)" : "transparent",
-                cursor: "pointer",
-                marginBottom: 8
-              }}
-              title="Haz clic o arrastra una imagen aqui"
-            >
-              {photoSourceDataUrl ? "Cambiar imagen" : "Haz clic o arrastra una imagen aqui"}
-            </div>
+            <label>
+              Birth place (lugar de nacimiento)
+              <SuggestionInput
+                value={birthPlace}
+                onChange={setBirthPlace}
+                onBlur={() => setBirthPlace(normalizePlace(birthPlace))}
+                suggestions={getPlaceSuggestions(document, birthPlace)}
+                placeholder="Ciudad, Estado, Pais"
+              />
+            </label>
 
-            {photoSourceDataUrl ? (
+            {editorState.type === "edit" && document ? (
+              <BirthRangeRefinementCard
+                document={document}
+                personId={editorState.personId}
+                aiSettings={aiSettings}
+                onApplyBirthGedcom={setBirthDate}
+                onAppendNote={(note) => setPendingNotesAppend((prev) => [...prev, note])}
+              />
+            ) : null}
+            <label>
+              Living status
+              <select value={lifeStatus} onChange={(e) => setLifeStatus(e.target.value as "alive" | "deceased")}>
+                <option value="alive">Vivo</option>
+                <option value="deceased">Fallecido</option>
+              </select>
+            </label>
+
+            {lifeStatus === "deceased" ? (
               <>
-                <div style={{ fontSize: 12, marginBottom: 6 }}>Encuadre (arrastra para mover, usa zoom):</div>
-                <div
-                  onMouseDown={(e) => {
-                    setIsDraggingPhoto(true);
-                    dragStartRef.current = { x: e.clientX, y: e.clientY, ox: photoOffset.x, oy: photoOffset.y };
-                  }}
-                  style={{
-                    width: CROP_VIEW_W,
-                    height: CROP_VIEW_H,
-                    margin: "0 auto 8px",
-                    borderRadius: 10,
-                    border: "1px solid var(--line)",
-                    overflow: "hidden",
-                    position: "relative",
-                    background: "var(--bg-input)",
-                    cursor: isDraggingPhoto ? "grabbing" : "grab",
-                    touchAction: "none"
-                  }}
-                >
-                  <img
-                    src={photoSourceDataUrl}
-                    alt="preview"
-                    draggable={false}
-                    onLoad={(e) => setImgDim({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                    style={{
-                      position: "absolute",
-                      left: "50%",
-                      top: "50%",
-                      width: imgDim.w ? imgDim.w * Math.max(CROP_VIEW_W / imgDim.w, CROP_VIEW_H / imgDim.h) * photoZoom : "100%",
-                      height: imgDim.h ? imgDim.h * Math.max(CROP_VIEW_W / imgDim.w, CROP_VIEW_H / imgDim.h) * photoZoom : "100%",
-                      objectFit: imgDim.w ? "fill" : "cover",
-                      transform: `translate(calc(-50% + ${photoOffset.x}px), calc(-50% + ${photoOffset.y}px))`,
-                      transformOrigin: "center center",
-                      userSelect: "none",
-                      pointerEvents: "none"
-                    }}
+                <label>
+                  Death date (defuncion)
+                  <input value={deathDate} onChange={(e) => setDeathDate(e.target.value)} placeholder="dd/mm/aaaa, mm/aaaa o aaaa" />
+                </label>
+                <label>
+                  Death place (lugar de defuncion)
+                  <SuggestionInput
+                    value={deathPlace}
+                    onChange={setDeathPlace}
+                    onBlur={() => setDeathPlace(normalizePlace(deathPlace))}
+                    suggestions={getPlaceSuggestions(document, deathPlace)}
+                    placeholder="Ciudad, Estado, Pais"
                   />
-                </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span style={{ fontSize: 12 }}>Zoom</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={3}
-                    step={0.05}
-                    value={photoZoom}
-                    onChange={(e) => setPhotoZoom(Number(e.target.value))}
-                    style={{ flex: 1 }}
-                  />
-                  <button type="button" onClick={() => setPhotoOffset({ x: 0, y: 0 })} style={{ width: "auto", padding: "0 10px" }}>
-                    Centrar
-                  </button>
-                  <button
-                    type="button"
-                    className="danger"
-                    style={{ width: "auto", padding: "0 10px" }}
-                    onClick={() => {
-                      setPhotoDataUrl(null);
-                      setPhotoSourceDataUrl(null);
-                      setPhotoZoom(1);
-                      setPhotoOffset({ x: 0, y: 0 });
-                    }}
-                  >
-                    Quitar
-                  </button>
-                </div>
+                </label>
               </>
             ) : null}
-          </div>
 
-          <button onClick={() => void handleSave()} style={{ marginTop: 16 }}>
-            Guardar
-          </button>
-        </div>
+            <label>
+              Residence (residencia)
+              <SuggestionInput
+                value={residence}
+                onChange={setResidence}
+                onBlur={() => setResidence(normalizePlace(residence))}
+                suggestions={getPlaceSuggestions(document, residence)}
+                placeholder="Ciudad, Estado, Pais"
+              />
+            </label>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10, fontWeight: 500, fontSize: 13, color: "var(--ink-muted)" }}>
+              <span style={{ color: "var(--ink-1)", marginBottom: 4 }}>Foto</span>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.heic,.heif"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void applyPhotoFile(file);
+                  e.target.value = "";
+                }}
+              />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOverPhoto(true);
+                }}
+                onDragLeave={() => setIsDragOverPhoto(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOverPhoto(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) void applyPhotoFile(file);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  border: `1px dashed ${isDragOverPhoto ? "var(--accent)" : "var(--line)"}`,
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  background: isDragOverPhoto ? "var(--accent-soft)" : "transparent",
+                  cursor: "pointer",
+                  marginBottom: 8
+                }}
+                title="Haz clic o arrastra una imagen aqui"
+              >
+                {photoSourceDataUrl ? "Cambiar imagen" : "Haz clic o arrastra una imagen aqui"}
+              </div>
+
+              {photoSourceDataUrl ? (
+                <>
+                  <div style={{ fontSize: 12, marginBottom: 6 }}>Encuadre (arrastra para mover, usa zoom):</div>
+                  <div
+                    onMouseDown={(e) => {
+                      setIsDraggingPhoto(true);
+                      dragStartRef.current = { x: e.clientX, y: e.clientY, ox: photoOffset.x, oy: photoOffset.y };
+                    }}
+                    style={{
+                      width: CROP_VIEW_W,
+                      height: CROP_VIEW_H,
+                      margin: "0 auto 8px",
+                      borderRadius: 10,
+                      border: "1px solid var(--line)",
+                      overflow: "hidden",
+                      position: "relative",
+                      background: "var(--bg-input)",
+                      cursor: isDraggingPhoto ? "grabbing" : "grab",
+                      touchAction: "none"
+                    }}
+                  >
+                    <img
+                      src={photoSourceDataUrl}
+                      alt="preview"
+                      draggable={false}
+                      onLoad={(e) => setImgDim({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+                      style={{
+                        position: "absolute",
+                        left: "50%",
+                        top: "50%",
+                        width: imgDim.w ? imgDim.w * Math.max(CROP_VIEW_W / imgDim.w, CROP_VIEW_H / imgDim.h) * photoZoom : "100%",
+                        height: imgDim.h ? imgDim.h * Math.max(CROP_VIEW_W / imgDim.w, CROP_VIEW_H / imgDim.h) * photoZoom : "100%",
+                        objectFit: imgDim.w ? "fill" : "cover",
+                        transform: `translate(calc(-50% + ${photoOffset.x}px), calc(-50% + ${photoOffset.y}px))`,
+                        transformOrigin: "center center",
+                        userSelect: "none",
+                        pointerEvents: "none"
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ fontSize: 12 }}>Zoom</span>
+                    <input
+                      type="range"
+                      min={1}
+                      max={3}
+                      step={0.05}
+                      value={photoZoom}
+                      onChange={(e) => setPhotoZoom(Number(e.target.value))}
+                      style={{ flex: 1 }}
+                    />
+                    <button type="button" onClick={() => setPhotoOffset({ x: 0, y: 0 })} style={{ width: "auto", padding: "0 10px" }}>
+                      Centrar
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      style={{ width: "auto", padding: "0 10px" }}
+                      onClick={() => {
+                        setPhotoDataUrl(null);
+                        setPhotoSourceDataUrl(null);
+                        setPhotoZoom(1);
+                        setPhotoOffset({ x: 0, y: 0 });
+                      }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            <button onClick={() => void handleSave()} style={{ marginTop: 16 }}>
+              Guardar
+            </button>
+          </div>
         </div>
       </div>
     </div >

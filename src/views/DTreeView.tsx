@@ -4,6 +4,7 @@ import { calculateGeneticHeatmap, findKinship, getLineagePath, getLifeOverlapInf
 import { consanguinityAlphaFromIntensity, normalizeConsanguinityIntensity } from "@/core/graph/endogamyVisual";
 import { analyzeGeneaDocument } from "@/core/diagnostics/analyzer";
 import { computeLayout } from "@/core/layout";
+import { getPersonMarkerPlace } from "@/core/graph/locationMarkers";
 import type { ExpandedGraph, GeneaDocument } from "@/types/domain";
 import type { ColorThemeConfig, NodeInteraction } from "@/types/editor";
 import { ContextCard } from "@/ui/context/ContextCard";
@@ -893,12 +894,15 @@ export function DTreeView({
                     });
                     graph.edges.forEach(edge => edgeStyles.set(edge.id, { opacity: 0.25 }));
                 } else if (layerId === 'layer-places' && document) {
+                    const mode = config.mode || 'intelligent';
                     graph.nodes.forEach(n => {
                         if (n.type === 'person' || n.type === 'personAlias') {
                             const p = document.persons[n.canonicalId ?? n.id];
-                            const birt = p?.events.find(e => e.type === "BIRT");
-                            if (birt?.place?.trim()) {
-                                const place = birt.place.trim().toUpperCase();
+                            if (!p) return;
+
+                            const placeStr = getPersonMarkerPlace(p, mode);
+                            if (placeStr?.trim()) {
+                                const place = placeStr.trim().toUpperCase();
                                 let hash = 0;
                                 for (let i = 0; i < place.length; i++) hash = place.charCodeAt(i) + ((hash << 5) - hash);
                                 nodeStyles.set(n.id, { fill: `hsl(${Math.abs(hash) % 360}, 75%, 28%)`, opacity: 1 });
@@ -1438,11 +1442,17 @@ export function DTreeView({
                                 </>
                             );
                         } else if (activeLayer === "layer-places" && personData) {
-                            const birt = personData.events.find(e => e.type === "BIRT");
+                            const resi = personData.residence?.trim();
+                            const birt = personData.events.find(e => e.type === "BIRT")?.place?.trim();
+                            const deat = personData.events.find(e => e.type === "DEAT")?.place?.trim();
+
+                            const place = resi || birt || deat;
+                            const sourceLabel = resi ? "Residencia" : birt ? "Nacimiento" : deat ? "Defunción" : "No registrado";
+
                             return (
                                 <>
-                                    <div style={{ fontWeight: "bold", marginBottom: 4, color: TREE_PALETTE.info }}>Geografía</div>
-                                    <div>Lugar natal: <strong>{birt?.place || "No registrado"}</strong></div>
+                                    <div style={{ fontWeight: "bold", marginBottom: 4, color: TREE_PALETTE.info }}>Geografía ({sourceLabel})</div>
+                                    <div>Lugar: <strong>{place || "No registrado"}</strong></div>
                                 </>
                             );
                         } else if (activeLayer === "layer-warnings") {

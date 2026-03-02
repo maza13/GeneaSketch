@@ -1,8 +1,13 @@
 ﻿import { buildBirthRangeRefinementCompactPrompt, buildBirthRangeRefinementPrompt } from "@/core/ai/prompts";
 import { safeParseJson } from "@/core/ai/parsing";
 import { aiInvokeProvider } from "@/services/aiRuntime";
+import { aiUsageService } from "@/services/aiUsageService";
 import { estimatePersonBirthYear } from "@/core/inference/dateInference";
+import { planBirthAiContext } from "@/core/inference/aiBirthContextPlanner";
+import { recommendBirthRefinementLevel } from "@/core/inference/intelligenceAdvisor";
 import type {
+  AiBirthRefinementLevel,
+  AiBirthRefinementNotesScope,
   AiBirthRangeRefinementFact,
   AiBirthRefinementDebugTrace,
   AiBirthRangeRefinementFactsRequest,
@@ -15,6 +20,8 @@ export type RefineBirthRangeWithAiParams = {
   document: GeneaDocument;
   personId: string;
   settings: AiSettings;
+  levelOverride?: AiBirthRefinementLevel;
+  includeNotesOverride?: boolean;
 };
 
 type RefinementResponse = {
@@ -30,11 +37,19 @@ type LooseTextExtraction = {
   verdict?: string;
 };
 
-type RetryReason = "length" | "empty_output" | "parse_failure";
+type RetryReason = "length" | "empty_output" | "parse_failure" | "invalid_format" | "invalid_year_domain" | "inverted_range";
 
 type RefinementBudget = {
   attempts: Array<{ tokenBudget: number; compactPrompt: boolean; factsLimit: number }>;
 };
+
+function isGpt5Nano(model: string): boolean {
+  return model.trim().toLowerCase().startsWith("gpt-5-nano");
+}
+
+function isGpt5Mini(model: string): boolean {
+  return model.trim().toLowerCase().startsWith("gpt-5-mini");
+}
 
 function truncateForDebug(value: string, max = 1200): string {
   const normalized = value.trim();
@@ -74,7 +89,7 @@ function extractLooseRangeAndVerdict(raw: string): LooseTextExtraction {
     const b = Number(betweenMatch[2]);
     if (Number.isFinite(a) && Number.isFinite(b)) {
       return {
-        range: a <= b ? [a, b] : [b, a],
+        range: [a, b],
         verdict: text.split(/\r?\n/).find((line) => line.trim().length > 0)?.trim()
       };
     }
@@ -86,7 +101,7 @@ function extractLooseRangeAndVerdict(raw: string): LooseTextExtraction {
     const b = Number(spanMatch[2]);
     if (Number.isFinite(a) && Number.isFinite(b)) {
       return {
-        range: a <= b ? [a, b] : [b, a],
+        range: [a, b],
         verdict: text.split(/\r?\n/).find((line) => line.trim().length > 0)?.trim()
       };
     }
@@ -97,7 +112,7 @@ function extractLooseRangeAndVerdict(raw: string): LooseTextExtraction {
     .replace(/\s+/g, " ")
     .trim();
   if (!verdictCandidate) return {};
-  const verdict = verdictCandidate.slice(0, 260);
+  const verdict = verdictCandidate.slice(0, 2500);
   return { verdict };
 }
 
@@ -116,13 +131,6 @@ function clamp01(value: number): number {
 function toInt(value: unknown): number | undefined {
   if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
   return Math.round(value);
-}
-
-function personLabel(document: GeneaDocument, personId: string | undefined): string {
-  if (!personId) return "Sin persona";
-  const person = document.persons[personId];
-  if (!person) return personId;
-  return `${person.name}${person.surname ? ` ${person.surname}` : ""}`.trim() || person.id;
 }
 
 function isRestrictedTemperatureModel(model: string): boolean {
@@ -144,40 +152,20 @@ function extractRawFromError(error: unknown): string {
 
 function formatSignedVerdict(verdict: string, provider: "chatgpt" | "gemini", model: string): string {
   const trimmed = verdict.trim().replace(/^veredicto:\s*/i, "");
-  const spanish = normalizeVerdictToSpanish(trimmed);
-  const base = spanish.length > 0
-    ? spanish
-    : trimmed.length > 0
+  const base = trimmed.length > 0
     ? trimmed
     : "Rango propuesto por consistencia cronológica y contexto familiar disponible.";
   return `Veredicto: ${base} (Modelo: ${provider}:${model})`;
 }
 
-function normalizeVerdictToSpanish(text: string): string {
-  const lower = text.toLowerCase();
-  const looksEnglish = /\b(range|based on|assuming|born|parents|siblings|children|years old|likely|plausible)\b/i.test(lower);
-  if (!looksEnglish) return text;
-  return "Rango estimado por consistencia cronológica de familiares, con supuestos demográficos plausibles para la época.";
-}
-
-function widenRangeIfLowEvidence(
-  range: [number, number],
-  factsUsed: number,
-  confidence: number | undefined,
-  minHard?: number,
-  maxHard?: number
-): [number, number] {
-  const conf = typeof confidence === "number" ? confidence : 0.5;
-  if (factsUsed >= 10 && conf >= 0.6) return range;
-
-  const widenBy = factsUsed <= 4 || conf < 0.45 ? 8 : 5;
-  let min = range[0] - widenBy;
-  let max = range[1] + widenBy;
-
-  if (minHard !== undefined && min < minHard) min = minHard;
-  if (maxHard !== undefined && max > maxHard) max = maxHard;
-  if (min > max) return range;
-  return [min, max];
+function validateRangeReason(minYear: number | undefined, maxYear: number | undefined): RetryReason | null {
+  if (minYear === undefined || maxYear === undefined || !Number.isFinite(minYear) || !Number.isFinite(maxYear)) {
+    return "invalid_format";
+  }
+  if (minYear > maxYear) return "inverted_range";
+  const maxAllowed = new Date().getFullYear() + 2;
+  if (minYear < 1200 || maxYear > maxAllowed) return "invalid_year_domain";
+  return null;
 }
 
 function scoreFactForBirth(fact: AiBirthRangeRefinementFact): number {
@@ -190,7 +178,9 @@ function scoreFactForBirth(fact: AiBirthRangeRefinementFact): number {
   if (rel === "spouse" && (event === "BIRT" || event === "DEAT")) return 70;
   if (rel === "sibling" && (event === "BIRT" || event === "DEAT")) return 40;
   if (event === "NOTE") return 10;
-  return 20;
+  const base = 20;
+  const layerFactor = fact.layer === 1 ? 1 : fact.layer === 2 ? 0.7 : 0.45;
+  return Math.round(base * layerFactor);
 }
 
 export function rankBirthRefinementFacts(facts: AiBirthRangeRefinementFact[]): AiBirthRangeRefinementFact[] {
@@ -201,26 +191,69 @@ export function rankBirthRefinementFacts(facts: AiBirthRangeRefinementFact[]): A
   });
 }
 
-function getRefinementBudget(profile: AiSettings["birthRefinementProfile"] | undefined): RefinementBudget {
-  if (profile === "max_reliability") {
+function getRefinementBudget(level: AiBirthRefinementLevel, model: string): RefinementBudget {
+  const nano = isGpt5Nano(model);
+  const mini = isGpt5Mini(model);
+  if (level === "simple") {
     return {
-      attempts: [
-        { tokenBudget: 800, compactPrompt: false, factsLimit: 36 },
-        { tokenBudget: 1100, compactPrompt: true, factsLimit: 24 },
-        { tokenBudget: 1300, compactPrompt: true, factsLimit: 16 }
-      ]
+      attempts: nano
+        ? [
+          { tokenBudget: 5200, compactPrompt: false, factsLimit: 220 },
+          { tokenBudget: 7200, compactPrompt: true, factsLimit: 160 },
+          { tokenBudget: 9000, compactPrompt: true, factsLimit: 120 }
+        ]
+        : mini
+          ? [
+            { tokenBudget: 3600, compactPrompt: false, factsLimit: 220 },
+            { tokenBudget: 5200, compactPrompt: true, factsLimit: 160 },
+            { tokenBudget: 7200, compactPrompt: true, factsLimit: 120 }
+          ]
+        : [
+          { tokenBudget: 600, compactPrompt: true, factsLimit: 90 },
+          { tokenBudget: 900, compactPrompt: true, factsLimit: 80 },
+          { tokenBudget: 1200, compactPrompt: true, factsLimit: 70 }
+        ]
     };
   }
-  if (profile === "low_cost") {
+  if (level === "complex") {
     return {
-      attempts: [{ tokenBudget: 450, compactPrompt: true, factsLimit: 14 }]
+      attempts: nano
+        ? [
+          { tokenBudget: 7200, compactPrompt: false, factsLimit: 260 },
+          { tokenBudget: 9000, compactPrompt: true, factsLimit: 180 },
+          { tokenBudget: 11000, compactPrompt: true, factsLimit: 140 }
+        ]
+        : mini
+          ? [
+            { tokenBudget: 5200, compactPrompt: false, factsLimit: 260 },
+            { tokenBudget: 7200, compactPrompt: true, factsLimit: 180 },
+            { tokenBudget: 9000, compactPrompt: true, factsLimit: 140 }
+          ]
+        : [
+          { tokenBudget: 1200, compactPrompt: false, factsLimit: 240 },
+          { tokenBudget: 1800, compactPrompt: true, factsLimit: 170 },
+          { tokenBudget: 2400, compactPrompt: true, factsLimit: 130 }
+        ]
     };
   }
   return {
-    attempts: [
-      { tokenBudget: 600, compactPrompt: false, factsLimit: 24 },
-      { tokenBudget: 900, compactPrompt: true, factsLimit: 16 }
-    ]
+    attempts: nano
+      ? [
+        { tokenBudget: 5200, compactPrompt: false, factsLimit: 220 },
+        { tokenBudget: 7200, compactPrompt: true, factsLimit: 160 },
+        { tokenBudget: 9000, compactPrompt: true, factsLimit: 120 }
+      ]
+      : mini
+        ? [
+          { tokenBudget: 3600, compactPrompt: false, factsLimit: 220 },
+          { tokenBudget: 5200, compactPrompt: true, factsLimit: 160 },
+          { tokenBudget: 7200, compactPrompt: true, factsLimit: 120 }
+        ]
+      : [
+        { tokenBudget: 900, compactPrompt: false, factsLimit: 180 },
+        { tokenBudget: 1300, compactPrompt: true, factsLimit: 140 },
+        { tokenBudget: 1700, compactPrompt: true, factsLimit: 110 }
+      ]
   };
 }
 
@@ -245,6 +278,7 @@ function buildFallbackResult(
     confidence: 0,
     verdict: formatSignedVerdict(extras?.verdict || "Se mantiene el rango local.", provider, model),
     notes: [note, ...extraNotes],
+    rangeValidity: "invalid",
     rawResponseText: extras?.rawResponseText,
     parseError: extras?.parseError,
     model,
@@ -254,93 +288,28 @@ function buildFallbackResult(
   };
 }
 
-function buildBirthRefinementFactsFromTree(document: GeneaDocument, focusPersonId: string): AiBirthRangeRefinementFact[] {
-  const focus = document.persons[focusPersonId];
-  if (!focus) return [];
+function chooseBirthRefinementModel(settings: AiSettings, level: AiBirthRefinementLevel): { provider: "chatgpt" | "gemini"; model: string } {
+  const byLevel = settings.birthRefinementLevelModels?.[level];
+  if (byLevel?.provider && byLevel?.model) {
+    return { provider: byLevel.provider, model: byLevel.model };
+  }
+  const legacy = settings.useCaseModels.birth_refinement;
+  return { provider: legacy.provider, model: legacy.model };
+}
 
-  const facts: AiBirthRangeRefinementFact[] = [];
-  const pushFact = (fact: AiBirthRangeRefinementFact) => {
-    facts.push(fact);
+function resolveNotesPolicy(
+  settings: AiSettings,
+  level: AiBirthRefinementLevel,
+  includeNotesOverride?: boolean
+): { includeNotes: boolean; scope: AiBirthRefinementNotesScope } {
+  const defaultInclude = level === "simple" ? false : true;
+  const includeNotes = includeNotesOverride ?? settings.birthRefinementIncludeNotesByLevel?.[level] ?? defaultInclude;
+  if (!includeNotes || level === "simple") return { includeNotes: false, scope: "none" };
+  const defaultScope: AiBirthRefinementNotesScope = level === "complex" ? "focus_parents_children" : "focus_only";
+  return {
+    includeNotes,
+    scope: settings.birthRefinementNotesScopeByLevel?.[level] ?? defaultScope
   };
-
-  const pushPersonEvents = (
-    personId: string,
-    relationToFocus: AiBirthRangeRefinementFact["relationToFocus"],
-    referencePrefix: string
-  ) => {
-    const person = document.persons[personId];
-    if (!person) return;
-    for (const event of person.events || []) {
-      if (event.type !== "BIRT" && event.type !== "DEAT") continue;
-      if (relationToFocus === "focus" && event.type === "BIRT") continue;
-      pushFact({
-        personId,
-        personLabel: personLabel(document, personId),
-        relationToFocus,
-        eventType: event.type,
-        date: event.date,
-        place: event.place,
-        reference: `${referencePrefix}:${personId}:${event.type}`
-      });
-    }
-    if (person.residence) {
-      pushFact({
-        personId,
-        personLabel: personLabel(document, personId),
-        relationToFocus,
-        eventType: "NOTE",
-        place: person.residence,
-        reference: `${referencePrefix}:${personId}:RESI`
-      });
-    }
-  };
-
-  pushPersonEvents(focusPersonId, "focus", "focus");
-
-  for (const familyId of focus.famc) {
-    const family = document.families[familyId];
-    if (!family) continue;
-
-    if (family.husbandId) pushPersonEvents(family.husbandId, "parent", `famc:${familyId}:parent`);
-    if (family.wifeId) pushPersonEvents(family.wifeId, "parent", `famc:${familyId}:parent`);
-
-    for (const siblingId of family.childrenIds) {
-      if (siblingId === focusPersonId) continue;
-      pushPersonEvents(siblingId, "sibling", `famc:${familyId}:sibling`);
-    }
-  }
-
-  for (const familyId of focus.fams) {
-    const family = document.families[familyId];
-    if (!family) continue;
-
-    const spouseId = family.husbandId === focusPersonId ? family.wifeId : family.husbandId;
-    if (spouseId) pushPersonEvents(spouseId, "spouse", `fams:${familyId}:spouse`);
-
-    for (const childId of family.childrenIds) {
-      pushPersonEvents(childId, "child", `fams:${familyId}:child`);
-    }
-
-    for (const event of family.events || []) {
-      if (event.type !== "MARR" && event.type !== "DIV") continue;
-      pushFact({
-        personId: spouseId || focusPersonId,
-        personLabel: spouseId ? personLabel(document, spouseId) : personLabel(document, focusPersonId),
-        relationToFocus: spouseId ? "spouse" : "focus",
-        eventType: event.type,
-        date: event.date,
-        place: event.place,
-        reference: `family:${familyId}:${event.type}`
-      });
-    }
-  }
-
-  const unique = new Map<string, AiBirthRangeRefinementFact>();
-  for (const fact of facts) {
-    const key = `${fact.reference}|${fact.personId}|${fact.eventType}|${fact.date || ""}|${fact.place || ""}`;
-    if (!unique.has(key)) unique.set(key, fact);
-  }
-  return Array.from(unique.values());
 }
 
 async function invokeRefinement(
@@ -365,6 +334,21 @@ async function invokeRefinement(
   });
 }
 
+function buildRetryCorrectionUserPrompt(baseUserPrompt: string, reason: RetryReason): string {
+  const guidance =
+    reason === "invalid_year_domain"
+      ? "La salida anterior tuvo años fuera de dominio válido (1200..año_actual+2). Corrige y devuelve JSON válido."
+      : reason === "inverted_range"
+        ? "La salida anterior tenía minYear > maxYear. Corrige y devuelve JSON válido."
+        : reason === "invalid_format" || reason === "parse_failure"
+          ? "La salida anterior no respetó el JSON esperado. Corrige y devuelve exactamente el esquema."
+          : reason === "empty_output"
+            ? "La salida anterior quedó vacía. Devuelve JSON válido con rango y justificación."
+            : "Corrige formato y coherencia, devuelve JSON válido.";
+
+  return `${baseUserPrompt}\n\n[CORRECCIÓN OBLIGATORIA]\n${guidance}`;
+}
+
 export async function refineBirthRangeWithAi(
   params: RefineBirthRangeWithAiParams
 ): Promise<AiBirthRangeRefinementResult> {
@@ -373,7 +357,9 @@ export async function refineBirthRangeWithAi(
     throw new BirthRefinementDomainError("Persona no encontrada para refinamiento.");
   }
 
-  const local = estimatePersonBirthYear(params.personId, params.document);
+  const local = estimatePersonBirthYear(params.personId, params.document, {
+    estimatorVersion: params.settings.birthEstimatorVersion
+  });
   if (!local) {
     throw new BirthRefinementDomainError("No hay inferencia local disponible.");
   }
@@ -384,21 +370,29 @@ export async function refineBirthRangeWithAi(
     throw new BirthRefinementDomainError("No hay rango local utilizable para refinar.");
   }
 
-  const minHard = local.minYear;
-  const maxHard = local.maxYear;
-
+  const recommendation = recommendBirthRefinementLevel(local);
+  const selectedLevel: AiBirthRefinementLevel = params.levelOverride || params.settings.birthRefinementLevel || recommendation.recommendedLevel;
+  const notesPolicy = resolveNotesPolicy(params.settings, selectedLevel, params.includeNotesOverride);
+  const planned = planBirthAiContext({
+    document: params.document,
+    focusPersonId: person.id,
+    level: selectedLevel,
+    includeNotes: notesPolicy.includeNotes,
+    notesScope: notesPolicy.scope,
+    minimumSimpleDates: 3
+  });
   const factualRequest: AiBirthRangeRefinementFactsRequest = {
     focusPersonId: person.id,
     focusPersonLabel: `${person.name}${person.surname ? ` ${person.surname}` : ""}`.trim() || person.id,
     focusSex: person.sex || "U",
-    focusBirthDateCurrent: undefined,
-    facts: buildBirthRefinementFactsFromTree(params.document, person.id)
+    facts: planned.facts,
+    contextStats: planned.contextStats
   };
 
-  const useCase = params.settings.useCaseModels.birth_refinement;
-  const provider = useCase.provider;
-  const model = useCase.model;
-  const budget = getRefinementBudget(params.settings.birthRefinementProfile);
+  const selection = chooseBirthRefinementModel(params.settings, selectedLevel);
+  const provider = selection.provider;
+  const model = selection.model;
+  const budget = getRefinementBudget(selectedLevel, model);
   const rankedFacts = rankBirthRefinementFacts(factualRequest.facts);
   const startedAtIso = new Date().toISOString();
   const startedAtMs = Date.now();
@@ -417,9 +411,13 @@ export async function refineBirthRangeWithAi(
       const attempt = budget.attempts[attemptIndex];
       const selectedFacts = rankedFacts.slice(0, attempt.factsLimit);
       const attemptRequest: AiBirthRangeRefinementFactsRequest = { ...factualRequest, facts: selectedFacts };
-      const prompts = attempt.compactPrompt
+      const basePrompts = attempt.compactPrompt
         ? buildBirthRangeRefinementCompactPrompt(attemptRequest)
         : buildBirthRangeRefinementPrompt(attemptRequest);
+      const userPrompt =
+        attemptIndex > 0 && retryReason
+          ? buildRetryCorrectionUserPrompt(basePrompts.user, retryReason)
+          : basePrompts.user;
 
       let response;
       try {
@@ -427,8 +425,8 @@ export async function refineBirthRangeWithAi(
           {
             provider,
             model,
-            systemPrompt: prompts.system,
-            userPrompt: prompts.user,
+            systemPrompt: basePrompts.system,
+            userPrompt,
             preferredApi: params.settings.openAiPreferredApi || "auto",
             tokenBudget: attempt.tokenBudget
           },
@@ -440,8 +438,8 @@ export async function refineBirthRangeWithAi(
             {
               provider,
               model,
-              systemPrompt: prompts.system,
-              userPrompt: prompts.user,
+              systemPrompt: basePrompts.system,
+              userPrompt,
               preferredApi: params.settings.openAiPreferredApi || "auto",
               tokenBudget: attempt.tokenBudget
             },
@@ -450,6 +448,16 @@ export async function refineBirthRangeWithAi(
         } else {
           throw error;
         }
+      }
+
+      if (response.usage) {
+        aiUsageService.saveRecord({
+          provider,
+          model,
+          inputTokens: response.usage.prompt_tokens,
+          outputTokens: response.usage.completion_tokens,
+          useCase: "birth_refinement"
+        }, params.settings);
       }
 
       const textForParse = response.text || "";
@@ -484,52 +492,56 @@ export async function refineBirthRangeWithAi(
 
       if (!parsed) {
         if (loose.range) {
-          let [minYear, maxYear] = loose.range;
+          const [minYear, maxYear] = loose.range;
+          const invalidReason = validateRangeReason(minYear, maxYear);
+          if (invalidReason) {
+            retryReason = invalidReason;
+            retryCount += 1;
+            continue;
+          }
           const notes: string[] = ["Se recuperó un rango desde respuesta IA no estructurada."];
-          if (minHard !== undefined && minYear < minHard) {
-            minYear = minHard;
-            notes.push("Rango IA ajustado al límite mínimo biológico local.");
-          }
-          if (maxHard !== undefined && maxYear > maxHard) {
-            maxYear = maxHard;
-            notes.push("Rango IA ajustado al límite máximo biológico local.");
-          }
-          if (minYear <= maxYear) {
-            const elapsedMs = Math.max(0, Date.now() - startedAtMs);
-            return {
-              minYear,
-              maxYear,
+          const elapsedMs = Math.max(0, Date.now() - startedAtMs);
+          return {
+            minYear,
+            maxYear,
             confidence: 0.35,
             verdict: formatSignedVerdict(
               loose.verdict || "Rango recuperado desde respuesta IA en texto libre.",
               provider,
               model
             ),
-              notes,
-              rawResponseText: rawDebug,
-              parseError: parseAttempt.parseError,
-              model,
+            notes,
+            rangeValidity: "valid",
+            rawResponseText: rawDebug,
+            parseError: parseAttempt.parseError,
+            model,
+            provider,
+            usedFallbackLocal: false,
+            debugTrace: {
+              requestFactsCount: factualRequest.facts.length,
+              inputFactsCount: factualRequest.facts.length,
+              inputFactsUsed: selectedFacts.length,
               provider,
-              usedFallbackLocal: false,
-              debugTrace: {
-                requestFactsCount: factualRequest.facts.length,
-                inputFactsCount: factualRequest.facts.length,
-                inputFactsUsed: selectedFacts.length,
-                provider,
-                model,
-                apiUsed: response.apiUsed,
-                finishReason: response.finishReason,
-                tokenBudget: attempt.tokenBudget,
-                retryCount,
-                retryReason,
-                rawResponseText: rawDebug,
-                parsed: false,
-                parseError: parseAttempt.parseError,
-                startedAt: startedAtIso,
-                elapsedMs
-              }
-            };
-          }
+              model,
+              apiUsed: response.apiUsed,
+              finishReason: response.finishReason,
+              tokenBudget: attempt.tokenBudget,
+              retryCount,
+              retryReason,
+              selectedLevel,
+              recommendedLevel: recommendation.recommendedLevel,
+              layersUsed: planned.layersUsed,
+              contextPolicyVersion: "v2_level_context",
+              selectionSummary: planned.selectionTrace,
+              notesIncluded: notesPolicy.includeNotes,
+              notesScopeApplied: notesPolicy.scope,
+              rawResponseText: rawDebug,
+              parsed: false,
+              parseError: parseAttempt.parseError,
+              startedAt: startedAtIso,
+              elapsedMs
+            }
+          };
         }
         retryReason = "parse_failure";
         retryCount += 1;
@@ -543,52 +555,22 @@ export async function refineBirthRangeWithAi(
         : "Rango IA calculado a partir del contexto factual.";
       const verdict = formatSignedVerdict(verdictRaw, provider, model);
       const notes: string[] = Array.isArray(parsed.notes) ? parsed.notes.filter((n): n is string => typeof n === "string").slice(0, 3) : [];
-
-      if (minYear === undefined || maxYear === undefined) {
-        retryReason = "parse_failure";
+      const invalidReason = validateRangeReason(minYear, maxYear);
+      if (invalidReason) {
+        retryReason = invalidReason;
         retryCount += 1;
         lastVerdict = verdict;
         continue;
       }
-
-      if (minYear > maxYear) {
-        const tmp = minYear;
-        minYear = maxYear;
-        maxYear = tmp;
-        notes.push("Rango IA venía invertido y fue normalizado.");
-      }
-
-      if (minHard !== undefined && minYear < minHard) {
-        minYear = minHard;
-        notes.push("Rango ajustado al límite mínimo biológico local.");
-      }
-      if (maxHard !== undefined && maxYear > maxHard) {
-        maxYear = maxHard;
-        notes.push("Rango ajustado al límite máximo biológico local.");
-      }
-
-      if (minYear > maxYear) {
-        retryReason = "parse_failure";
-        retryCount += 1;
-        lastVerdict = verdict;
-        continue;
-      }
-
-      [minYear, maxYear] = widenRangeIfLowEvidence(
-        [minYear, maxYear],
-        selectedFacts.length,
-        parsed.confidence,
-        minHard,
-        maxHard
-      );
 
       const elapsedMs = Math.max(0, Date.now() - startedAtMs);
       return {
-        minYear,
-        maxYear,
+        minYear: minYear as number,
+        maxYear: maxYear as number,
         confidence: clamp01(parsed.confidence ?? 0),
         verdict,
         notes,
+        rangeValidity: "valid",
         rawResponseText: rawDebug,
         model,
         provider,
@@ -604,6 +586,13 @@ export async function refineBirthRangeWithAi(
           tokenBudget: attempt.tokenBudget,
           retryCount,
           retryReason,
+          selectedLevel,
+          recommendedLevel: recommendation.recommendedLevel,
+          layersUsed: planned.layersUsed,
+          contextPolicyVersion: "v2_level_context",
+          selectionSummary: planned.selectionTrace,
+          notesIncluded: notesPolicy.includeNotes,
+          notesScopeApplied: notesPolicy.scope,
           rawResponseText: rawDebug,
           parsed: true,
           parseError: undefined,
@@ -623,7 +612,13 @@ export async function refineBirthRangeWithAi(
         ? "La IA agotó tokens en razonamiento; se aplicó reintento adaptativo y se mantiene rango local."
         : retryReason === "empty_output"
           ? "No hubo salida textual utilizable; se mantiene rango local."
-          : "Salida IA inválida; se mantiene rango local.",
+          : retryReason === "invalid_year_domain"
+            ? "La IA devolvió años fuera de dominio válido; se conserva rango local."
+            : retryReason === "inverted_range"
+              ? "La IA devolvió un rango invertido; se conserva rango local."
+              : retryReason === "invalid_format"
+                ? "La IA no devolvió formato de rango válido; se conserva rango local."
+                : "Salida IA inválida; se mantiene rango local.",
       {
         verdict: lastVerdict || "La IA no devolvió salida utilizable tras reintentos.",
         rawResponseText: lastRawDebug,
@@ -639,6 +634,13 @@ export async function refineBirthRangeWithAi(
           tokenBudget: lastResponseMeta?.tokenBudget || budget.attempts[0].tokenBudget,
           retryCount,
           retryReason,
+          selectedLevel,
+          recommendedLevel: recommendation.recommendedLevel,
+          layersUsed: planned.layersUsed,
+          contextPolicyVersion: "v2_level_context",
+          selectionSummary: planned.selectionTrace,
+          notesIncluded: notesPolicy.includeNotes,
+          notesScopeApplied: notesPolicy.scope,
           rawResponseText: lastRawDebug || "[empty model output]",
           parsed: false,
           parseError: lastParseError,
@@ -669,8 +671,15 @@ export async function refineBirthRangeWithAi(
           inputFactsUsed: 0,
           provider,
           model,
-          tokenBudget: getRefinementBudget(params.settings.birthRefinementProfile).attempts[0].tokenBudget,
+          tokenBudget: getRefinementBudget(selectedLevel, model).attempts[0].tokenBudget,
           retryCount: 0,
+          selectedLevel,
+          recommendedLevel: recommendation.recommendedLevel,
+          layersUsed: planned.layersUsed,
+          contextPolicyVersion: "v2_level_context",
+          selectionSummary: planned.selectionTrace,
+          notesIncluded: notesPolicy.includeNotes,
+          notesScopeApplied: notesPolicy.scope,
           rawResponseText: rawDebug,
           parsed: false,
           parseError: message,
@@ -681,4 +690,3 @@ export async function refineBirthRangeWithAi(
     );
   }
 }
-

@@ -1,6 +1,11 @@
 import { GeneGraph, GgPerson, GgFamily } from "./types";
 import { GeneaDocument, Person, Family } from "@/types/domain";
 
+function toGgEventType(type: Person["events"][number]["type"] | Family["events"][number]["type"]) {
+    if (type === "BIRT" || type === "DEAT" || type === "MARR" || type === "DIV" || type === "OTHER") return type;
+    return "OTHER";
+}
+
 /**
  * Converts GeneGraph (internal model) to GeneaDocument (UI/Legacy View Model).
  */
@@ -83,7 +88,7 @@ export function fromViewModel(doc: GeneaDocument): GeneGraph {
             deathPlace: p.deathPlace,
             residence: p.residence,
             events: p.events.map(e => ({
-                type: e.type,
+                type: toGgEventType(e.type),
                 date: e.date,
                 place: e.place
             })),
@@ -104,7 +109,7 @@ export function fromViewModel(doc: GeneaDocument): GeneGraph {
             partners,
             children: f.childrenIds,
             events: f.events.map(e => ({
-                type: e.type,
+                type: toGgEventType(e.type),
                 date: e.date,
                 place: e.place
             })),

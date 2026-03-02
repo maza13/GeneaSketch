@@ -1,5 +1,4 @@
-﻿
-import { safeParseJson } from "@/core/ai/parsing";
+﻿import { safeParseJson } from "@/core/ai/parsing";
 import {
   buildExtractionPromptsGlobalFocusOnly,
   buildExtractionPromptsLocal,
@@ -12,6 +11,7 @@ import { normalizePlace } from "@/core/ai/normalization";
 import { heuristicExtractionFromText, resolveExtractionToResolution } from "@/core/ai/resolutionEngine";
 import { rankFocusCandidatesByName } from "@/core/ai/matching";
 import { aiInvokeProvider } from "@/services/aiRuntime";
+import { aiUsageService } from "@/services/aiUsageService";
 import type {
   AiDiagnosticEntry,
   AiAttributeConflict,
@@ -259,6 +259,17 @@ async function invokeWithFailover(
             maxOutputTokens: stage === "extraction" ? settings.tokenLimits.extraction : settings.tokenLimits.resolution,
             temperature: isRestricted ? undefined : 0
           });
+
+          if (response.usage) {
+            aiUsageService.saveRecord({
+              provider,
+              model,
+              inputTokens: response.usage.prompt_tokens,
+              outputTokens: response.usage.completion_tokens,
+              useCase: stage
+            }, settings);
+          }
+
           return {
             text: response.text,
             diagnostics,
@@ -715,7 +726,3 @@ export async function runAiGlobalFocusDetection(params: Omit<RunParams, "context
     ]
   };
 }
-
-
-
-

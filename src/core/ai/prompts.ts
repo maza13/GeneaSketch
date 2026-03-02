@@ -94,12 +94,13 @@ export function buildBirthRangeRefinementPrompt(
     "Output EXACT shape: {\"minYear\": number, \"maxYear\": number, \"confidence\": number, \"verdict\": string, \"notes\": string[]}",
     "Never return a single-year-only decision; always return a range.",
     "If evidence is weak, still return your best coarse range and explain uncertainty in verdict/notes.",
-    "Use only the provided tree facts as anchors. You may use general demographic/historical reasoning.",
+    "Use the provided tree facts as anchors. Notes are optional and only if present in facts.",
     "Do not invent new people, IDs, or fictional events.",
     "Ensure minYear <= maxYear.",
     "confidence must be between 0 and 1.",
-    "Keep verdict short (one sentence).",
-    "Verdict style must be justificative: explain briefly WHY that range is the most plausible."
+    "Verdict must be detailed and justificative, not a one-line summary.",
+    "Preferred mixed structure for verdict: 1) Evidencias del árbol, 2) Aporte de notas familiares, 3) Supuestos demográficos/históricos, 4) Incertidumbres y por qué el rango final es el más plausible.",
+    "Notes should list concrete clues used (dates, notas, relaciones)."
   ].join("\n");
 
   const user = JSON.stringify(
@@ -107,9 +108,9 @@ export function buildBirthRangeRefinementPrompt(
       focusPerson: {
         id: request.focusPersonId,
         label: request.focusPersonLabel,
-        sex: request.focusSex,
-        currentBirthDateGedcom: request.focusBirthDateCurrent || null
+        sex: request.focusSex
       },
+      contextStats: request.contextStats || null,
       facts: request.facts,
       task: "Infer a plausible birth range for the focus person using these facts and demographic/historical reasoning."
     },
@@ -129,8 +130,8 @@ export function buildBirthRangeRefinementCompactPrompt(
     "Return ONLY valid JSON. No markdown. No prose.",
     "Output EXACT shape: {\"minYear\": number, \"maxYear\": number, \"confidence\": number, \"verdict\": string, \"notes\": string[]}",
     "If token budget is tight, prioritize valid JSON over explanation detail.",
-    "verdict must be one justificative line (why this range is plausible).",
-    "notes must contain at most 3 short items.",
+    "verdict must be justificative with useful detail (prefer 2-4 sentences if possible).",
+    "notes should summarize concrete evidence and only mention notes if they are present in facts.",
     "Ensure minYear <= maxYear and confidence between 0 and 1."
   ].join("\n");
 
@@ -139,9 +140,9 @@ export function buildBirthRangeRefinementCompactPrompt(
       focusPerson: {
         id: request.focusPersonId,
         label: request.focusPersonLabel,
-        sex: request.focusSex,
-        currentBirthDateGedcom: request.focusBirthDateCurrent || null
+        sex: request.focusSex
       },
+      contextStats: request.contextStats || null,
       facts: request.facts,
       task: "Infer best birth range and output strict JSON only."
     },

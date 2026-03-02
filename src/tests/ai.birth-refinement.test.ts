@@ -83,6 +83,7 @@ describe("ai birth refinement", () => {
     expect(aiInvokeProviderMock).toHaveBeenCalledTimes(1);
     expect(aiInvokeProviderMock.mock.calls[0][0].temperature).toBeUndefined();
     expect(result.usedFallbackLocal).toBe(false);
+    expect(result.rangeValidity).toBe("valid");
     expect(result.verdict).toContain("Veredicto:");
     expect(result.verdict).toContain("Consistente");
     expect(result.verdict).toContain("Modelo: chatgpt:gpt-5-nano");
@@ -91,6 +92,11 @@ describe("ai birth refinement", () => {
   it("retries without temperature when provider rejects it", async () => {
     const settings = createDefaultAiSettings();
     settings.useCaseModels.birth_refinement = { provider: "chatgpt", model: "gpt-4o" };
+    settings.birthRefinementLevelModels = {
+      simple: { provider: "chatgpt", model: "gpt-4o" },
+      balanced: { provider: "chatgpt", model: "gpt-4o" },
+      complex: { provider: "chatgpt", model: "gpt-4o" }
+    };
 
     aiInvokeProviderMock
       .mockRejectedValueOnce(new Error("HTTP_400: OpenAI error: {\"error\":{\"param\":\"temperature\",\"code\":\"unsupported_value\"}}"))
@@ -132,7 +138,8 @@ describe("ai birth refinement", () => {
     expect(request.userPrompt).toContain("\"facts\"");
     expect(request.userPrompt).not.toContain("localInference");
     expect(request.userPrompt).not.toContain("suggestedRange");
-    expect(request.userPrompt).toContain("\"currentBirthDateGedcom\": null");
+    expect(request.userPrompt).not.toContain("localBoundsContext");
+    expect(request.userPrompt).not.toContain("currentBirthDateGedcom");
     expect(request.userPrompt).not.toContain("focus:@I1@:BIRT");
   });
 
@@ -203,6 +210,11 @@ describe("ai birth refinement", () => {
 
     const settings = createDefaultAiSettings();
     settings.useCaseModels.birth_refinement = { provider: "chatgpt", model: "gpt-5-mini" };
+    settings.birthRefinementLevelModels = {
+      simple: { provider: "chatgpt", model: "gpt-5-mini" },
+      balanced: { provider: "chatgpt", model: "gpt-5-mini" },
+      complex: { provider: "chatgpt", model: "gpt-5-mini" }
+    };
 
     const result = await refineBirthRangeWithAi({
       document: buildDoc(),
@@ -212,7 +224,31 @@ describe("ai birth refinement", () => {
 
     expect(result.verdict).toContain("Veredicto:");
     expect(result.verdict).toContain("Modelo: chatgpt:gpt-5-mini");
-    expect(result.verdict.toLowerCase()).not.toContain("range based on");
+    expect(result.verdict).toContain("Range based on");
+  });
+
+  it("does not clamp or widen a valid AI range", async () => {
+    aiInvokeProviderMock.mockResolvedValue({
+      text: JSON.stringify({
+        minYear: 1700,
+        maxYear: 1710,
+        confidence: 0.52,
+        verdict: "Rango plausible por evidencia histórica.",
+        notes: ["Sin clamping esperado"]
+      }),
+      model: "gpt-5-nano",
+      provider: "chatgpt"
+    } as any);
+
+    const result = await refineBirthRangeWithAi({
+      document: buildDoc(),
+      personId: "@I1@",
+      settings: createDefaultAiSettings()
+    });
+
+    expect(result.usedFallbackLocal).toBe(false);
+    expect(result.minYear).toBe(1700);
+    expect(result.maxYear).toBe(1710);
   });
 
   it("retries when finish reason is length and succeeds on second attempt", async () => {
@@ -241,8 +277,8 @@ describe("ai birth refinement", () => {
     });
 
     expect(aiInvokeProviderMock).toHaveBeenCalledTimes(2);
-    expect(aiInvokeProviderMock.mock.calls[0][0].maxOutputTokens).toBe(600);
-    expect(aiInvokeProviderMock.mock.calls[1][0].maxOutputTokens).toBe(900);
+    expect(aiInvokeProviderMock.mock.calls[0][0].maxOutputTokens).toBe(5200);
+    expect(aiInvokeProviderMock.mock.calls[1][0].maxOutputTokens).toBe(7200);
     expect(result.usedFallbackLocal).toBe(false);
     expect(result.debugTrace?.retryCount).toBe(1);
     expect(result.debugTrace?.retryReason).toBe("length");
@@ -259,6 +295,14 @@ describe("ai birth refinement", () => {
         finishReason: "length",
         apiUsed: "chat_completions",
         rawBody: "{\"choices\":[{\"finish_reason\":\"length\",\"message\":{\"content\":\"\"}}]}"
+      } as any)
+      .mockResolvedValueOnce({
+        text: "",
+        model: "gpt-5-nano",
+        provider: "chatgpt",
+        finishReason: "length",
+        apiUsed: "responses",
+        rawBody: "{\"status\":\"incomplete\"}"
       } as any)
       .mockResolvedValueOnce({
         text: "",

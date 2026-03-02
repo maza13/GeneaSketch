@@ -86,6 +86,16 @@ export function expandGraph(document: GeneaDocument, config: ViewConfig): Expand
     for (const pId of directLine) {
       (indexes.spousesByPerson[pId] ?? []).forEach(s => finalVisiblePersons.add(s));
     }
+
+    // Extended preset also honors collateral depth sliders when provided.
+    const collateralAncestorDepth = Math.max(config.depth.unclesGreatUncles, config.depth.unclesCousins > 0 ? 1 : 0);
+    const collateralAncestorsByDepth = collectAncestorsForMultiple(indexes, focusRoots, collateralAncestorDepth);
+    const unclesGreatUncles = collectUnclesGreatUncles(indexes, collateralAncestorsByDepth, config.depth.unclesGreatUncles);
+    const siblingsNephews = collectSiblingsNephewsForMultiple(indexes, focusRoots, config.depth.siblingsNephews);
+    const unclesCousins = collectUnclesCousins(indexes, focusRoots, config.depth.unclesCousins);
+    for (const personId of [...unclesGreatUncles, ...siblingsNephews, ...unclesCousins]) {
+      finalVisiblePersons.add(personId);
+    }
   } else if (config.preset === "direct_ancestors") {
     // All direct ancestors. No collaterals or descendants.
     const allAncestors = collectAncestorsForMultiple(indexes, focusRoots, 25);

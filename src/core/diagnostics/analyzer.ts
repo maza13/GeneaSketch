@@ -11,12 +11,7 @@ function getYearFromEvent(events: { type: string; date?: string }[] | undefined,
     return match ? parseInt(match[1], 10) : undefined;
 }
 
-const analysisCache = new WeakMap<GeneaDocument, DiagnosticReport>();
-
 export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
-    const cached = analysisCache.get(doc);
-    if (cached) return cached;
-
     const issues: DiagnosticIssue[] = [];
 
     const categoryCounts: Record<DiagnosticCategory, number> = {
@@ -329,6 +324,5 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
         categoryCounts
     };
 
-    analysisCache.set(doc, report);
     return report;
 }

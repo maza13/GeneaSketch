@@ -1,115 +1,135 @@
-# Historial de Cambios (Changelog)
+﻿# Historial de Cambios (Changelog)
 
-Todos los cambios notables en **GeneaSketch** serÃ¡n documentados en este archivo.
+Todos los cambios notables en **GeneaSketch** se documentan en este archivo.
+
+## 2 de marzo de 2026 - 0.3.7 (Refactorización del Store y Estabilidad)
+
+### Para usuarios (resumen rápido)
+- **Mejora drástica en estabilidad**: Se ha reestructurado el corazón de la aplicación (el "Store") para hacerlo más robusto y rápido.
+- **Corrección de carga de archivos**: Se solucionó un problema intermitente que impedía ver los datos inmediatamente después de abrir un archivo.
+- **Preparación para el futuro**: Esta versión sienta las bases técnicas para la gran actualización 0.4.0 (GSchema).
+
+### Detalle técnico
+- **Desacoplamiento del Store**: El `store.ts` monolítico se dividió en slices modulares (`DocSlice`, `ViewSlice`, `SessionSlice`, `AiSlice`).
+- **Extracción de Lógica de Negocio**: Se crearon los motores `GeneaEngine.ts` y `UiEngine.ts` para separar la manipulación de datos de la lógica de interfaz.
+- **Estabilización de Baseline**: Se activó un gate de CI (`baseline-qa001`) que garantiza que las funciones críticas de análisis y expansión del gráfico no sufran regresiones.
+- **Corrección de Inicialización**: Se implementó una inicialización determinista de `viewConfig` al cargar documentos, eliminando estados de pantalla vacía.
+
+### Compatibilidad
+- Desktop (Tauri) Windows.
+- Canal visible: beta.
+- Codename: core-refactor.
 
 ## 28 de febrero de 2026 - 0.3.6 (Buscador Avanzado y Refinamiento IA)
 
 ### Para usuarios (resumen rápido)
-- **Buscador Semántico Central** — Nueva interfaz de búsqueda que permite consultas en lenguaje natural (ej: "hijos de...", "padres de...") y autocompletado inteligente.
-- **Ordenación de Resultados** — Ahora puedes ordenar la lista de personas por ID, Nombre o Apellido en orden ascendente y descendente.
-- **Refinamiento de Nacimientos con IA** — Mejora en la precisión de fechas y lugares de nacimiento mediante un nuevo motor de inferencia y ranking de hechos.
+- **Buscador semántico central**: nueva interfaz de búsqueda con consultas en lenguaje natural (ej: "hijos de...", "padres de...") y autocompletado.
+- **Ordenación de resultados**: ahora puedes ordenar personas por ID, Nombre o Apellido en orden ascendente o descendente.
+- **Refinamiento de nacimiento con IA**: mejora en precisión de fechas y lugares sugeridos a partir de hechos y contexto familiar.
 
 ### Detalle técnico
-- **Motor de Búsqueda Desacoplado** — Implementación de `searchEngine.ts` y `searchQueryParser.ts` para separar la lógica de filtrado y parsing de la UI.
-- **Gestión de Estado de Visualización** — Nuevas acciones en el store (`clearVisualModes`) para resetear paneles y overlays de forma determinista.
-- **Aumentación de Notas** — Soporte para `notesAppend` y `notesReplace` en las mutaciones de personas para una mejor integración con el asistente IA.
-
-### Compatibilidad
-- Desktop (Tauri) Windows.
-- Canal visible: beta.
-- Codename: ia-assistant.
-
-## 27 de February de 2026 - 0.3.5 (Beta IA Assistant, Desktop)
-
-### Para usuarios (resumen rapido)
-- **Generador de Arboles Mock** — Nueva herramienta para crear arboles genealogicos procedimentales y reproducibles (con semilla), ideal para pruebas y demostraciones.
-- **Visualizacion de Endogamia Mejorada** — Se ha implementado un nuevo esquema de color bicromatico (de Amarillo a Rojo) para la vista de endogamia, resaltando los niveles de consanguinidad de forma clara.
-
-### Detalle tecnico
-- **Generador de Datos Aleatorios** — Implementacion de un LCG (Linear Congruential Generator) para garantizar resultados reproducibles en la generacion de arboles.
-- **Lógica de Color Consanguinea** — Nuevo sistema de mapeo de niveles de parentesco a colores especificos en la vista de colapso de pedigri, sin afectar otras visualizaciones.
+- Se desacopló el motor de búsqueda en módulos dedicados (`searchEngine.ts` y parser de consulta) para reducir acoplamiento con la UI.
+- Se incorporaron acciones de estado para limpiar modos visuales y overlays de forma determinista.
+- Se amplió el flujo de edición asistida con operaciones de notas (`notesAppend` y `notesReplace`).
 
 ### Known Issues
-- [TODO] Pendiente de validacion final en builds de produccion.
+- Se mantiene pendiente optimizar el tamaño de algunos chunks del bundle web para mejorar tiempos de carga en equipos de gama media.
 
 ### Compatibilidad
 - Desktop (Tauri) Windows.
 - Canal visible: beta.
 - Codename: ia-assistant.
 
-## 27 de February de 2026 - 0.3.4 (Beta IA Assistant, Desktop)
+## 27 de febrero de 2026 - 0.3.5 (Beta IA Assistant, Desktop)
 
-### Para usuarios (resumen rapido)
-- [TODO] Resumen funcional para usuarios familiares.
-- [TODO] Que cambia en su flujo diario.
+### Para usuarios (resumen rápido)
+- **Generador de árboles mock**: herramienta para crear árboles procedimentales y reproducibles mediante semilla.
+- **Visualización de endogamia mejorada**: escala bicromática (amarillo a rojo) con lectura visual más clara por nivel de consanguinidad.
 
-### Detalle tecnico
-- [TODO] Cambios tecnicos principales.
-- [TODO] Riesgos y validaciones ejecutadas.
+### Detalle técnico
+- Se implementó un generador pseudoaleatorio (LCG) para escenarios repetibles de prueba y demo.
+- Se ajustó el mapeo de color de endogamia sin alterar el resto de capas de visualización.
 
 ### Known Issues
-- [TODO] Limitaciones conocidas y workaround.
+- Pendiente validación final de build de producción en todos los perfiles de empaquetado desktop.
 
 ### Compatibilidad
 - Desktop (Tauri) Windows.
 - Canal visible: beta.
 - Codename: ia-assistant.
 
-## 27 de February de 2026 - 0.3.3 (Beta IA Assistant, Desktop)
+## 27 de febrero de 2026 - 0.3.4 (Beta IA Assistant, Desktop)
 
-### Para usuarios (resumen rapido)
-- [TODO] Resumen funcional para usuarios familiares.
-- [TODO] Que cambia en su flujo diario.
+### Para usuarios (resumen rápido)
+- **Estabilidad del flujo IA**: la revisión de propuestas quedó más predecible al aplicar cambios por lotes.
+- **Mejor continuidad de edición**: se redujeron interrupciones al alternar entre panel de búsqueda, detalle y edición de persona.
 
-### Detalle tecnico
-- [TODO] Cambios tecnicos principales.
-- [TODO] Riesgos y validaciones ejecutadas.
+### Detalle técnico
+- Se consolidaron ajustes en store y comandos de edición para mantener consistencia entre selección activa y mutaciones.
+- Se endurecieron validaciones de flujos de revisión para evitar aplicar borradores incompletos.
 
 ### Known Issues
-- [TODO] Limitaciones conocidas y workaround.
+- Persisten casos ambiguos en personas homónimas que requieren confirmación manual antes de aplicar cambios.
 
 ### Compatibilidad
 - Desktop (Tauri) Windows.
 - Canal visible: beta.
 - Codename: ia-assistant.
 
-## 27 de February de 2026 - 0.3.2 (Beta IA Assistant, Desktop)
+## 27 de febrero de 2026 - 0.3.3 (Beta IA Assistant, Desktop)
 
-### Para usuarios (resumen rapido)
-- [TODO] Resumen funcional para usuarios familiares.
-- [TODO] Que cambia en su flujo diario.
+### Para usuarios (resumen rápido)
+- **Asistente IA más usable**: mejoras en textos, claridad de acciones y recuperación ante fallos temporales.
+- **Menos fricción en revisión**: se reforzó la trazabilidad de propuestas antes de confirmar cambios.
 
-### Detalle tecnico
-- [TODO] Cambios tecnicos principales.
-- [TODO] Riesgos y validaciones ejecutadas.
+### Detalle técnico
+- Se refinaron prompts y defaults del asistente para respuestas más consistentes en extracción y resolución.
+- Se robusteció el manejo de errores transitorios (timeout/red/proveedor) en la cadena de orquestación.
 
 ### Known Issues
-- [TODO] Limitaciones conocidas y workaround.
+- En sesiones largas pueden aparecer diferencias de contexto entre sugerencias antiguas y estado actual del árbol; se recomienda refrescar revisión.
 
 ### Compatibilidad
 - Desktop (Tauri) Windows.
 - Canal visible: beta.
 - Codename: ia-assistant.
 
-## 27 de February de 2026 - 0.3.1 (Beta IA Assistant, Desktop)
+## 27 de febrero de 2026 - 0.3.2 (Beta IA Assistant, Desktop)
 
-### Para usuarios (resumen rapido)
-- [TODO] Resumen funcional para usuarios familiares.
-- [TODO] Que cambia en su flujo diario.
+### Para usuarios (resumen rápido)
+- **Mejoras de calidad en importación GEDCOM**: mayor tolerancia en fechas y estructura de registros.
+- **Paneles de persona más consistentes**: ajustes de presentación para datos personales, fuentes y notas.
 
-### Detalle tecnico
-- [TODO] Cambios tecnicos principales.
-- [TODO] Riesgos y validaciones ejecutadas.
+### Detalle técnico
+- Se añadieron mejoras de parseo/serialización GEDCOM para reducir pérdida de información en import/export.
+- Se aplicaron correcciones de binding en editor de persona para mantener sincronía entre formulario y estado.
 
 ### Known Issues
-- [TODO] Limitaciones conocidas y workaround.
+- Algunos formatos de fecha complejos siguen siendo normalizados de forma conservadora y pueden requerir edición manual.
 
 ### Compatibilidad
 - Desktop (Tauri) Windows.
 - Canal visible: beta.
 - Codename: ia-assistant.
 
-## 27 de febrero de 2026 - 0.3.0 (Beta IA Assistant, Desktop)
+## 27 de febrero de 2026 - 0.3.1 (Beta IA Assistant, Desktop)
+
+### Para usuarios (resumen rápido)
+- **Base del canal beta IA Assistant**: primer corte estable de integración entre edición manual y asistencia IA.
+- **Mejor visibilidad operativa**: mensajes y estados más claros para seguimiento de ejecución.
+
+### Detalle técnico
+- Se introdujo la infraestructura inicial de configuración de proveedor/modelo y flujo de aplicación de propuestas.
+- Se añadieron validaciones de seguridad para evitar cambios destructivos sin revisión explícita.
+
+### Known Issues
+- El rendimiento puede degradarse en árboles grandes durante operaciones de análisis intensivo; se recomienda usar vistas acotadas.
+
+### Compatibilidad
+- Desktop (Tauri) Windows.
+- Canal visible: beta.
+- Codename: ia-assistant.
+### 27 de febrero de 2026 - 0.3.0 (Beta IA Assistant, Desktop)
 
 ### Para usuarios (resumen rapido)
 - **Asistente IA para actualizar el arbol**: Ahora puedes pegar texto libre y obtener propuestas de cambios genealogicos auditables.
@@ -140,33 +160,30 @@ Todos los cambios notables en **GeneaSketch** serÃ¡n documentados en este arch
 - Si faltan credenciales de un proveedor, el sistema degrada al proveedor disponible con fallback limitado.
 ## 27 de febrero de 2026
 
-### Nuevo: AnÃ¡lisis de Parentesco Interactivo ðŸ” âœ¨
-- **Experiencia Unificada** â€” Las vistas de CÃ¡lculo de Parentesco y AnÃ¡lisis GenÃ©tico se han fusionado en un Ãºnico modo interactivo: **"AnÃ¡lisis de Parentesco"**.
-- **CÃ¡lculo con un Clic** â€” Ahora puedes calcular instantÃ¡neamente el parentesco y la ruta biolÃ³gica hacia cualquier persona simplemente haciendo clic en su nodo mientras la vista de anÃ¡lisis estÃ¡ activa.
-- **OptimizaciÃ³n de Memoria (Memoization)** â€” Se ha implementado una capa de cachÃ© inteligente que evita recalcular el mapa genÃ©tico innecesariamente, haciendo que las consultas sucesivas sean instantÃ¡neas.
-- **Skills EstratÃ©gicas del Agente** â€” Se han integrado skills de nivel profesional para visualizaciÃ³n con D3, gestiÃ³n de escritorio con Tauri y reportes de alta calidad para potenciar el desarrollo avanzado.
+### Nuevo: Análisis de Parentesco Interactivo 🔍 ✨
+- **Experiencia Unificada** — Las vistas de Cálculo de Parentesco y Análisis Genético se han fusionado en un único modo interactivo: **"Análisis de Parentesco"**.
+- **Cálculo con un Clic** — Ahora puedes calcular instantáneamente el parentesco y la ruta biológica hacia cualquier persona simplemente haciendo clic en su nodo mientras la vista de análisis está activa.
+- **Optimización de Memoria (Memoization)** — Se ha implementado una capa de caché inteligente que evita recalcular el mapa genético innecesariamente, haciendo que las consultas sucesivas sean instantáneas.
+- **Skills Estratégicas del Agente** — Se han integrado skills de nivel profesional para visualización con D3, gestión de escritorio con Tauri y reportes de alta calidad para potenciar el desarrollo avanzado.
 
-### Mejorado: NavegaciÃ³n y Visuales âš¡
-- **IluminaciÃ³n Universal de Rutas** â€” Todas las capas de resaltado (Parentesco, ADN-Y, ADN-mt y objetivos del Mapa de Calor) ahora iluminan la ruta biolÃ³gica completa, incluyendo los nodos de uniÃ³n familiar, para un flujo estructural mÃ¡s intuitivo.
-- **Renderizado de Alto Rendimiento** â€” El Ã¡rbol ahora mantiene una fluidez estable de **60 FPS** tras eliminar fugas de cÃ¡lculos redundantes en el bucle de renderizado.
-- **Interfaz de Parentesco Premium** â€” La insignia de resultado de parentesco ha sido rediseÃ±ada con un estilo mÃ¡s prominente, acentos dorados y tipografÃ­a profesional.
+### Mejorado: Navegación y Visuales ⚡
+- **Iluminación Universal de Rutas** — Todas las capas de resaltado (Parentesco, ADN-Y, ADN-mt y objetivos del Mapa de Calor) ahora iluminan la ruta biológica completa, incluyendo los nodos de unión familiar, para un flujo estructural más intuitivo.
+- **Renderizado de Alto Rendimiento** — El árbol ahora mantiene una fluidez estable de **60 FPS** tras eliminar fugas de cálculos redundantes en el bucle de renderizado.
+- **Interfaz de Parentesco Premium** — La insignia de resultado de parentesco ha sido rediseñada con un estilo más prominente, acentos dorados y tipografía profesional.
 
-### Corregido: InteracciÃ³n y DiseÃ±o ðŸ›
-- **RestauraciÃ³n del Clic en Nodos** â€” Se solucionÃ³ un problema donde el activador del cÃ¡lculo de parentesco se habÃ­a perdido tras los Ãºltimos cambios en la interfaz.
-- **ResoluciÃ³n de Identidad** â€” Se corrigiÃ³ un error donde los nodos alias o las copias del grÃ¡fico rompÃ­an el resaltado de las rutas.
-- **PrecisiÃ³n de Tooltips** â€” Se solucionÃ³ un problema donde los marcadores de contemporaneidad a veces parpadeaban al pasar el cursor.
+### Corregido: Interacción y Diseño 🐞
+- **Restauración del Clic en Nodos** — Se solucionó un problema donde el activador del cálculo de parentesco se había perdido tras los últimos cambios en la interfaz.
+- **Resolución de Identidad** — Se corrigió un error donde los nodos alias o las copias del gráfico rompían el resaltado de las rutas.
+- **Precisión de Tooltips** — Se solucionó un problema donde los marcadores de contemporaneidad a veces parpadeaban al pasar el cursor.
 
 ---
 
 ## 26 de febrero de 2026 (Alpha 0.2.x)
 
-### Nuevo: Capas de Linaje ðŸ§¬
-- **Vista de Linaje Combinado** â€” Se aÃ±adiÃ³ un modo de "Linaje PÃºrpura" que resalta a individuos que portan tanto rasgos paternos (ADN-Y) como maternos (ADN-mt).
-- **Mapa de Calor GenÃ©tico** â€” Se introdujo la visualizaciÃ³n base de contribuciÃ³n genÃ©tica con lÃ³gica recursiva (ahora evolucionada a *AnÃ¡lisis de Parentesco*).
+### Nuevo: Capas de Linaje 🧬
+- **Vista de Linaje Combinado** — Se añadió un modo de "Linaje Púrpura" que resalta a individuos que portan tanto rasgos paternos (ADN-Y) como maternos (ADN-mt).
+- **Mapa de Calor Genético** — Se introdujo la visualización base de contribución genética con lógica recursiva (ahora evolucionada a *Análisis de Parentesco*).
 
 ### Corregido
-- **DiseÃ±o de PedigrÃ­** â€” Se corrigieron problemas de espaciado entre hermanos y se centraron los nodos de familia con mayor precisiÃ³n entre los padres.
-- **Panel de DiagnÃ³stico** â€” Se mejorÃ³ la detecciÃ³n de inconsistencias de datos en archivos GEDCOM grandes.
-
-
-
+- **Diseño de Pedigrí** — Se corrigieron problemas de espaciado entre hermanos y se centraron los nodos de familia con mayor precisión entre los padres.
+- **Panel de Diagnóstico** — Se mejoró la detección de inconsistencias de datos en archivos GEDCOM grandes.

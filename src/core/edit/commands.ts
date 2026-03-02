@@ -1,6 +1,6 @@
 import type { Event, Family, GeneaDocument, PendingRelationType, Person } from "@/types/domain";
 
-type PersonInput = {
+export type PersonInput = {
   name: string;
   surname?: string;
   birthDate?: string;
@@ -58,6 +58,20 @@ function upsertEvent(person: Person, type: "BIRT" | "DEAT", options: { create?: 
   }
 }
 
+function syncLegacyBirthDeathFromEvents(person: Person) {
+  const birth = person.events.find((event) => event.type === "BIRT");
+  const death = person.events.find((event) => event.type === "DEAT");
+  person.birthDate = birth?.date;
+  person.birthPlace = birth?.place;
+  person.deathDate = death?.date;
+  person.deathPlace = death?.place;
+  if (death?.date || death?.place) {
+    person.lifeStatus = "deceased";
+  } else if (person.lifeStatus !== "deceased") {
+    person.lifeStatus = "alive";
+  }
+}
+
 function createFamily(id: string): Family {
   return {
     id,
@@ -95,6 +109,8 @@ function cloneDoc(doc: GeneaDocument): GeneaDocument {
     parentChildLinks: doc.parentChildLinks ? structuredClone(doc.parentChildLinks) : undefined,
     siblingLinks: doc.siblingLinks ? structuredClone(doc.siblingLinks) : undefined,
     media: structuredClone(doc.media),
+    sources: doc.sources ? structuredClone(doc.sources) : undefined,
+    notes: doc.notes ? structuredClone(doc.notes) : undefined,
     metadata: structuredClone(doc.metadata)
   };
 }
@@ -129,6 +145,8 @@ export function createNewTree(): GeneaDocument {
     parentChildLinks: {},
     siblingLinks: {},
     media: {},
+    sources: {},
+    notes: {},
     metadata: { sourceFormat: "GED", gedVersion: "7.0.x" }
   };
 }
@@ -187,6 +205,14 @@ export function updatePerson(
     photoDataUrl?: string | null;
     notesAppend?: string[];
     notesReplace?: string[];
+    notesInlineReplace?: string[];
+    sourceRefs?: Person["sourceRefs"];
+    mediaRefs?: string[];
+    noteRefs?: string[];
+    names?: Person["names"];
+    change?: Person["change"];
+    events?: Event[];
+    rawTagsPatch?: Record<string, string[]>;
   }
 ): GeneaDocument {
   const next = cloneDoc(doc);
@@ -198,6 +224,46 @@ export function updatePerson(
   if (patch.lifeStatus !== undefined) person.lifeStatus = patch.lifeStatus;
   if (patch.isPlaceholder !== undefined) person.isPlaceholder = patch.isPlaceholder;
 
+  if (Array.isArray(patch.names)) {
+    person.names = patch.names.map((item) => ({ ...item }));
+  }
+
+  if (patch.change !== undefined) {
+    person.change = patch.change ? { ...patch.change } : undefined;
+  }
+
+  if (Array.isArray(patch.sourceRefs)) {
+    person.sourceRefs = patch.sourceRefs.map((ref) => ({ ...ref }));
+    if (!next.sources) next.sources = {};
+    for (const ref of person.sourceRefs) {
+      const sourceId = (ref.id || "").trim();
+      if (!sourceId) continue;
+      if (!next.sources[sourceId]) {
+        next.sources[sourceId] = {
+          id: sourceId,
+          title: ref.title?.trim() || undefined,
+          text: ref.text?.trim() || undefined
+        };
+      }
+    }
+  }
+
+  if (Array.isArray(patch.mediaRefs)) {
+    person.mediaRefs = Array.from(new Set(patch.mediaRefs.filter((id) => typeof id === "string" && id.trim().length > 0)));
+  }
+
+  if (Array.isArray(patch.noteRefs)) {
+    person.noteRefs = Array.from(new Set(patch.noteRefs.filter((id) => typeof id === "string" && id.trim().length > 0)));
+  }
+
+  if (Array.isArray(patch.events)) {
+    person.events = patch.events.map((event, index) => ({
+      ...event,
+      id: event.id || `evt-${index + 1}`
+    }));
+    syncLegacyBirthDeathFromEvents(person);
+  }
+
   if (patch.birthDate !== undefined || patch.birthPlace !== undefined) {
     const existingDate = person.events.find(e => e.type === "BIRT")?.date;
     const existingPlace = person.events.find(e => e.type === "BIRT")?.place;
@@ -205,8 +271,7 @@ export function updatePerson(
     const place = patch.birthPlace !== undefined ? (patch.birthPlace === "" ? undefined : patch.birthPlace) : existingPlace;
 
     upsertEvent(person, "BIRT", { create: !!(date || place), date, place });
-    person.birthDate = date;
-    person.birthPlace = place;
+    syncLegacyBirthDeathFromEvents(person);
   }
 
   const hasDeathPatch = patch.lifeStatus !== undefined || patch.deathDate !== undefined || patch.deathPlace !== undefined;
@@ -218,9 +283,8 @@ export function updatePerson(
     const place = patch.deathPlace !== undefined ? (patch.deathPlace === "" ? undefined : patch.deathPlace) : existingPlace;
 
     upsertEvent(person, "DEAT", { create: isDead || !!(date || place), date, place });
-    person.deathDate = date;
-    person.deathPlace = place;
     person.lifeStatus = isDead || !!(date || place) ? "deceased" : "alive";
+    syncLegacyBirthDeathFromEvents(person);
   }
 
   if (patch.residence !== undefined) {
@@ -255,6 +319,19 @@ export function updatePerson(
     }
   }
 
+  if (Array.isArray(patch.notesInlineReplace)) {
+    const cleaned = patch.notesInlineReplace
+      .map((note) => (typeof note === "string" ? note.trim() : ""))
+      .filter((note) => note.length > 0);
+    if (cleaned.length > 0) {
+      person.rawTags = { ...(person.rawTags || {}), NOTE: cleaned };
+    } else if (person.rawTags?.NOTE) {
+      const nextRaw = { ...(person.rawTags || {}) };
+      delete nextRaw.NOTE;
+      person.rawTags = Object.keys(nextRaw).length > 0 ? nextRaw : undefined;
+    }
+  }
+
   if (Array.isArray(patch.notesAppend) && patch.notesAppend.length > 0) {
     const additions = patch.notesAppend
       .map((note) => (typeof note === "string" ? note.trim() : ""))
@@ -263,6 +340,22 @@ export function updatePerson(
       const currentNotes = Array.isArray(person.rawTags?.NOTE) ? [...person.rawTags!.NOTE] : [];
       person.rawTags = { ...(person.rawTags || {}), NOTE: [...currentNotes, ...additions] };
     }
+  }
+
+  if (patch.rawTagsPatch && typeof patch.rawTagsPatch === "object") {
+    const mergedRawTags = { ...(person.rawTags || {}) };
+    for (const [key, values] of Object.entries(patch.rawTagsPatch)) {
+      if (!Array.isArray(values) || values.length === 0) {
+        delete mergedRawTags[key];
+      } else {
+        const cleaned = values
+          .map((value) => (typeof value === "string" ? value.trim() : ""))
+          .filter((value) => value.length > 0);
+        if (cleaned.length > 0) mergedRawTags[key] = cleaned;
+        else delete mergedRawTags[key];
+      }
+    }
+    person.rawTags = Object.keys(mergedRawTags).length > 0 ? mergedRawTags : undefined;
   }
 
   return next;

@@ -1,6 +1,24 @@
-﻿import { useEffect, useState } from "react";
-import { aiClearCredentials, aiGetCredentialsStatus, aiListModels, aiSaveCredentials, aiValidateCredentials } from "@/services/aiRuntime";
-import type { AiCredentialStatus, AiModelCatalogEntry, AiProvider, AiSettings, AiUseCase } from "@/types/ai";
+﻿import { useState, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import {
+  aiClearCredentials,
+  aiGetCredentialsStatus,
+  aiListModels,
+  aiSaveCredentials,
+  aiValidateCredentials
+} from "@/services/aiRuntime";
+import { AiUsageDashboard } from "./AiUsageDashboard";
+import { createDefaultAiSettings, DEFAULT_CHATGPT_MODEL } from "@/core/ai/defaults";
+import {
+  AiBirthRefinementLevel,
+  AiBirthRefinementNotesScope,
+  AiCredentialStatus,
+  AiModelCatalogEntry,
+  AiProvider,
+  AiSettings,
+  AiUseCase,
+} from "@/types/ai";
+import { StandardModal, SectionCard, SectionSubtitle } from "../common/StandardModal";
 
 type Props = {
   open: boolean;
@@ -43,7 +61,7 @@ function AiStatusItem({ message, state }: { message: string, state: CatalogRefre
             </svg>
           </button>
           {message.length > 60 && (
-            <span className="expand-hint">{expanded ? "Ver menos" : "Ver mÃ¡s"}</span>
+            <span className="expand-hint">{expanded ? "Ver menos" : "Ver mas"}</span>
           )}
         </div>
       </div>
@@ -148,90 +166,36 @@ const AI_STATUS_STYLE = `
     letter-spacing: 0.05em;
   }
   
-  /* Select Dropdown Fix for Dark Mode */
-  select {
-    background-color: #1e293b !important; /* Force solid dark background */
-    color: #f8fafc !important;
-    border: 1px solid var(--line) !important;
-    cursor: pointer;
-    color-scheme: dark;
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-  }
-  option {
-    background-color: #1e293b;
-    color: #f8fafc;
-    padding: 8px;
-  }
-
-  .ai-settings-modal {
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    width: 600px;
-    max-width: 95vw;
-  }
-
-  .ai-settings-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--gs-accent-gold-soft) transparent;
-  }
-
-  .ai-settings-content::-webkit-scrollbar {
-    width: 6px;
-  }
-  .ai-settings-content::-webkit-scrollbar-thumb {
-    background-color: var(--gs-accent-gold-soft);
-    border-radius: 10px;
-  }
-
-  .settings-section-title {
-    margin: 0 0 16px 0;
-    font-size: 0.95rem;
-    color: var(--gs-accent-gold);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .use-case-card {
-    margin-bottom: 16px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--line-soft);
-    padding: 16px;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-  }
-
-  .use-case-card:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: var(--gs-accent-gold-soft);
-  }
-
-  .use-case-header {
-    margin-bottom: 12px;
-    font-weight: 600;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--gs-ink-secondary);
-  }
-
-  .ai-settings-actions {
+  .ai-actions-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 4px;
   }
-
-  .ai-settings-actions button {
+  .ai-actions-grid button {
     font-size: 12px;
-    padding: 8px;
+    padding: 8px 12px;
   }
+  .status-badge-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--bg-input);
+    border: 1px solid var(--line-soft);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-1);
+  }
+  .status-badge.ok { border-color: var(--gs-success); color: var(--gs-success); }
+  .status-badge.missing { border-color: var(--gs-error); color: var(--gs-error); }
 `;
 
 function defaultCredentialStatus(): AiCredentialStatus {
@@ -243,8 +207,8 @@ function defaultCredentialStatus(): AiCredentialStatus {
 
 function defaultCatalogStatus(): Record<AiProvider, ProviderCatalogStatus> {
   return {
-    chatgpt: { state: "idle", message: "CatÃ¡logo local activo." },
-    gemini: { state: "idle", message: "CatÃ¡logo local activo." }
+    chatgpt: { state: "idle", message: "Catalogo local activo." },
+    gemini: { state: "idle", message: "Catalogo local activo." }
   };
 }
 
@@ -267,6 +231,76 @@ function chooseProviderModel(
   const recommended = catalog.find((entry) => entry.recommended)?.id;
   if (recommended) return recommended;
   return catalog[0]?.id ?? currentModel;
+}
+
+type HelpTarget = { targetId: string };
+
+function ContextAnchorHelp({
+  targetId,
+  title,
+  description,
+  activeHelpTarget,
+  onSetActiveHelp,
+  children,
+  className,
+}: {
+  targetId: string;
+  title: string;
+  description: string;
+  activeHelpTarget: HelpTarget | null;
+  onSetActiveHelp: (next: HelpTarget | null) => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const open = activeHelpTarget?.targetId === targetId;
+
+  useLayoutEffect(() => {
+    if (open && anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.top,
+        left: rect.left + rect.width / 2,
+      });
+    } else {
+      setCoords(null);
+    }
+  }, [open]);
+
+  return (
+    <span
+      ref={anchorRef}
+      className={className || "context-help-anchor"}
+      onMouseEnter={() => onSetActiveHelp({ targetId })}
+      onMouseLeave={() => onSetActiveHelp(null)}
+      onFocus={() => onSetActiveHelp(null)}
+      onBlur={() => onSetActiveHelp(null)}
+      onClick={() => onSetActiveHelp(open ? null : { targetId })}
+      style={{ position: "relative", display: "inline-flex", cursor: "help" }}
+    >
+      {children}
+      {open &&
+        coords &&
+        createPortal(
+          <div
+            className="gs-help-card portal-context-card"
+            role="note"
+            style={{
+              position: "fixed",
+              top: coords.top - 12,
+              left: coords.left,
+              zIndex: 99999,
+              transform: "translateX(-50%) translateY(-100%)",
+            }}
+          >
+            <strong>{title}</strong>
+            <p>{description}</p>
+          </div>,
+          document.body
+        )}
+    </span>
+  );
 }
 
 function mergeCatalogIntoDraft(
@@ -293,24 +327,7 @@ function mergeCatalogIntoDraft(
   };
 }
 
-function formatModelLabel(model: AiModelCatalogEntry, provider?: AiProvider): string {
-  const badges: string[] = [];
-  if (model.recommended) badges.push("Rec.");
-  if (model.isPreview) badges.push("Pre.");
-
-  const providerPrefix = provider === "chatgpt" ? "OpenAI" : (provider === "gemini" ? "Gemini" : "");
-  let label = providerPrefix ? `${providerPrefix}: ${model.label}` : model.label;
-
-  if (model.intelligence) {
-    const stars = "★".repeat(model.intelligence);
-    label += ` ${stars}`;
-  }
-
-  if (model.isReasoning) label += " 🧠";
-
-  if (badges.length === 0) return label;
-  return `${label} (${badges.join(", ")})`;
-}
+type TabType = "general" | "use_cases" | "credentials" | "stats";
 
 export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: Props) {
   const [draft, setDraft] = useState<AiSettings>(settings);
@@ -320,7 +337,8 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
   const [busy, setBusy] = useState(false);
   const [refreshingModels, setRefreshingModels] = useState(false);
   const [catalogStatus, setCatalogStatus] = useState<Record<AiProvider, ProviderCatalogStatus>>(defaultCatalogStatus());
-
+  const [activeTab, setActiveTab] = useState<TabType>("general");
+  const [activeHelpTarget, setActiveHelpTarget] = useState<HelpTarget | null>(null);
 
   async function refreshProviderCatalog(provider: AiProvider, hasKey: boolean): Promise<void> {
     if (!hasKey) {
@@ -338,7 +356,7 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
       ...prev,
       [provider]: {
         state: "loading",
-        message: `${providerLabel(provider)}: actualizando catÃ¡logo...`
+        message: `${providerLabel(provider)}: actualizando catalogo...`
       }
     }));
 
@@ -387,7 +405,19 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    setDraft(settings);
+
+    // Merge incoming settings with defaults to ensure missing keys (from old configs) don't crash the UI
+    setDraft({
+      ...createDefaultAiSettings(),
+      ...settings,
+      useCaseModels: {
+        ...createDefaultAiSettings().useCaseModels,
+        ...(settings.useCaseModels || {})
+      },
+      // Ensure specific use cases like birthRefinementModel are also merged
+      birthRefinementModel: settings.birthRefinementModel || createDefaultAiSettings().birthRefinementModel,
+    });
+
     setOpenaiKey("");
     setGeminiKey("");
     setCatalogStatus(defaultCatalogStatus());
@@ -407,7 +437,7 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
     return () => {
       cancelled = true;
     };
-  }, [open, onStatus, settings]);
+  }, [open, settings, onStatus]);
 
   if (!open) return null;
 
@@ -462,7 +492,7 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
       });
       onStatus(`${provider}: ${response.message}`);
     } catch (error) {
-      onStatus(`ValidaciÃ³n fallida (${provider}): ${error instanceof Error ? error.message : String(error)}`);
+      onStatus(`Validacion fallida (${provider}): ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }
@@ -477,206 +507,332 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
     onClose();
   }
 
+  const tabs = [
+    { id: "general", label: "Ajustes", icon: "tune" },
+    { id: "use_cases", label: "Modelos", icon: "auto_awesome_motion" },
+    { id: "credentials", label: "Conexión", icon: "hub" },
+    { id: "stats", label: "Uso", icon: "monitoring" },
+  ];
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-panel ai-settings-modal" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>ConfiguraciÃ³n IA</h3>
-          <button onClick={onClose}>Cerrar</button>
-        </div>
+    <StandardModal
+      open={open}
+      title="Configuración IA"
+      onClose={onClose}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={(id) => setActiveTab(id as TabType)}
+      footer={
+        <>
+          <button className="secondary-ghost" onClick={onClose}>Cancelar</button>
+          <button className="accent-solid" onClick={handleSaveSettings}>Guardar Cambios</button>
+        </>
+      }
+    >
+      <style>{AI_STATUS_STYLE}</style>
 
-        <div className="ai-settings-content">
-          <div className="builder">
-            <h4 className="settings-section-title">Parámetros Globales</h4>
+      {activeTab === "general" && (
+        <>
+          <SectionCard title="Modo del Motor" icon="psychology">
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={draft.deterministicMode}
+                onChange={(event) => setDraft((prev) => ({ ...prev, deterministicMode: event.target.checked }))}
+              />
+              <ContextAnchorHelp
+                targetId="general:deterministic"
+                title="Modo Determinista (Temperatura 0)"
+                description="Obliga al motor a elegir siempre la palabra más probable. Es ideal para extraer fechas y nombres de forma estable, pero hace que las narraciones sean repetitivas y menos 'humanas'."
+                activeHelpTarget={activeHelpTarget}
+                onSetActiveHelp={setActiveHelpTarget}
+              >
+                Garantizar consistencia (Cálculo exacto)
+              </ContextAnchorHelp>
+            </label>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={draft.fallbackEnabled}
+                onChange={(event) => setDraft((prev) => ({ ...prev, fallbackEnabled: event.target.checked }))}
+              />
+              <ContextAnchorHelp
+                targetId="general:fallback"
+                title="Motor de Reserva (Fallback)"
+                description="Si el proveedor principal (ej. OpenAI) devuelve un error por falta de saldo o caída del servidor, GeneaSketch reintentará la operación automáticamente usando el segundo proveedor (ej. Gemini) para no interrumpir tu trabajo."
+                activeHelpTarget={activeHelpTarget}
+                onSetActiveHelp={setActiveHelpTarget}
+              >
+                Alternancia inteligente entre proveedores en caso de error
+              </ContextAnchorHelp>
+            </label>
+          </SectionCard>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={draft.deterministicMode}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, deterministicMode: event.target.checked }))}
-                />
-                Modo determinista
-              </label>
+          <SectionCard title="Arquitectura de Inferencia" icon="integration_instructions">
+            <label>
+              <ContextAnchorHelp
+                targetId="general:preferred-api"
+                title="Capa de Comunicación (OpenAI API)"
+                description="'Responses' es el protocolo más reciente que permite recibir datos estructurados directamente del modelo, minimizando errores de formato GEDCOM. 'Chat' es el sistema clásico basado en texto libre."
+                activeHelpTarget={activeHelpTarget}
+                onSetActiveHelp={setActiveHelpTarget}
+                className="gs-section-card-subtitle"
+              >
+                Infraestructura de Inferencia Preferida
+              </ContextAnchorHelp>
+              <select
+                value={draft.openAiPreferredApi || "auto"}
+                onChange={(e) => setDraft(prev => ({ ...prev, openAiPreferredApi: e.target.value as any }))}
+              >
+                <option value="auto">Auto (Priorizar Capa Moderna)</option>
+                <option value="responses">Solo Responses (Nativo Estructurado)</option>
+                <option value="chat_completions">Solo Chat (Legacy / Compatible)</option>
+              </select>
+            </label>
+            <label style={{ marginTop: 4 }}>
+              <ContextAnchorHelp
+                targetId="general:estimator-version"
+                title="Lógica de Estimación Cronológica"
+                description="V2 utiliza un motor biomecánico que calcula intervalos de tiempo basados en la fertilidad y esperanza de vida histórica. Legacy usa una regla matemática fija de +/- 25 años por generación."
+                activeHelpTarget={activeHelpTarget}
+                onSetActiveHelp={setActiveHelpTarget}
+                className="gs-section-card-subtitle"
+              >
+                Algoritmo de Cálculo de Fechas
+              </ContextAnchorHelp>
+              <select
+                value={draft.birthEstimatorVersion || "v2"}
+                onChange={(e) => setDraft(prev => ({ ...prev, birthEstimatorVersion: e.target.value as any }))}
+              >
+                <option value="v2">V2 (Fisiología Humana - Precisión Alta)</option>
+                <option value="legacy">Legacy (Regla Estadística Simple)</option>
+              </select>
+            </label>
+          </SectionCard>
 
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={draft.fallbackEnabled}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, fallbackEnabled: event.target.checked }))}
-                />
-                Fallback automático
-              </label>
+          <SectionCard title="Diagnóstico" icon="bug_report">
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={draft.developerBirthRefinementDebug}
+                onChange={(e) => setDraft(prev => ({ ...prev, developerBirthRefinementDebug: e.target.checked }))}
+              />
+              <ContextAnchorHelp
+                targetId="general:debug"
+                title="Trazabilidad de Ejecución (Debug)"
+                description="Habilita la impresión de 'tokens' y tiempos de respuesta en la consola. Solo recomendado si estás experimentando errores técnicos o quieres ver el 'razonamiento' interno de la IA."
+                activeHelpTarget={activeHelpTarget}
+                onSetActiveHelp={setActiveHelpTarget}
+              >
+                Visualizar logs de inferencia en tiempo real
+              </ContextAnchorHelp>
+            </label>
+          </SectionCard>
+        </>
+      )}
 
-            </div>
-
-            <div className="settings-section" style={{ marginTop: 16 }}>
-              <h4 className="settings-section-title">Depuración refinamiento nacimiento</h4>
-              <div className="person-meta" style={{ marginBottom: 8 }}>
-                Solo para desarrollador. No afecta producción si está desactivado.
+      {activeTab === "use_cases" && (
+        <>
+          <SectionCard title="Motores por Caso de Uso" icon="architecture">
+            {(["extraction", "narration"] as AiUseCase[]).map((useCase) => (
+              <div key={useCase} style={{ marginBottom: 12 }}>
+                <ContextAnchorHelp
+                  targetId={`models:${useCase}`}
+                  title={useCase === "extraction" ? "Especialista en Datos (Parsing)" : "Escritor Creativo (Narración)"}
+                  description={useCase === "extraction"
+                    ? "Modelo entrenado para leer manuscritos, actas y documentos antiguos para detectar nombres y fechas sin errores catastróficos."
+                    : "Modelo con mayor vocabulario capaz de redactar biografías que suenan naturales, integrando el contexto histórico familiar."}
+                  activeHelpTarget={activeHelpTarget}
+                  onSetActiveHelp={setActiveHelpTarget}
+                  className="gs-section-card-subtitle"
+                >
+                  {useCase === "extraction" ? "Extracción de registros (Parsing)" : "Generador Narrativo (Biografías)"}
+                </ContextAnchorHelp>
+                <select
+                  value={`${draft.useCaseModels[useCase].provider}:${draft.useCaseModels[useCase].model}`}
+                  onChange={(e) => {
+                    const [provider, model] = e.target.value.split(":") as [AiProvider, string];
+                    setDraft(prev => ({
+                      ...prev,
+                      useCaseModels: {
+                        ...prev.useCaseModels,
+                        [useCase]: { provider, model }
+                      }
+                    }));
+                  }}
+                >
+                  <optgroup label="OpenAI">
+                    {draft.modelCatalog.chatgpt.map((m) => (
+                      <option key={`chat:${m.id}`} value={`chatgpt:${m.id}`}>
+                        {m.label} ({m.price ?? "n/a"}/{m.priceOut ?? "n/a"})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Google Gemini">
+                    {draft.modelCatalog.gemini.map((m) => (
+                      <option key={`gem:${m.id}`} value={`gemini:${m.id}`}>
+                        {m.label} ({m.price ?? "n/a"}/{m.priceOut ?? "n/a"})
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
               </div>
+            ))}
+          </SectionCard>
+
+          <SectionCard title="Estimación de Nacimiento" icon="calendar_month">
+            {(["simple", "balanced", "complex"] as AiBirthRefinementLevel[]).map((level) => (
+              <div key={`birth-level-${level}`} style={{ marginBottom: 16 }}>
+                <ContextAnchorHelp
+                  targetId={`models:birth:${level}`}
+                  title={level === "simple" ? "Estrategia Simple" : level === "balanced" ? "Estrategia Balanceada" : "Estrategia Compleja"}
+                  description={level === "simple"
+                    ? "Uso mínimo de tokens; ideal para personas con pocos datos o ramas laterales poco conectadas."
+                    : level === "balanced"
+                      ? "Escanea 2 capas de familia y notas si están habilitadas. Mejor relación calidad/precio."
+                      : "Análisis profundo de toda la familia conectada y notas extensas. Máxima confiabilidad para casos difíciles."}
+                  activeHelpTarget={activeHelpTarget}
+                  onSetActiveHelp={setActiveHelpTarget}
+                  className="gs-section-card-subtitle"
+                >
+                  Modelo de Cálculo ({level === "simple" ? "Simple" : level === "balanced" ? "Balanceado" : "Complejo"})
+                </ContextAnchorHelp>
+
+                <select
+                  value={`${draft.birthRefinementLevelModels?.[level]?.provider ?? 'chatgpt'}:${draft.birthRefinementLevelModels?.[level]?.model ?? DEFAULT_CHATGPT_MODEL}`}
+                  onChange={(e) => {
+                    const [provider, model] = e.target.value.split(":") as [AiProvider, string];
+                    setDraft(prev => ({
+                      ...prev,
+                      birthRefinementLevelModels: {
+                        ...(prev.birthRefinementLevelModels || {
+                          simple: prev.birthRefinementModel,
+                          balanced: prev.birthRefinementModel,
+                          complex: prev.birthRefinementModel
+                        }),
+                        [level]: { provider, model }
+                      }
+                    }));
+                  }}
+                >
+                  <optgroup label="OpenAI">
+                    {draft.modelCatalog.chatgpt.map((m) => (
+                      <option key={`br-${level}-chat:${m.id}`} value={`chatgpt:${m.id}`}>
+                        {m.label} ({m.price ?? "n/a"}/{m.priceOut ?? "n/a"})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Google Gemini">
+                    {draft.modelCatalog.gemini.map((m) => (
+                      <option key={`br-${level}-gem:${m.id}`} value={`gemini:${m.id}`}>
+                        {m.label} ({m.price ?? "n/a"}/{m.priceOut ?? "n/a"})
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+            ))}
+
+            <SectionSubtitle>Política de Datos</SectionSubtitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label className="toggle">
                 <input
                   type="checkbox"
-                  checked={draft.developerBirthRefinementDebug === true}
-                  onChange={(event) =>
-                    setDraft((prev) => ({ ...prev, developerBirthRefinementDebug: event.target.checked }))
-                  }
+                  checked={draft.birthRefinementIncludeNotes}
+                  onChange={(e) => setDraft(prev => ({ ...prev, birthRefinementIncludeNotes: e.target.checked }))}
                 />
-                Habilitar debug refinamiento
-              </label>
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={draft.developerBirthRefinementShowRawUnfiltered === true}
-                  onChange={(event) =>
-                    setDraft((prev) => ({ ...prev, developerBirthRefinementShowRawUnfiltered: event.target.checked }))
-                  }
-                  disabled={!draft.developerBirthRefinementDebug}
-                />
-                Mostrar salida IA literal sin filtro
-              </label>
-              <label style={{ marginTop: 10 }}>
-                OpenAI API preferida
-                <select
-                  value={draft.openAiPreferredApi || "auto"}
-                  onChange={(event) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      openAiPreferredApi: event.target.value as "auto" | "responses" | "chat_completions"
-                    }))
-                  }
+                <ContextAnchorHelp
+                  targetId="models:birth-notes"
+                  title="Inclusión de Notas"
+                  description="Permite que el modelo lea notas biográficas para encontrar pistas que ayuden a calcular la fecha de nacimiento."
+                  activeHelpTarget={activeHelpTarget}
+                  onSetActiveHelp={setActiveHelpTarget}
                 >
-                  <option value="auto">Auto (Responses luego Chat)</option>
-                  <option value="responses">Solo Responses</option>
-                  <option value="chat_completions">Solo Chat Completions</option>
-                </select>
+                  Incluir notas biográficas en el contexto
+                </ContextAnchorHelp>
               </label>
-              <label style={{ marginTop: 10 }}>
-                Perfil refinamiento nacimiento
-                <select
-                  value={draft.birthRefinementProfile || "balanced"}
-                  onChange={(event) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      birthRefinementProfile: event.target.value as "balanced" | "max_reliability" | "low_cost"
-                    }))
-                  }
-                >
-                  <option value="balanced">Balanceado</option>
-                  <option value="max_reliability">Máxima fiabilidad</option>
-                  <option value="low_cost">Costo mínimo</option>
-                </select>
-              </label>
-            </div>
 
-            <div className="settings-section" style={{ marginTop: 24 }}>
-              <h4 className="settings-section-title">Modelos por Caso de Uso</h4>
-
-              {draft.useCaseModels && (["extraction", "resolution", "narration", "birth_refinement"] as AiUseCase[]).map((useCase) => (
-                <div key={useCase} className="use-case-card">
-                  <div className="use-case-header">
-                  {useCase === "extraction"
-                    ? "1. Extracción (Parsing)"
-                    : useCase === "resolution"
-                      ? "2. Resolución (sin uso en V4)"
-                      : useCase === "narration"
-                        ? "3. Asistencia (Narration)"
-                        : "4. Refinamiento nacimiento (IA)"}
-                  </div>
-                  {useCase === "birth_refinement" ? (
-                    <div className="person-meta" style={{ marginBottom: 8 }}>
-                      Se usa al presionar “Refinar con IA” en sugerencia de nacimiento.
-                    </div>
-                  ) : null}
-                  <label style={{ margin: 0 }}>
-                    <select
-                      value={`${draft.useCaseModels[useCase].provider}:${draft.useCaseModels[useCase].model}`}
-                      onChange={(e) => {
-                        const [provider, model] = e.target.value.split(":") as [AiProvider, string];
-                        setDraft(prev => ({
-                          ...prev,
-                          useCaseModels: {
-                            ...prev.useCaseModels,
-                            [useCase]: { provider, model }
-                          }
-                        }));
-                      }}
-                    >
-                      <optgroup label="OpenAI">
-                        {draft.modelCatalog.chatgpt.map((model) => (
-                          <option key={`chatgpt:${model.id}`} value={`chatgpt:${model.id}`}>
-                            {formatModelLabel(model, "chatgpt")}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Google Gemini">
-                        {draft.modelCatalog.gemini.map((model) => (
-                          <option key={`gemini:${model.id}`} value={`gemini:${model.id}`}>
-                            {formatModelLabel(model, "gemini")}
-                          </option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </label>
+              {draft.birthRefinementIncludeNotes && (
+                <div style={{ paddingLeft: 24 }}>
+                  <SectionSubtitle>Alcance de Notas</SectionSubtitle>
+                  <select
+                    value={draft.birthRefinementNotesScope || 'focus_only'}
+                    onChange={(e) => setDraft(prev => ({ ...prev, birthRefinementNotesScope: e.target.value as AiBirthRefinementNotesScope }))}
+                  >
+                    <option value="focus_only">Solo persona principal</option>
+                    <option value="focus_parents_children">Persona + Padres + Hijos</option>
+                  </select>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
+          </SectionCard>
+        </>
+      )}
 
-          <div className="builder" style={{ marginTop: 24, borderTop: "1px solid var(--line-soft)", paddingTop: 24 }}>
-            <h4 className="settings-section-title">Conectividad y Credenciales</h4>
-            <style>{AI_STATUS_STYLE}</style>
-
-            <div className="ai-status-container" style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', fontSize: '11px', color: 'var(--gs-ink-muted)' }}>
-                <span>OpenAI: <b style={{ color: credentialStatus.hasOpenAiKey ? 'var(--gs-success)' : 'inherit' }}>{credentialStatus.hasOpenAiKey ? "Configurada" : "No configurada"}</b></span>
-                <span>Gemini: <b style={{ color: credentialStatus.hasGeminiKey ? 'var(--gs-success)' : 'inherit' }}>{credentialStatus.hasGeminiKey ? "Configurada" : "No configurada"}</b></span>
+      {activeTab === "credentials" && (
+        <>
+          <SectionCard title="Credenciales de API" icon="key">
+            <div className="status-badge-container">
+              <div className={`status-badge ${credentialStatus.hasOpenAiKey ? 'ok' : 'missing'}`}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                  {credentialStatus.hasOpenAiKey ? 'verified' : 'close'}
+                </span>
+                OpenAI Key
               </div>
-
-              <AiStatusItem state={catalogStatus.chatgpt.state === "idle" ? "credential" : catalogStatus.chatgpt.state} message={catalogStatus.chatgpt.message} />
-              <AiStatusItem state={catalogStatus.gemini.state === "idle" ? "credential" : catalogStatus.gemini.state} message={catalogStatus.gemini.message} />
+              <div className={`status-badge ${credentialStatus.hasGeminiKey ? 'ok' : 'missing'}`}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                  {credentialStatus.hasGeminiKey ? 'verified' : 'close'}
+                </span>
+                Gemini Key
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <label>
-                API Key ChatGPT
-                <input
-                  type="password"
-                  value={openaiKey}
-                  onChange={(event) => setOpenaiKey(event.target.value)}
-                  placeholder="sk-..."
-                />
-              </label>
-
-              <label>
-                API Key Gemini
-                <input
-                  type="password"
-                  value={geminiKey}
-                  onChange={(event) => setGeminiKey(event.target.value)}
-                  placeholder="AIza..."
-                />
-              </label>
+            <SectionSubtitle>Actualizar Claves</SectionSubtitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input
+                type="password"
+                placeholder="Nueva OpenAI API Key..."
+                value={openaiKey}
+                onChange={(e) => setOpenaiKey(e.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="Nueva Gemini API Key..."
+                value={geminiKey}
+                onChange={(e) => setGeminiKey(e.target.value)}
+              />
             </div>
 
-            <div className="ai-settings-actions">
-              <button disabled={busy || refreshingModels} onClick={() => void handleRefreshModels()}>
-                {refreshingModels ? "Actualizando..." : "Actualizar modelos"}
+            <div className="ai-actions-grid" style={{ marginTop: 12 }}>
+              <button className="accent-solid" onClick={handleSaveCredentials} disabled={busy || (!openaiKey && !geminiKey)}>
+                Actualizar Credenciales
               </button>
-              <button disabled={busy} onClick={() => void handleSaveCredentials()}>Guardar credenciales</button>
-              <button disabled={busy} onClick={() => void handleValidate("chatgpt")}>Test ChatGPT</button>
-              <button disabled={busy} onClick={() => void handleValidate("gemini")}>Test Gemini</button>
-              <button className="danger" style={{ gridColumn: "span 2" }} disabled={busy} onClick={() => void handleClearCredentials()}>Limpiar credenciales</button>
+              <button className="secondary-ghost danger" onClick={handleClearCredentials} disabled={busy}>
+                Borrar todas
+              </button>
             </div>
-          </div>
-        </div>
+          </SectionCard>
 
-        <div className="builder-actions" style={{ padding: "16px 20px", borderTop: "1px solid var(--line-soft)" }}>
-          <button onClick={onClose}>Cancelar</button>
-          <button className="primary" onClick={handleSaveSettings}>Guardar ajustes IA</button>
-        </div>
-      </div>
-    </div>
+          <SectionCard title="Estado del Catálogo" icon="cloud_sync">
+            <AiStatusItem state={catalogStatus.chatgpt.state} message={catalogStatus.chatgpt.message} />
+            <AiStatusItem state={catalogStatus.gemini.state} message={catalogStatus.gemini.message} />
+
+            <div className="ai-actions-grid" style={{ marginTop: 12 }}>
+              <button onClick={handleRefreshModels} disabled={refreshingModels}>
+                Actualizar Modelos
+              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="secondary-ghost" style={{ flex: 1 }} onClick={() => handleValidate("chatgpt")} disabled={busy}>Test OpenAI</button>
+                <button className="secondary-ghost" style={{ flex: 1 }} onClick={() => handleValidate("gemini")} disabled={busy}>Test Gemini</button>
+              </div>
+            </div>
+          </SectionCard>
+        </>
+      )}
+
+      {activeTab === "stats" && (
+        <AiUsageDashboard settings={draft} />
+      )}
+    </StandardModal>
   );
 }

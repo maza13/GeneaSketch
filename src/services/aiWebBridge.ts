@@ -10,7 +10,8 @@ import type {
     AiReadDiagnosticLogResponse,
     AiValidateRequest,
     AiValidateResponse,
-    AiModelCatalogEntry
+    AiModelCatalogEntry,
+    AiProvider
 } from "@/types/ai";
 
 const STORAGE_KEY = "geneasketch_ai_credentials";
@@ -70,21 +71,16 @@ export async function webAiClearCredentials(): Promise<AiCredentialStatus> {
 
 export async function webAiListModels(request: AiListModelsRequest): Promise<AiListModelsResponse> {
     const chatgptModels: AiModelCatalogEntry[] = [
-        { id: "gpt-5-nano", label: "GPT-5 Nano", recommended: true, price: "$0.05", priceOut: "$0.40", intelligence: 3 },
-        { id: "gpt-5-mini", label: "GPT-5 Mini", recommended: false, price: "$0.25", priceOut: "$2.00", intelligence: 4 },
-        { id: "gpt-5", label: "GPT-5", recommended: false, price: "$1.25", priceOut: "$10.00", intelligence: 5 },
-        { id: "gpt-5.1", label: "GPT-5.1", recommended: false, price: "$1.75", priceOut: "$14.00", intelligence: 5 },
-        { id: "o4-mini", label: "o4-mini", recommended: false, price: "$1.10", priceOut: "$4.40", intelligence: 4, isReasoning: true },
-        { id: "o3-mini", label: "o3-mini", recommended: false, price: "Low", priceOut: "Low", intelligence: 4, isReasoning: true },
-        { id: "gpt-4o", label: "GPT-4o", recommended: false, price: "$5.00", priceOut: "$20.00", intelligence: 4 },
-        { id: "gpt-4o-mini", label: "GPT-4o Mini", recommended: false, price: "$0.15", priceOut: "$0.60", intelligence: 3 }
+        { id: "gpt-5-nano", label: "OpenAI: GPT-5 Nano (★★★) ($0.05/$0.005/$0.40) (recomendado)", recommended: true, price: "$0.05", priceOut: "$0.40", intelligence: 3 },
+        { id: "gpt-4o-mini", label: "OpenAI: GPT-4o Mini (★★★) ($0.15/$0.075/$0.60)", recommended: false, price: "$0.15", priceOut: "$0.60", intelligence: 3 },
+        { id: "gpt-5-mini", label: "OpenAI: GPT-5 Mini (★★★★) ($0.25/$0.025/$2.00)", recommended: false, price: "$0.25", priceOut: "$2.00", intelligence: 4 },
+        { id: "o4-mini", label: "OpenAI: o4-mini (★★★★) ($1.10/$0.28/$4.40)", recommended: false, price: "$1.10", priceOut: "$4.40", intelligence: 4, isReasoning: true },
+        { id: "gpt-5.1", label: "OpenAI: GPT-5.1 (★★★★★) ($1.25/$0.125/$10.00)", recommended: false, price: "$1.25", priceOut: "$10.00", intelligence: 5 }
     ];
 
     const geminiModels: AiModelCatalogEntry[] = [
-        { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", recommended: true, price: "Free*", priceOut: "Free*", intelligence: 4 },
-        { id: "gemini-2.0-flash", label: "Gemini 2.0 Flash", recommended: false, price: "$0.10", priceOut: "$0.40", intelligence: 4 },
-        { id: "gemini-1.5-pro", label: "Gemini 1.5 Pro", recommended: false, price: "$1.25", priceOut: "$3.75", intelligence: 5 },
-        { id: "gemini-1.5-flash", label: "Gemini 1.5 Flash", recommended: false, price: "$0.075", priceOut: "$0.30", intelligence: 3 }
+        { id: "gemini-2.0-flash", label: "Google: Gemini 2.0 Flash (★★★★) ($0.10/$0.025/$0.40)", recommended: false, price: "$0.10", priceOut: "$0.40", intelligence: 4 },
+        { id: "gemini-2.5-flash", label: "Google: Gemini 2.5 Flash (★★★★) ($0.30/$0.03/$2.50) (recomendado)", recommended: true, price: "$0.30", priceOut: "$2.50", intelligence: 4 }
     ];
 
     return {
@@ -169,6 +165,29 @@ function parseHttpCode(message: string): number | null {
     return Number.isFinite(code) ? code : null;
 }
 
+function extractUsage(data: any, provider: AiProvider): { prompt_tokens: number; completion_tokens: number; total_tokens: number } | undefined {
+    if (provider === "chatgpt") {
+        const usage = data?.usage;
+        if (usage && typeof usage.prompt_tokens === "number") {
+            return {
+                prompt_tokens: usage.prompt_tokens,
+                completion_tokens: usage.completion_tokens ?? 0,
+                total_tokens: usage.total_tokens ?? (usage.prompt_tokens + (usage.completion_tokens ?? 0))
+            };
+        }
+    } else if (provider === "gemini") {
+        const usage = data?.usageMetadata;
+        if (usage && typeof usage.promptTokenCount === "number") {
+            return {
+                prompt_tokens: usage.promptTokenCount,
+                completion_tokens: usage.candidatesTokenCount ?? 0,
+                total_tokens: usage.totalTokenCount ?? (usage.promptTokenCount + (usage.candidatesTokenCount ?? 0))
+            };
+        }
+    }
+    return undefined;
+}
+
 function isResponsesCompatError(message: string): boolean {
     const lower = message.toLowerCase();
     const code = parseHttpCode(message);
@@ -212,7 +231,8 @@ async function invokeOpenAiChatCompletions(req: AiInvokeProviderRequest, apiKey:
         provider: "chatgpt",
         rawBody,
         apiUsed: "chat_completions",
-        finishReason: parsed.finishReason
+        finishReason: parsed.finishReason,
+        usage: extractUsage(data, "chatgpt")
     };
 }
 
@@ -246,7 +266,8 @@ async function invokeOpenAiResponses(req: AiInvokeProviderRequest, apiKey: strin
         provider: "chatgpt",
         rawBody,
         apiUsed: "responses",
-        finishReason: parsed.finishReason
+        finishReason: parsed.finishReason,
+        usage: extractUsage(data, "chatgpt")
     };
 }
 
@@ -313,7 +334,8 @@ async function invokeGemini(req: AiInvokeProviderRequest, apiKey: string): Promi
         model: req.model,
         provider: "gemini",
         rawBody,
-        apiUsed: "gemini_generate_content"
+        apiUsed: "gemini_generate_content",
+        usage: extractUsage(data, "gemini")
     };
 }
 

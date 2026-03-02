@@ -11,14 +11,59 @@ export type Preset =
   | "direct_descendants";
 
 export type Event = {
-  type: "BIRT" | "DEAT" | "MARR" | "DIV" | "OTHER";
+  type: "BIRT" | "DEAT" | "MARR" | "DIV" | "CHR" | "BAPM" | "BURI" | "CENS" | "RESI" | "NOTE" | "OTHER";
+  id?: string;
+  subType?: string;
   date?: string;
   place?: string;
+  addr?: string;
+  datePhrase?: string;
+  quality?: "0" | "1" | "2" | "3";
+  sourceRefs?: SourceRef[];
+  mediaRefs?: string[];
+  notesInline?: string[];
+  noteRefs?: string[];
+  rawTags?: Record<string, string[]>;
 };
 
 export type SourceRef = {
   id: string;
   title?: string;
+  page?: string;
+  text?: string;
+  note?: string;
+  quality?: "0" | "1" | "2" | "3";
+};
+
+export type ChangeMeta = {
+  date?: string;
+  time?: string;
+  actor?: string;
+  raw?: string[];
+};
+
+export type SourceRecord = {
+  id: string;
+  title?: string;
+  text?: string;
+  rawTags?: Record<string, string[]>;
+  change?: ChangeMeta;
+};
+
+export type NoteRecord = {
+  id: string;
+  text: string;
+  rawTags?: Record<string, string[]>;
+  change?: ChangeMeta;
+};
+
+export type PersonNameVariant = {
+  value: string;
+  given?: string;
+  surname?: string;
+  nickname?: string;
+  type?: "primary" | "aka" | "nick" | "other";
+  primary?: boolean;
 };
 
 export type Media = {
@@ -34,6 +79,7 @@ export type Person = {
   id: string;
   name: string;
   surname?: string;
+  names?: PersonNameVariant[];
   sex: "M" | "F" | "U";
   lifeStatus: "alive" | "deceased";
   isPlaceholder?: boolean;
@@ -50,9 +96,17 @@ export type Person = {
   residence?: string;
   events: Event[];
   famc: string[];
+  famcLinks?: Array<{
+    familyId: string;
+    pedi?: "BIRTH" | "ADOPTED" | "FOSTER" | "SEALING" | "UNKNOWN";
+    quality?: "0" | "1" | "2" | "3";
+    reference?: string;
+  }>;
   fams: string[];
   mediaRefs: string[];
   sourceRefs: SourceRef[];
+  noteRefs?: string[];
+  change?: ChangeMeta;
   rawTags?: Record<string, string[]>;
 };
 
@@ -63,6 +117,9 @@ export type Family = {
   childrenIds: string[];
   events: Event[];
   name?: string;
+  relationNotes?: string[];
+  noteRefs?: string[];
+  change?: ChangeMeta;
   rawTags?: Record<string, string[]>;
 };
 
@@ -232,6 +289,8 @@ export type RelationEdge = {
 export type GeneaDocument = {
   persons: Record<string, Person>;
   families: Record<string, Family>;
+  sources?: Record<string, SourceRecord>;
+  notes?: Record<string, NoteRecord>;
   // V2 graph entities kept in sync with legacy family projection during migration.
   unions?: Record<string, UnionV2>;
   parentChildLinks?: Record<string, ParentChildLink>;
@@ -240,6 +299,7 @@ export type GeneaDocument = {
   metadata: {
     sourceFormat: SourceFormat;
     gedVersion: string;
+    schemaUris?: string[];
     importProvenance?: Array<{
       fileName?: string;
       sourceFormat: SourceFormat;

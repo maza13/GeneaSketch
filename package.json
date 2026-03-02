@@ -1,13 +1,14 @@
 {
     "name": "geneasketch",
     "private": true,
-    "version": "0.3.6",
+    "version": "0.3.7",
     "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "tsc -b \u0026\u0026 vite build",
         "preview": "vite preview",
         "test": "vitest run",
+        "test:baseline:qa001": "vitest run src/tests/diagnostics/analyzer.test.ts src/tests/diagnostics/fixPlanner.test.ts src/tests/expand.depth.test.ts src/tests/expand.presets.test.ts",
         "desktop:dev": "tauri dev",
         "desktop:build:win": "tauri build --bundles msi,nsis",
         "release:preflight": "python .agents/skills/geneasketch-build-process/scripts/preflight_build.py",

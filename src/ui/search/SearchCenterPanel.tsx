@@ -33,9 +33,12 @@ export function SearchCenterPanel({ open, document, onClose, onSelectPerson }: P
     <div className="search-center-overlay" onClick={onClose}>
       <section className="search-center-panel" onClick={(event) => event.stopPropagation()}>
         <header className="search-center-header">
-          <h3>Buscar personas y relaciones</h3>
-          <button onClick={onClose} aria-label="Cerrar buscador">
-            Cerrar
+          <div className="search-center-title">
+            <h3>Buscar personas y relaciones</h3>
+            {results.length > 0 && <span className="search-results-badge">{results.length}</span>}
+          </div>
+          <button onClick={onClose} aria-label="Cerrar buscador" className="search-close-x">
+            ✕
           </button>
         </header>
         <input
@@ -96,12 +99,29 @@ export function SearchCenterPanel({ open, document, onClose, onSelectPerson }: P
               <option value="with">Con apellido</option>
               <option value="without">Sin apellido</option>
             </select>
+            <button
+              className="search-reset-chips"
+              onClick={() => {
+                setQuery("");
+                setFilters({ sex: "any", lifeStatus: "any", surname: "any" });
+                setSortField("id");
+                setSortDirection("asc");
+              }}
+              title="Restablecer filtros"
+            >
+              Limpiar
+            </button>
           </div>
         </div>
         <div className="search-center-results">
           {results.length === 0 ? (
             <div className="search-center-empty">
-              {isQueryEmpty ? "No hay personas en el arbol actual." : "Sin resultados para la consulta actual."}
+              {isQueryEmpty ? (
+                <>
+                  <span className="search-center-empty-icon">📭</span>
+                  <p>{document ? "No hay personas en el árbol actual." : "Carga un árbol para empezar a buscar."}</p>
+                </>
+              ) : "Sin resultados para la consulta actual."}
             </div>
           ) : null}
           {results.map((result) => (
@@ -113,8 +133,13 @@ export function SearchCenterPanel({ open, document, onClose, onSelectPerson }: P
                 onClose();
               }}
             >
-              <strong>{result.title}</strong>
-              <span>{result.subtitle}</span>
+              <div className="search-item-info">
+                <strong>{result.title}</strong>
+                <span>{result.subtitle}</span>
+              </div>
+              <div className="search-item-id">
+                <code>{result.personId}</code>
+              </div>
             </button>
           ))}
         </div>

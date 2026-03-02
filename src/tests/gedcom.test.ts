@@ -86,6 +86,35 @@ describe("GED parser + serializer", () => {
     expect(parsed.sourceVersion).toBe("5.5.1");
   });
 
+  it("parses FAMC with PEDI into famcLinks", () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Child /Adopted/
+1 SEX U
+1 FAMC @F1@
+2 PEDI ADOPTED
+0 @I2@ INDI
+1 NAME Father /Bio/
+1 SEX M
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Mother /Bio/
+1 SEX F
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I3@
+1 CHIL @I1@
+0 TRLR`;
+    const parsed = parseGedcomAnyVersion(ged);
+    expect(parsed.errors).toHaveLength(0);
+    expect(parsed.document?.persons["@I1@"].famcLinks?.[0]?.familyId).toBe("@F1@");
+    expect(parsed.document?.persons["@I1@"].famcLinks?.[0]?.pedi).toBe("ADOPTED");
+  });
+
   it("sets GDZ metadata when parsing legacy zipped import", async () => {
     const zip = new JSZip();
     zip.file("data.ged", SAMPLE_GED);

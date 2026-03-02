@@ -1,22 +1,36 @@
-import type { PendingRelationType, Person } from "@/types/domain";
+import type { Event, PendingRelationType, Person, SourceRef } from "@/types/domain";
 
 export type PersonEditorPatch = {
-  name: string;
+  name?: string;
   surname?: string;
   birthDate?: string;
+  birthPlace?: string;
   deathDate?: string;
+  deathPlace?: string;
+  residence?: string;
   sex?: "M" | "F" | "U";
   lifeStatus?: "alive" | "deceased";
   photoDataUrl?: string | null;
   notesAppend?: string[];
   notesReplace?: string[];
+  notesInlineReplace?: string[];
+  sourceRefs?: SourceRef[];
+  mediaRefs?: string[];
+  noteRefs?: string[];
+  names?: Person["names"];
+  change?: Person["change"];
+  events?: Event[];
+  rawTagsPatch?: Record<string, string[]>;
 };
 
-export type PersonRelationInput = PersonEditorPatch;
+export type PersonRelationInput = Omit<PersonEditorPatch, "name"> & {
+  name: string;
+};
 
 export type BirthRangeApplySource = "local_algorithm" | "ai_refinement" | "fusion";
 
 export type BirthRangeApplyPayload = {
+
   gedcomDate: string;
   source: BirthRangeApplySource;
   saveNote: boolean;
