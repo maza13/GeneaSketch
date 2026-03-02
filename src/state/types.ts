@@ -12,6 +12,7 @@ import type {
     ViewMode,
     VisualConfig
 } from "@/types/domain";
+import type { GSchemaGraph } from "@/core/gschema";
 
 export type RightStackState = {
     detailsMode: "expanded" | "compact";
@@ -24,6 +25,12 @@ import { PersonPatch, PersonInput } from "@/core/engine/GeneaEngine";
 
 export interface DocSlice {
     document: GeneaDocument | null;
+    /**
+     * The GSchema graph engine — the new source of truth for 0.4.0+.
+     * When null, the app is operating in legacy-only mode (pre-0.4.0 files).
+     * When set, `document` is a compat projection generated from this graph.
+     */
+    gschemaGraph: GSchemaGraph | null;
     expandedGraph: ExpandedGraph;
     setDocument: (doc: GeneaDocument | null) => void;
     applyDiagnosticDocument: (nextDoc: GeneaDocument) => void;

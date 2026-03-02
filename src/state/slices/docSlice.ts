@@ -3,14 +3,17 @@ import { AppState, DocSlice } from "../types";
 import { GeneaEngine } from "@/core/engine/GeneaEngine";
 import { UiEngine } from "@/core/engine/UiEngine";
 import { ensureExpanded } from "../helpers/graphHelpers";
+import { documentToGSchema } from "@/core/gschema/GedcomBridge";
+import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 
 export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, get) => ({
     document: null,
+    gschemaGraph: null,
     expandedGraph: { nodes: [], edges: [] },
 
     setDocument: (doc) => set((state) => {
         const normalized = GeneaEngine.normalizeDocument(doc);
-        if (!normalized) return { document: null, expandedGraph: { nodes: [], edges: [] } };
+        if (!normalized) return { document: null, gschemaGraph: null, expandedGraph: { nodes: [], edges: [] } };
 
         let viewConfig = state.viewConfig;
         if (!viewConfig) {
@@ -21,8 +24,22 @@ export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, ge
             viewConfig = { ...viewConfig, focusPersonId: firstPersonId, homePersonId: firstPersonId };
         }
 
+        // Build the GSchema graph from the normalized document.
+        // This is async-free and runs in O(n) — fine for UI thread.
+        let gschemaGraph: GSchemaGraph | null = null;
+        try {
+            const result = documentToGSchema(
+                normalized,
+                (normalized.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1") as "5.5.1" | "7.0.x"
+            );
+            gschemaGraph = result.graph;
+        } catch (e) {
+            console.error("[GSchemaGraph] Failed to build graph from document:", e);
+        }
+
         return {
             document: normalized,
+            gschemaGraph,
             viewConfig,
             expandedGraph: ensureExpanded(normalized, viewConfig)
         };
