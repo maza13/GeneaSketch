@@ -76,7 +76,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
     return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable;
 }
 
-function normalizeDtreeConfig(config: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeDtreeConfig(config: any): any {
     if (!config) return undefined;
     return {
         ...config,
@@ -642,38 +643,38 @@ export function App() {
                         }}
                     >
                         <>
-                        <RightPanel
-                            document={document}
-                            selectedPersonId={workspacePersonId || selectedPersonId}
-                            detailsMode={detailsMode}
-                            onToggleDetailsExpanded={() => toggleRightStackSection("details")}
-                            onEditPerson={openPersonEditor}
-                            onViewPersonDetail={(personId) => setWorkspacePersonId(personId)}
-                            onAddRelation={openAddRelationEditor}
-                            onLinkExistingRelation={(anchorId, type) => setPicker({ anchorId, type })}
-                            onUnlinkRelation={(personId, relatedId, type) => {
-                                unlinkRelation(personId, relatedId, type);
-                                setStatus(`Relación desvinculada: ${type}`);
-                            }}
-                        />
-                        {timelineOpen ? (
-                            <TimelineRightPanel
+                            <RightPanel
                                 document={document}
-                                expandedGraph={expandedGraph}
-                                viewConfig={viewConfig}
-                                onTimelineView={setTimelineView}
-                                onTimelineScaleZoom={setTimelineScaleZoom}
-                                onTimelineScaleOffset={setTimelineScaleOffset}
-                                onTimelineHighlight={handleTimelineHighlight}
-                                onTimelineStatus={setTimelineStatus}
-                                timelineMode={timelineMode}
-                                onToggleTimelineExpanded={() => toggleRightStackSection("timeline")}
-                                onClosePanel={() => {
-                                    clearOverlayType("timeline");
-                                    setTimelinePanelOpen(false);
+                                selectedPersonId={workspacePersonId || selectedPersonId}
+                                detailsMode={detailsMode}
+                                onToggleDetailsExpanded={() => toggleRightStackSection("details")}
+                                onEditPerson={openPersonEditor}
+                                onViewPersonDetail={(personId) => setWorkspacePersonId(personId)}
+                                onAddRelation={openAddRelationEditor}
+                                onLinkExistingRelation={(anchorId, type) => setPicker({ anchorId, type })}
+                                onUnlinkRelation={(personId, relatedId, type) => {
+                                    unlinkRelation(personId, relatedId, type);
+                                    setStatus(`Relación desvinculada: ${type}`);
                                 }}
                             />
-                        ) : null}
+                            {timelineOpen ? (
+                                <TimelineRightPanel
+                                    document={document}
+                                    expandedGraph={expandedGraph}
+                                    viewConfig={viewConfig}
+                                    onTimelineView={setTimelineView}
+                                    onTimelineScaleZoom={setTimelineScaleZoom}
+                                    onTimelineScaleOffset={setTimelineScaleOffset}
+                                    onTimelineHighlight={handleTimelineHighlight}
+                                    onTimelineStatus={setTimelineStatus}
+                                    timelineMode={timelineMode}
+                                    onToggleTimelineExpanded={() => toggleRightStackSection("timeline")}
+                                    onClosePanel={() => {
+                                        clearOverlayType("timeline");
+                                        setTimelinePanelOpen(false);
+                                    }}
+                                />
+                            ) : null}
                         </>
                     </PanelErrorBoundary>
                 }
@@ -686,70 +687,70 @@ export function App() {
                         }}
                     >
                         <>
-                        {restoreAvailable ? (
-                            <div className="restore-banner">
-                                <span>Se encontró sesión previa.</span>
-                                <button onClick={() => void restoreSession()}>Continuar sesión</button>
-                                <button onClick={() => void clearSession()}>Nueva sesión</button>
-                            </div>
-                        ) : null}
+                            {restoreAvailable ? (
+                                <div className="restore-banner">
+                                    <span>Se encontró sesión previa.</span>
+                                    <button onClick={() => void restoreSession()}>Continuar sesión</button>
+                                    <button onClick={() => void clearSession()}>Nueva sesión</button>
+                                </div>
+                            ) : null}
 
-                        {exportWarnings.length > 0 ? (
-                            <div className="restore-banner" style={{ marginTop: 6, justifyContent: "space-between" }}>
-                                <span>Exportación legacy con advertencias: {exportWarnings.length}</span>
-                                <button onClick={() => setExportWarnings([])}>Ocultar</button>
-                            </div>
-                        ) : null}
+                            {exportWarnings.length > 0 ? (
+                                <div className="restore-banner" style={{ marginTop: 6, justifyContent: "space-between" }}>
+                                    <span>Exportación legacy con advertencias: {exportWarnings.length}</span>
+                                    <button onClick={() => setExportWarnings([])}>Ocultar</button>
+                                </div>
+                            ) : null}
 
-                        {aiUndoSnapshot ? (
-                            <div className="restore-banner" style={{ marginTop: 6, justifyContent: "space-between" }}>
-                                <span>Último lote IA disponible para deshacer.</span>
-                                <button onClick={undoAiBatch}>Deshacer lote IA</button>
-                            </div>
-                        ) : null}
+                            {aiUndoSnapshot ? (
+                                <div className="restore-banner" style={{ marginTop: 6, justifyContent: "space-between" }}>
+                                    <span>Último lote IA disponible para deshacer.</span>
+                                    <button onClick={undoAiBatch}>Deshacer lote IA</button>
+                                </div>
+                            ) : null}
 
-                        {pendingKinshipSourceId && document ? (
-                            <div
-                                onClick={() => setPendingKinshipSourceId(null)}
-                                style={{
-                                    position: "absolute",
-                                    top: 10,
-                                    left: "50%",
-                                    transform: "translateX(-50%)",
-                                    background: "var(--overlay-panel-bg-soft)",
-                                    color: "var(--tree-kinship-accent)",
-                                    border: "1px solid var(--border)",
-                                    padding: "12px 24px",
-                                    borderRadius: 8,
-                                    zIndex: 100,
-                                    fontWeight: "bold",
-                                    cursor: "pointer",
-                                    boxShadow: "var(--overlay-shadow)"
-                                }}
-                            >
-                                Selecciona a otra persona para calcular parentesco con {document.persons[pendingKinshipSourceId]?.name}
-                            </div>
-                        ) : null}
+                            {pendingKinshipSourceId && document ? (
+                                <div
+                                    onClick={() => setPendingKinshipSourceId(null)}
+                                    style={{
+                                        position: "absolute",
+                                        top: 10,
+                                        left: "50%",
+                                        transform: "translateX(-50%)",
+                                        background: "var(--overlay-panel-bg-soft)",
+                                        color: "var(--tree-kinship-accent)",
+                                        border: "1px solid var(--border)",
+                                        padding: "12px 24px",
+                                        borderRadius: 8,
+                                        zIndex: 100,
+                                        fontWeight: "bold",
+                                        cursor: "pointer",
+                                        boxShadow: "var(--overlay-shadow)"
+                                    }}
+                                >
+                                    Selecciona a otra persona para calcular parentesco con {document.persons[pendingKinshipSourceId]?.name}
+                                </div>
+                            ) : null}
 
-                        {viewConfig ? null : <div className="empty-state">Crea un árbol nuevo o abre un archivo .gsk o .ged.</div>}
-                        {modeBadge ? <div className="mode-badge">{modeBadge}</div> : null}
-                        {showMockTools ? <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1000, width: 300 }}><MockToolsPanel /></div> : null}
+                            {viewConfig ? null : <div className="empty-state">Crea un árbol nuevo o abre un archivo .gsk o .ged.</div>}
+                            {modeBadge ? <div className="mode-badge">{modeBadge}</div> : null}
+                            {showMockTools ? <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1000, width: 300 }}><MockToolsPanel /></div> : null}
 
-                        <DTreeView
-                            graph={expandedGraph}
-                            document={document}
-                            fitNonce={fitNonce}
-                            onNodeClick={handleNodeClick}
-                            onNodeContextMenu={handleNodeContextMenu}
-                            focusPersonId={viewConfig?.focusPersonId ?? null}
-                            focusFamilyId={viewConfig?.focusFamilyId ?? null}
-                            selectedPersonId={selectedPersonId}
-                            colorTheme={colorTheme}
-                            dtreeConfig={normalizedDtreeConfig}
-                            onBgClick={() => setNodeMenu(null)}
-                            onBgDoubleClick={() => clearVisualModes()}
-                            onSvgReady={(svg) => { graphSvgRef.current = svg; }}
-                        />
+                            <DTreeView
+                                graph={expandedGraph}
+                                document={document}
+                                fitNonce={fitNonce}
+                                onNodeClick={handleNodeClick}
+                                onNodeContextMenu={handleNodeContextMenu}
+                                focusPersonId={viewConfig?.focusPersonId ?? null}
+                                focusFamilyId={viewConfig?.focusFamilyId ?? null}
+                                selectedPersonId={selectedPersonId}
+                                colorTheme={colorTheme}
+                                dtreeConfig={normalizedDtreeConfig}
+                                onBgClick={() => setNodeMenu(null)}
+                                onBgDoubleClick={() => clearVisualModes()}
+                                onSvgReady={(svg) => { graphSvgRef.current = svg; }}
+                            />
                         </>
                     </PanelErrorBoundary>
                 }
@@ -781,8 +782,8 @@ export function App() {
                     <div className="modal-panel" style={{ width: 520 }} onClick={(event) => event.stopPropagation()}>
                         <div className="modal-header"><h3>Exportar PDF</h3><button onClick={() => setShowPdfExport(false)}>Cerrar</button></div>
                         <div className="builder" style={{ marginTop: 8 }}>
-                            <label>Alcance<select value={pdfOptions.scope} onChange={(event) => setPdfOptions((prev) => ({ ...prev, scope: event.target.value as any }))}><option value="viewport">Viewport actual</option><option value="full">Todo lo visible</option></select></label>
-                            <label>Tamaño de papel<select value={pdfOptions.paperSize} onChange={(event) => setPdfOptions((prev) => ({ ...prev, paperSize: event.target.value as any }))}><option value="A4">A4</option><option value="A3">A3</option><option value="A2">A2</option><option value="A1">A1</option><option value="A0">A0</option></select></label>
+                            <label>Alcance<select value={pdfOptions.scope} onChange={(event) => setPdfOptions((prev) => ({ ...prev, scope: event.target.value as "viewport" | "full" }))}><option value="viewport">Viewport actual</option><option value="full">Todo lo visible</option></select></label>
+                            <label>Tamaño de papel<select value={pdfOptions.paperSize} onChange={(event) => setPdfOptions((prev) => ({ ...prev, paperSize: event.target.value as "A4" | "A3" | "A2" | "A1" | "A0" }))}><option value="A4">A4</option><option value="A3">A3</option><option value="A2">A2</option><option value="A1">A1</option><option value="A0">A0</option></select></label>
                             <div className="builder-actions" style={{ justifyContent: "flex-end", marginTop: 24 }}><button className="primary" onClick={() => void exportPdfNow()}>Exportar ahora</button></div>
                         </div>
                     </div>

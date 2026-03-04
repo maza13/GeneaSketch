@@ -316,7 +316,21 @@ export function useMenuConfig(p: MenuConfigParams) {
             }
         ];
 
-    }, [p, recentItems]);
+    }, [
+        recentItems,
+        p.createNewTreeDoc, p.openFileInput, p.saveGsk, p.colorTheme,
+        p.document, p.importFileInput, p.exportGed, p.setShowPdfExport,
+        p.exportRaster, p.selectedPersonId, p.openPersonEditor,
+        p.openAddRelationEditor, p.openPersonWorkspaceV3, p.setShowFamilySearchPanel,
+        p.openLocalAiAssistant, p.openGlobalAiAssistant, p.setShowAiSettingsModal,
+        p.aiUndoSnapshot, p.undoAiBatch, p.setShowDiagnostics, p.setShowPersonStatsPersonId,
+        p.setShowGlobalStatsPanel, p.fitToScreen, p.themeMode, p.setThemeMode,
+        p.setShowColorThemeMenu, p.leftCollapsed, p.rightCollapsed, p.toggleShellPanel,
+        p.timelineOpen, p.setTimelinePanelOpen, p.clearNodePositions, p.viewConfig,
+        p.setTimelineScope, p.setTimelineView, p.setDTreeLayoutEngine, p.generateScenario,
+        p.setShowMockTools, p.setShowWikiPanel, p.setShowAboutModalV2, p.setShowAboutModalV3,
+        p.menuLayout, p.setMenuLayout
+    ]);
 
     // Quick-action icons shown on the right side of the toolbar
     const actions = useMemo((): MenuItem[] => {
