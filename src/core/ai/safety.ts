@@ -1,6 +1,6 @@
-import { rankPersonCandidates, resolvePersonMatch } from "@/core/ai/matching";
+﻿import { rankPersonCandidates, resolvePersonMatch } from "@/core/ai/matching";
 import type { AiPersonInput, AiResolvedAction, AiReviewCandidate } from "@/types/ai";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 
 export type SafetyAnnotation = {
   blocked?: boolean;
@@ -53,7 +53,7 @@ function block(annotations: Record<number, SafetyAnnotation>, index: number, rea
   };
 }
 
-function toReviewCandidates(doc: GeneaDocument, query?: string, explicitId?: string): AiReviewCandidate[] {
+function toReviewCandidates(doc: GraphDocument, query?: string, explicitId?: string): AiReviewCandidate[] {
   if (explicitId && doc.persons[explicitId]) {
     const person = doc.persons[explicitId];
     const label = `${person.name}${person.surname ? ` ${person.surname}` : ""} (${person.id})`;
@@ -68,7 +68,7 @@ function toReviewCandidates(doc: GeneaDocument, query?: string, explicitId?: str
   }));
 }
 
-function familyChoices(doc: GeneaDocument, anchorId?: string): Array<{ id: string; label: string }> {
+function familyChoices(doc: GraphDocument, anchorId?: string): Array<{ id: string; label: string }> {
   if (!anchorId || !doc.persons[anchorId]) return [];
   return doc.persons[anchorId].fams
     .filter((familyId) => Boolean(doc.families[familyId]))
@@ -82,7 +82,7 @@ function familyChoices(doc: GeneaDocument, anchorId?: string): Array<{ id: strin
     });
 }
 
-function anchorNetworkCandidateIds(doc: GeneaDocument, anchorId?: string): string[] {
+function anchorNetworkCandidateIds(doc: GraphDocument, anchorId?: string): string[] {
   if (!anchorId || !doc.persons[anchorId]) return [];
   const ids = new Set<string>([anchorId]);
   const anchor = doc.persons[anchorId];
@@ -107,7 +107,7 @@ function anchorNetworkCandidateIds(doc: GeneaDocument, anchorId?: string): strin
   return Array.from(ids);
 }
 
-export function normalizeActionsWithSafety(doc: GeneaDocument, actions: AiResolvedAction[]): SafetyResult {
+export function normalizeActionsWithSafety(doc: GraphDocument, actions: AiResolvedAction[]): SafetyResult {
   const normalized: AiResolvedAction[] = [];
   const warnings: string[] = [];
   const annotations: Record<number, SafetyAnnotation> = {};
@@ -132,7 +132,7 @@ export function normalizeActionsWithSafety(doc: GeneaDocument, actions: AiResolv
         return;
       }
       if (match.level === "ambiguous_match") {
-        block(annotations, index, `create_person ambiguo para "${query}". Requiere selección manual.`);
+        block(annotations, index, `create_person ambiguo para "${query}". Requiere selecciÃ³n manual.`);
       }
       normalized.push(action);
       return;
@@ -220,3 +220,4 @@ export function normalizeActionsWithSafety(doc: GeneaDocument, actions: AiResolv
 
   return { actions: normalized, warnings, annotations };
 }
+

@@ -1,0 +1,34 @@
+﻿version: 1
+source_of_truth: docs/wiki-uxdesign/12_instrucciones_agentes_ia.md
+rules:
+  UX-RULE-001:
+    check: tokenized_visual_values_only
+    blocks: [hardcoded_colors, hardcoded_spacing, hardcoded_radius]
+  UX-RULE-002:
+    check: dark_light_theme_support
+    blocks: [single_theme_only]
+  UX-RULE-003:
+    check: material_symbols_only
+    blocks: [alternate_icon_libraries]
+  UX-RULE-004:
+    check: typography_from_contract
+    blocks: [arbitrary_font_stack]
+  UX-RULE-005:
+    check: print_behavior_integrity
+    blocks: [print_breakage]
+  UX-RULE-006:
+    check: inline_edit_pattern_integrity
+    blocks: [detached_edit_forms]
+  UX-RULE-007:
+    check: destructive_action_confirmation
+    blocks: [destructive_without_confirmation]
+  UX-RULE-008:
+    check: z_index_token_scale_only
+    blocks: [arbitrary_z_index]
+  UX-RULE-009:
+    check: wiki_update_for_new_patterns
+    blocks: [undocumented_new_pattern]
+  UX-RULE-010:
+    check: wiki_precedence_on_conflict
+    blocks: [specialized_skill_overrides_wiki]
+

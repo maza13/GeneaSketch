@@ -1,4 +1,4 @@
-﻿import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { estimatePersonBirthYear } from "@/core/inference/dateInference";
 import type { InferenceEvidence, InferenceResult } from "@/core/inference/types";
 import { refineBirthRangeWithAi } from "@/core/inference/aiBirthRefinement";
@@ -10,11 +10,11 @@ import {
 } from "@/core/inference/birthRangeFusion";
 import { recommendBirthRefinementLevel } from "@/core/inference/intelligenceAdvisor";
 import type { AiBirthRefinementLevel, AiBirthRangeRefinementResult, AiSettings } from "@/types/ai";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 import { BirthRangeApplyConfirmPanel } from "@/ui/person/BirthRangeApplyConfirmPanel";
 
 type Props = {
-  document: GeneaDocument;
+  document: GraphDocument;
   personId: string;
   aiSettings: AiSettings;
   disabled?: boolean;
@@ -188,9 +188,7 @@ export function BirthRangeRefinementCard({
   const fusedMidYear = fusedRange ? Math.round((fusedRange[0] + fusedRange[1]) / 2) : null;
 
   const handleCalculate = () => {
-    const nextInference = estimatePersonBirthYear(personId, document, {
-      estimatorVersion: aiSettings.birthEstimatorVersion
-    });
+    const nextInference = estimatePersonBirthYear(personId, document);
     setLocalInference(nextInference);
     setAiResult(null);
     setMessage("");
@@ -583,3 +581,4 @@ export function BirthRangeRefinementCard({
     </div>
   );
 }
+

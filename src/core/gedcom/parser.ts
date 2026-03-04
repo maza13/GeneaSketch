@@ -1,4 +1,3 @@
-import JSZip from "jszip";
 import type {
   Event,
   Family,
@@ -11,7 +10,8 @@ import type {
   SourceRecord,
   SourceGedVersion
 } from "@/types/domain";
-import { parseGsk, type GskMetadata } from "@/core/gskFormat";
+import { ERROR_CODES } from "@/core/gschema/errorCatalog";
+import { inferCanonicalSurnameFields } from "@/core/naming/surname";
 
 type ParsedLine = {
   lineNo: number;
@@ -26,7 +26,6 @@ export type ImportGedResult = {
   errors: GedParseError[];
   warnings: ImportWarning[];
   sourceVersion?: SourceGedVersion;
-  gskMeta?: GskMetadata | null;
 };
 
 const GED_LINE_REGEX = /^(\d+)\s+((@[^@]+@)\s+)?([A-Z0-9_]+)(?:\s+(.*))?$/;
@@ -96,18 +95,28 @@ function normalizePedi(value?: string): "BIRTH" | "ADOPTED" | "FOSTER" | "SEALIN
   return "UNKNOWN";
 }
 
-function parseFamcLinks(record: ParsedLine[], person: Person) {
+function parseFamcLinks(record: ParsedLine[], person: Person, warnings: ImportWarning[]) {
   for (let i = 0; i < record.length; i += 1) {
     const line = record[i];
     if (line.tag !== "FAMC" || !line.value) continue;
     const link: NonNullable<Person["famcLinks"]>[number] = {
       familyId: line.value,
-      pedi: "UNKNOWN",
       reference: `line:${line.lineNo}`
     };
     for (let j = i + 1; j < record.length && record[j].level > line.level; j += 1) {
       const sub = record[j];
-      if (sub.tag === "PEDI") link.pedi = normalizePedi(sub.value);
+      if (sub.tag === "PEDI") {
+        const normalized = normalizePedi(sub.value);
+        if ((sub.value || "").trim().length > 0 && normalized === "UNKNOWN" && sub.value?.toUpperCase() !== "UNKNOWN") {
+          warnings.push({
+            code: ERROR_CODES.PEDI_UNKNOWN_VALUE_COERCED,
+            line: sub.lineNo,
+            entity: person.id,
+            message: `PEDI valor no reconocido (${sub.value}) coercionado a UNKNOWN.`
+          });
+        }
+        link.pedi = normalized;
+      }
       if (sub.tag === "QUAY" && (sub.value === "0" || sub.value === "1" || sub.value === "2" || sub.value === "3")) {
         link.quality = sub.value;
       }
@@ -157,15 +166,18 @@ function parseChangeMeta(record: ParsedLine[], startIndex: number): { date?: str
   return { ...result, nextIndex: j };
 }
 
-function parseNameParts(record: ParsedLine[], startIndex: number): {
+function parseNameParts(record: ParsedLine[], startIndex: number, warnings?: ImportWarning[]): {
   value: string;
   given?: string;
   surname?: string;
   nickname?: string;
+  prefix?: string;
+  suffix?: string;
+  title?: string;
   nextIndex: number;
 } {
   const line = record[startIndex];
-  const result: { value: string; given?: string; surname?: string; nickname?: string } = {
+  const result: { value: string; given?: string; surname?: string; nickname?: string; prefix?: string; suffix?: string; title?: string } = {
     value: line.value || ""
   };
   let j = startIndex + 1;
@@ -174,8 +186,61 @@ function parseNameParts(record: ParsedLine[], startIndex: number): {
     if (sub.tag === "GIVN") result.given = sub.value;
     else if (sub.tag === "SURN") result.surname = sub.value;
     else if (sub.tag === "NICK") result.nickname = sub.value;
+    else if (sub.tag === "NPFX") result.prefix = sub.value;
+    else if (sub.tag === "NSFX") result.suffix = sub.value;
     j += 1;
   }
+  // Fallback: infer given/surname from slash notation if tags missing
+  if (!result.given || !result.surname) {
+    const match = result.value.match(/^(.*?)\/(.*?)\/(.*)$/);
+    if (match) {
+      if (!result.given) result.given = `${match[1]} ${match[3]}`.trim().replace(/\s+/g, " ");
+      if (!result.surname) result.surname = match[2].trim();
+      if (warnings) {
+        warnings.push({
+          code: ERROR_CODES.GED_NAME_PARTS_INFERRED,
+          message: `Inferencia de partes de nombre via delimitadores / / para "${result.value}"`
+        });
+      }
+    } else if (!result.given && !result.value.includes("/")) {
+      result.given = result.value.trim();
+    }
+  }
+
+  // Heuristic metadata extraction: isolate common prefixes/suffixes if not explicitly tagged
+  if (result.given && !result.prefix) {
+    const prefixes = ["Dr.", "Dra.", "Sr.", "Sra.", "Don", "Doña", "Sir", "Lady", "Fr.", "Mtr.", "Mtro."];
+    for (const p of prefixes) {
+      if (result.given.startsWith(p + " ")) {
+        result.prefix = p;
+        result.given = result.given.slice(p.length + 1).trim();
+        if (warnings) {
+          warnings.push({
+            code: ERROR_CODES.GED_NAME_METADATA_INFERRED,
+            message: `Prefijo "${p}" inferido de la cadena de nombre.`
+          });
+        }
+        break;
+      }
+    }
+  }
+  if (result.given && !result.suffix) {
+    const suffixes = ["Jr.", "Sr.", "III", "IV", "V", "Ph.D.", "M.D."];
+    for (const s of suffixes) {
+      if (result.given.endsWith(" " + s)) {
+        result.suffix = s;
+        result.given = result.given.slice(0, -(s.length + 1)).trim();
+        if (warnings) {
+          warnings.push({
+            code: ERROR_CODES.GED_NAME_METADATA_INFERRED,
+            message: `Sufijo "${s}" inferido de la cadena de nombre.`
+          });
+        }
+        break;
+      }
+    }
+  }
+
   return { ...result, nextIndex: j };
 }
 
@@ -282,7 +347,7 @@ function detectVersion(lines: ParsedLine[]): { version: SourceGedVersion; warnin
   if (!value) {
     return {
       version: "unknown",
-      warnings: [{ code: "GED_VERSION_MISSING", message: "No se encontro HEAD.GEDC.VERS. Se intenta importar en modo tolerante." }]
+      warnings: [{ code: ERROR_CODES.GED_VERSION_MISSING, message: "No se encontro HEAD.GEDC.VERS. Se intenta importar en modo tolerante." }]
     };
   }
   if (!SUPPORTED_VERSIONS.has(value)) {
@@ -290,7 +355,7 @@ function detectVersion(lines: ParsedLine[]): { version: SourceGedVersion; warnin
       version: "unknown",
       warnings: [
         {
-          code: "GED_VERSION_UNKNOWN",
+          code: ERROR_CODES.GED_VERSION_UNKNOWN,
           entity: "HEAD.GEDC.VERS",
           message: `Version ${value} no reconocida. Se intenta importar en modo tolerante.`
         }
@@ -383,10 +448,11 @@ export function parseGedcomAnyVersion(raw: string): ImportGedResult {
     if (!head.xref) continue;
     if (head.tag === "INDI") {
       const person = emptyPerson(head.xref);
+      let parsedName: any = null;
       for (let i = 0; i < record.length; i += 1) {
         const line = record[i];
         if (line.tag === "NAME" && line.value) {
-          const parsedName = parseNameParts(record, i);
+          parsedName = parseNameParts(record, i, warnings);
           const match = parsedName.value.match(/^(.*?)\/(.*?)\/(.*)$/);
           if (match) {
             person.name = `${match[1]} ${match[3]}`.trim().replace(/\s+/g, " ");
@@ -400,12 +466,29 @@ export function parseGedcomAnyVersion(raw: string): ImportGedResult {
             given: parsedName.given,
             surname: parsedName.surname,
             nickname: parsedName.nickname,
+            prefix: parsedName.prefix,
+            suffix: parsedName.suffix,
+            title: parsedName.title,
             type: person.names.length === 0 ? "primary" : "other",
             primary: person.names.length === 0
           });
           i = parsedName.nextIndex - 1;
         }
         if (line.tag === "SEX" && (line.value === "M" || line.value === "F" || line.value === "U")) person.sex = line.value;
+        if (line.tag === "TITL" && line.value) {
+          if (!person.names) person.names = [];
+          const primary = person.names.find(n => n.primary) || person.names[0];
+          if (primary) {
+            primary.title = line.value;
+          } else {
+            person.names.push({
+              value: line.value,
+              title: line.value,
+              type: "primary",
+              primary: true
+            });
+          }
+        }
         if (line.tag === "FAMC" && line.value) person.famc.push(line.value);
         if (line.tag === "FAMS" && line.value) person.fams.push(line.value);
         if (line.tag === "OBJE" && line.value) person.mediaRefs.push(line.value);
@@ -437,7 +520,12 @@ export function parseGedcomAnyVersion(raw: string): ImportGedResult {
           i = parsedChange.nextIndex - 1;
         }
       }
-      parseFamcLinks(record, person);
+      parseFamcLinks(record, person, warnings);
+      const inferred = inferCanonicalSurnameFields({ rawSurname: person.surname, preferredOrder: "paternal_first" });
+      person.surnamePaternal = inferred.surnamePaternal;
+      person.surnameMaternal = inferred.surnameMaternal;
+      person.surnameOrder = inferred.surnameOrder;
+      person.surname = inferred.surname || person.surname;
       collectUnknownTags(record, person);
       parseRecordEvents(record, person);
       person.lifeStatus = person.events.some((event) => event.type === "DEAT") ? "deceased" : "alive";
@@ -537,37 +625,3 @@ export function parseGedcomAnyVersion(raw: string): ImportGedResult {
   return { document, errors: [], warnings, sourceVersion: versionData.version };
 }
 
-export async function parseGedzipAnyVersion(
-  file: File | Blob | ArrayBuffer | Uint8Array,
-  sourceExt: "gdz" | "gsz" = "gdz"
-): Promise<ImportGedResult> {
-  const zip = await JSZip.loadAsync(file);
-  const entries = Object.keys(zip.files);
-  const gedEntry = entries.find((k) => k.toLowerCase().endsWith(".ged"));
-  if (!gedEntry) {
-    return { document: null, errors: [{ line: 1, message: "GEDZIP sin archivo .ged." }], warnings: [], sourceVersion: "unknown" };
-  }
-
-  const gedRaw = await zip.file(gedEntry)!.async("string");
-  const parsed = parseGedcomAnyVersion(gedRaw);
-  if (!parsed.document) return parsed;
-
-  for (const mediaId of Object.keys(parsed.document.media)) {
-    const m = parsed.document.media[mediaId];
-    if (m.fileName && zip.file(m.fileName)) {
-      m.bytes = await zip.file(m.fileName)!.async("uint8array");
-      const mime = m.mimeType || (m.fileName.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
-      const blob = new Blob([m.bytes as unknown as BlobPart], { type: mime });
-      m.dataUrl = URL.createObjectURL(blob);
-    }
-  }
-  parsed.document.metadata.sourceFormat = sourceExt === "gsz" ? "GSZ" : "GDZ";
-
-  const gskEntry = entries.find((k) => k === "geneasketch.json");
-  if (gskEntry) {
-    const gskRaw = await zip.file(gskEntry)!.async("string");
-    parsed.gskMeta = parseGsk(gskRaw);
-  }
-
-  return parsed;
-}

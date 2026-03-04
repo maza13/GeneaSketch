@@ -1,6 +1,6 @@
-import { estimatePersonBirthYear } from "@/core/inference/dateInference";
+﻿import { estimatePersonBirthYear } from "@/core/inference/dateInference";
 import { normalizeGedcomTimelineDate, certaintyRank } from "@/core/timeline/dateNormalization";
-import type { Event, GeneaDocument } from "@/types/domain";
+import type { Event, GraphDocument } from "@/types/domain";
 
 type YearBound = {
   year: number;
@@ -37,7 +37,7 @@ function pickBestYear(events: Event[], type: "BIRT" | "DEAT"): YearBound | null 
   return { year: best.year, inferred: best.inferred };
 }
 
-function buildLifeWindow(document: GeneaDocument, personId: string): LifeWindow {
+function buildLifeWindow(document: GraphDocument, personId: string): LifeWindow {
   const person = document.persons[personId];
   if (!person) return { minYear: null, maxYear: null };
 
@@ -71,7 +71,7 @@ function overlaps(
   return minYear <= rangeEnd && maxYear >= rangeStart;
 }
 
-export function inferLivingPersonIdsByYear(document: GeneaDocument, year: number): string[] {
+export function inferLivingPersonIdsByYear(document: GraphDocument, year: number): string[] {
   if (!Number.isFinite(year)) return [];
   const targetYear = Math.floor(year);
   const result: string[] = [];
@@ -86,7 +86,7 @@ export function inferLivingPersonIdsByYear(document: GeneaDocument, year: number
   return result;
 }
 
-export function inferLivingPersonIdsByDecade(document: GeneaDocument, decadeStart: number): string[] {
+export function inferLivingPersonIdsByDecade(document: GraphDocument, decadeStart: number): string[] {
   if (!Number.isFinite(decadeStart)) return [];
   const start = Math.floor(decadeStart / 10) * 10;
   const end = start + 9;
@@ -101,7 +101,7 @@ export function inferLivingPersonIdsByDecade(document: GeneaDocument, decadeStar
   }
   return result;
 }
-export function inferTimelineStatus(document: GeneaDocument, year: number): { living: Set<string>, deceased: Set<string> } {
+export function inferTimelineStatus(document: GraphDocument, year: number): { living: Set<string>, deceased: Set<string> } {
   const living = new Set<string>();
   const deceased = new Set<string>();
   if (!Number.isFinite(year)) return { living, deceased };
@@ -123,7 +123,7 @@ export function inferTimelineStatus(document: GeneaDocument, year: number): { li
   return { living, deceased };
 }
 
-export function inferTimelineEvents(document: GeneaDocument, year: number): Set<string> {
+export function inferTimelineEvents(document: GraphDocument, year: number): Set<string> {
   const eventPersonIds = new Set<string>();
   if (!Number.isFinite(year)) return eventPersonIds;
 
@@ -171,3 +171,4 @@ export function inferTimelineEvents(document: GeneaDocument, year: number): Set<
 
   return eventPersonIds;
 }
+

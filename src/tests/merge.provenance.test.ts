@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { calculateDiff } from "@/core/edit/diff";
 import { applyDiff } from "@/core/edit/merge";
 import type { GeneaDocument } from "@/types/domain";
@@ -12,12 +12,12 @@ describe("merge provenance", () => {
       families: {},
       media: {},
       metadata: {
-        sourceFormat: "GSZ",
+        sourceFormat: "GSK",
         gedVersion: "7.0.x",
         importProvenance: [
           {
-            fileName: "base.gsz",
-            sourceFormat: "GSZ",
+            fileName: "base.gsk",
+            sourceFormat: "GSK",
             sourceGedVersion: "7.0.x",
             importedAt: "2026-01-01T00:00:00.000Z"
           }
@@ -31,7 +31,7 @@ describe("merge provenance", () => {
       },
       families: {},
       media: {},
-      metadata: { sourceFormat: "GDZ", gedVersion: "5.5.1" }
+      metadata: { sourceFormat: "GED", gedVersion: "5.5.1" }
     };
 
     const diff = calculateDiff(base, incoming, new Map());
@@ -40,7 +40,8 @@ describe("merge provenance", () => {
     expect(merged.metadata.importProvenance).toBeDefined();
     expect((merged.metadata.importProvenance || []).length).toBeGreaterThanOrEqual(2);
     const last = (merged.metadata.importProvenance || [])[((merged.metadata.importProvenance || []).length - 1)];
-    expect(last.sourceFormat).toBe("GDZ");
+    expect(last.sourceFormat).toBe("GED");
     expect(last.sourceGedVersion).toBe("5.5.1");
   });
 });
+

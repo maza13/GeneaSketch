@@ -33,7 +33,7 @@ export function TimelineListView({
   const groups = useMemo(() => {
     const map = new Map<string, TimelineItem[]>();
     for (const item of items) {
-      const key = item.sortDate ? String(item.sortDate.getUTCFullYear()) : "Sin fecha";
+      const key = item.sortDate ? String(item.sortDate.getUTCFullYear()) : "Undated";
       const bucket = map.get(key) ?? [];
       bucket.push(item);
       map.set(key, bucket);

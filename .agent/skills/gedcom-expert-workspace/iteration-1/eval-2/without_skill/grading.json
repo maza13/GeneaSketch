@@ -1,0 +1,19 @@
+{
+    "expectations": [
+        {
+            "text": "Scoring list prioritizes lineage/parents over names",
+            "passed": true,
+            "evidence": "Lineage prioritized."
+        },
+        {
+            "text": "Score for both parents is significantly high",
+            "passed": true,
+            "evidence": "+60 for parents."
+        },
+        {
+            "text": "Includes negative scores for conflicts like anachronisms",
+            "passed": true,
+            "evidence": "Includes -100 for anachronisms."
+        }
+    ]
+}

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { analyzeGeneaDocument } from "@/core/diagnostics/analyzer";
 import { type DataDiff, type DiffResolution } from "@/core/edit/diff";
 import { mergeFocusKey, normalizeMergeFocus, type MergeFocusPayload } from "@/core/edit/mergeFocus";
@@ -22,7 +22,7 @@ import {
   setSelectedCase
 } from "@/core/edit/reviewSession";
 import { findAllMatches, type MatchResult } from "@/core/edit/personMatcher";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
 import type { MergeReviewPreset, MergeReviewSession, MergeReviewStep, MergeSessionPreview } from "@/types/merge-review";
 import { MergeApplyStep } from "@/ui/merge-review/MergeApplyStep";
@@ -34,12 +34,12 @@ import { MergeTechnicalConflictsStep } from "@/ui/merge-review/MergeTechnicalCon
 import { MERGE_STRINGS_ES } from "@/ui/merge-review/strings.es";
 
 type Props = {
-  baseDoc: GeneaDocument;
-  incomingDoc: GeneaDocument;
+  baseDoc: GraphDocument;
+  incomingDoc: GraphDocument;
   initialDraft?: MergeDraftSnapshot | null;
   onDraftChange?: (draft: MergeDraftSnapshot | null) => void;
   onFocusChange?: (focus: MergeFocusPayload | null) => void;
-  onApply: (merged: GeneaDocument, stats: MergeStats) => void;
+  onApply: (merged: GraphDocument, stats: MergeStats) => void;
   onClose: () => void;
 };
 
@@ -56,7 +56,7 @@ function quickHash(input: string): string {
   return (hash >>> 0).toString(16);
 }
 
-function documentFingerprint(doc: GeneaDocument): string {
+function documentFingerprint(doc: GraphDocument): string {
   const personIds = Object.keys(doc.persons).sort((a, b) => a.localeCompare(b));
   const familyIds = Object.keys(doc.families).sort((a, b) => a.localeCompare(b));
   const personSample = personIds
@@ -77,7 +77,7 @@ function documentFingerprint(doc: GeneaDocument): string {
   return quickHash(payload);
 }
 
-function mergeContextId(baseDoc: GeneaDocument, incomingDoc: GeneaDocument): string {
+function mergeContextId(baseDoc: GraphDocument, incomingDoc: GraphDocument): string {
   return quickHash(`${documentFingerprint(baseDoc)}::${documentFingerprint(incomingDoc)}`);
 }
 
@@ -113,7 +113,7 @@ function technicalIncomingIdsFromSession(session: MergeReviewSession): Set<strin
   );
 }
 
-function exportMergeAudit(merged: GeneaDocument): void {
+function exportMergeAudit(merged: GraphDocument): void {
   if (!merged.metadata.mergeAudit) return;
   const payload = JSON.stringify(merged.metadata.mergeAudit, null, 2);
   const blob = new Blob([payload], { type: "application/json" });
@@ -147,7 +147,7 @@ function uniqueSorted(ids: Iterable<string>): string[] {
   return Array.from(new Set(Array.from(ids).filter(Boolean))).sort((a, b) => a.localeCompare(b));
 }
 
-function immediateFamilyIds(doc: GeneaDocument, personId: string | undefined): string[] {
+function immediateFamilyIds(doc: GraphDocument, personId: string | undefined): string[] {
   if (!personId) return [];
   const person = doc.persons[personId];
   if (!person) return [];
@@ -170,7 +170,7 @@ function immediateFamilyIds(doc: GeneaDocument, personId: string | undefined): s
   return uniqueSorted(out);
 }
 
-function expandOneHop(doc: GeneaDocument, ids: string[]): string[] {
+function expandOneHop(doc: GraphDocument, ids: string[]): string[] {
   const out = new Set<string>();
   for (const id of ids) {
     for (const relativeId of immediateFamilyIds(doc, id)) out.add(relativeId);
@@ -759,4 +759,6 @@ export function ImportReviewPanel({
     </div>
   );
 }
+
+
 

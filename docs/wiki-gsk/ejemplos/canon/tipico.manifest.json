@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "0.4.0",
+  "graphId": "graph-tipico-0001",
+  "createdAt": "2026-03-03T11:00:00.000Z",
+  "updatedAt": "2026-03-03T11:00:40.000Z",
+  "graphDerivedFromOpSeq": 10,
+  "journalHeadOpSeq": 10,
+  "stats": {
+    "personCount": 3,
+    "unionCount": 1,
+    "edgeCount": 4,
+    "claimCount": 3,
+    "mediaCount": 0
+  },
+  "mediaFiles": [],
+  "security": {
+    "mode": "none",
+    "signature": {
+      "mode": "none"
+    },
+    "encryption": {
+      "mode": "none"
+    }
+  },
+  "graphHash": "sha256:d79ea2b7efc681583ac4415fc96ce02a7d83761ab42e43d542ca4a3ff4cb0588",
+  "journalHash": "sha256:357dc5f6ba83346ffa821a7a2bbc83a94b3e80b8d5f5d04dc1744c8a78ad4a0a",
+  "encryption": "none",
+  "signature": "none",
+  "mediaEntries": [],
+  "integrity": {
+    "algorithm": "sha256",
+    "packageHash": "sha256:355875b8266e5ca42af602743f5a4093ff3b93d923840cb6c96f3b26c13ab65a",
+    "entries": [
+      {
+        "path": "graph.json",
+        "sha256": "sha256:d79ea2b7efc681583ac4415fc96ce02a7d83761ab42e43d542ca4a3ff4cb0588",
+        "bytes": 2428,
+        "role": "graph",
+        "canonicalized": true
+      },
+      {
+        "path": "journal.jsonl",
+        "sha256": "sha256:357dc5f6ba83346ffa821a7a2bbc83a94b3e80b8d5f5d04dc1744c8a78ad4a0a",
+        "bytes": 3294,
+        "role": "journal",
+        "canonicalized": true
+      },
+      {
+        "path": "manifest.json",
+        "sha256": "sha256:53858042bdf491d16a9dd107c8ef6a4e63ee90e52b897935eba2215415e50bc8",
+        "bytes": 975,
+        "role": "manifest",
+        "canonicalized": true
+      }
+    ]
+  }
+}

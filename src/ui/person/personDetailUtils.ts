@@ -1,13 +1,14 @@
 ﻿import type { Event, Family, Person } from "@/types/domain";
 import type { FamilyUnionStatus } from "@/core/edit/commands";
+import { inferCanonicalSurnameFields } from "@/core/naming/surname";
 
 export function getPersonLabel(person: Person): string {
   return `${person.name}${person.surname ? ` ${person.surname}` : ""}`.trim();
 }
 
 export function splitSurnames(surname: string | undefined): { paternal: string; maternal: string } {
-  const parts = (surname || "").split(" ").filter(Boolean);
-  return { paternal: parts[0] || "", maternal: parts.slice(1).join(" ") || "" };
+  const inferred = inferCanonicalSurnameFields({ rawSurname: surname });
+  return { paternal: inferred.surnamePaternal || "", maternal: inferred.surnameMaternal || "" };
 }
 
 export function deriveFamilyStatus(family: Family): FamilyUnionStatus {

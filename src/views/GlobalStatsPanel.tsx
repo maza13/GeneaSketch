@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 import type { DiagnosticReport } from "@/core/diagnostics/types";
 import { calculateGlobalStatistics } from "@/core/graph/globalStatistics";
 
 type Props = {
-  document: GeneaDocument | null;
+  document: GraphDocument | null;
   report?: DiagnosticReport | null;
   visiblePersonIds?: string[];
   onClose: () => void;
@@ -110,3 +110,4 @@ export function GlobalStatsPanel({ document, visiblePersonIds, onClose }: Props)
     </div>
   );
 }
+

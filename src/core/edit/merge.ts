@@ -1,6 +1,6 @@
-import { syncGraphV2FromLegacy, syncLegacyProjectionFromGraphV2 } from "@/core/graph/v2Adapters";
+﻿import { syncGraphV2FromLegacy, syncLegacyProjectionFromGraphV2 } from "@/core/graph/v2Adapters";
 import type {
-    GeneaDocument,
+    GraphDocument,
     Event,
     MergeAction,
     MergeAuditReport,
@@ -331,7 +331,7 @@ function collectRequiredActions(diff: DataDiff): Array<{ incomingId: string; act
     return queue;
 }
 
-function applyRequiredActionsInOrder(merged: GeneaDocument, diff: DataDiff): void {
+function applyRequiredActionsInOrder(merged: GraphDocument, diff: DataDiff): void {
     const actionQueue = collectRequiredActions(diff);
     if (actionQueue.length === 0) return;
 
@@ -409,8 +409,8 @@ function applyRequiredActionsInOrder(merged: GeneaDocument, diff: DataDiff): voi
     }
 }
 
-export function applyDiff(baseDoc: GeneaDocument, diff: DataDiff): { merged: GeneaDocument; stats: MergeStats } {
-    const merged: GeneaDocument = {
+export function applyDiff(baseDoc: GraphDocument, diff: DataDiff): { merged: GraphDocument; stats: MergeStats } {
+    const merged: GraphDocument = {
         persons: { ...baseDoc.persons },
         families: { ...baseDoc.families },
         unions: baseDoc.unions ? { ...baseDoc.unions } : undefined,
@@ -593,7 +593,7 @@ export function applyDiff(baseDoc: GeneaDocument, diff: DataDiff): { merged: Gen
     }
 
     // Final reconciliation of famc/fams pointers from family structure.
-    const rebuiltPersons: GeneaDocument["persons"] = {};
+    const rebuiltPersons: GraphDocument["persons"] = {};
     for (const person of Object.values(merged.persons)) {
         rebuiltPersons[person.id] = {
             ...person,
@@ -636,11 +636,11 @@ export function applyDiff(baseDoc: GeneaDocument, diff: DataDiff): { merged: Gen
                 importedAt: new Date().toISOString()
             }
             : undefined
-    ].filter(Boolean) as NonNullable<GeneaDocument["metadata"]["importProvenance"]>;
+    ].filter(Boolean) as NonNullable<GraphDocument["metadata"]["importProvenance"]>;
 
     merged.metadata = {
         ...merged.metadata,
-        sourceFormat: "GSZ",
+        sourceFormat: "GSK",
         gedVersion: "7.0.x",
         importProvenance: mergedProvenance,
         mergeAudit: buildMergeAudit(diff)
@@ -651,4 +651,5 @@ export function applyDiff(baseDoc: GeneaDocument, diff: DataDiff): { merged: Gen
     synced = syncGraphV2FromLegacy(synced);
     return { merged: synced, stats };
 }
+
 

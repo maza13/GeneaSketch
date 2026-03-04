@@ -18,7 +18,7 @@ function doc(): GeneaDocument {
     },
     families: {},
     media: {},
-    metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+    metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
   };
 }
 
@@ -266,3 +266,4 @@ describe("ai orchestrator deterministic v5", () => {
     }
   });
 });
+

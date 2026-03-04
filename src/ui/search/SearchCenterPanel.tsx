@@ -1,11 +1,11 @@
-﻿import { useMemo, useState } from "react";
-import type { GeneaDocument } from "@/types/domain";
+import { useMemo, useState } from "react";
+import type { GraphDocument } from "@/types/domain";
 import type { SearchFilterState, SearchSortDirection, SearchSortField } from "./searchEngine";
 import { buildSearchResults } from "./searchEngine";
 
 type Props = {
   open: boolean;
-  document: GeneaDocument | null;
+  document: GraphDocument | null;
   onClose: () => void;
   onSelectPerson: (personId: string) => void;
 };
@@ -38,7 +38,7 @@ export function SearchCenterPanel({ open, document, onClose, onSelectPerson }: P
             {results.length > 0 && <span className="search-results-badge">{results.length}</span>}
           </div>
           <button onClick={onClose} aria-label="Cerrar buscador" className="search-close-x">
-            ✕
+            ?
           </button>
         </header>
         <input
@@ -118,8 +118,8 @@ export function SearchCenterPanel({ open, document, onClose, onSelectPerson }: P
             <div className="search-center-empty">
               {isQueryEmpty ? (
                 <>
-                  <span className="search-center-empty-icon">📭</span>
-                  <p>{document ? "No hay personas en el árbol actual." : "Carga un árbol para empezar a buscar."}</p>
+                  <span className="search-center-empty-icon">??</span>
+                  <p>{document ? "No hay personas en el �rbol actual." : "Carga un �rbol para empezar a buscar."}</p>
                 </>
               ) : "Sin resultados para la consulta actual."}
             </div>
@@ -147,4 +147,5 @@ export function SearchCenterPanel({ open, document, onClose, onSelectPerson }: P
     </div>
   );
 }
+
 

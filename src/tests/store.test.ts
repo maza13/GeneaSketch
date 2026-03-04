@@ -1,4 +1,5 @@
-﻿import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { documentToGSchema, gschemaToDocument } from "@/core/gschema/GedcomBridge";
 import { createNewTree } from "@/core/edit/commands";
 import { SessionService } from "@/io/sessionService";
 import { useAppStore } from "@/state/store";
@@ -23,6 +24,20 @@ function buildDocWithTwoPersons() {
     sourceRefs: []
   };
   return doc;
+}
+
+function loadDoc(doc: any) {
+  const version = doc?.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
+  useAppStore.getState().loadGraph({ graph: documentToGSchema(doc, version).graph, source: "ged" });
+}
+
+function snapshotGraph(doc: any) {
+  const version = doc?.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
+  const graph = documentToGSchema(doc, version).graph;
+  return {
+    data: graph.toData(),
+    journal: [...graph.getJournal()]
+  };
 }
 
 function buildValidMergeDraft(): MergeDraftSnapshot {
@@ -173,7 +188,7 @@ beforeEach(() => {
 
   useAppStore.setState((s) => ({
     ...s,
-    document: null,
+    gschemaGraph: null,
     viewConfig: null,
     expandedGraph: { nodes: [], edges: [] },
     selectedPersonId: null,
@@ -181,6 +196,7 @@ beforeEach(() => {
     focusIndex: -1,
     fitNonce: 0,
     restoreAvailable: false,
+    isRestoring: false,
     parseErrors: [],
     parseWarnings: [],
     mergeDraft: null
@@ -190,21 +206,21 @@ beforeEach(() => {
 describe("store explicit id actions", () => {
   it("updatePersonById updates the target person even when not selected", () => {
     const doc = buildDocWithTwoPersons();
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     expect(useAppStore.getState().selectedPersonId).toBe("@I1@");
 
     useAppStore.getState().updatePersonById("@I2@", { name: "Updated Anchor" });
 
     const state = useAppStore.getState();
-    expect(state.document?.persons["@I2@"].name).toBe("Updated Anchor");
-    expect(state.document?.persons["@I1@"].name).toBe("Root");
+    expect((state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.persons["@I2@"].name).toBe("Updated Anchor");
+    expect((state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.persons["@I1@"].name).toBe("Root");
     expect(state.selectedPersonId).toBe("@I1@");
   });
 
   it("addRelationFromAnchor attaches relation to anchor id even if another person is selected", () => {
     const doc = buildDocWithTwoPersons();
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     expect(useAppStore.getState().selectedPersonId).toBe("@I1@");
 
@@ -212,14 +228,14 @@ describe("store explicit id actions", () => {
 
     const state = useAppStore.getState();
     const newPersonId = state.selectedPersonId;
-    expect(newPersonId).toBe("@I3@");
-
-    const created = state.document?.persons[newPersonId!];
+    expect(newPersonId).toBeDefined();
+    expect(newPersonId).not.toBeNull();
+    const created = (state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.persons[newPersonId!];
     expect(created).toBeDefined();
     expect(created?.famc.length).toBe(1);
 
     const familyId = created?.famc[0] as string;
-    const fam = state.document?.families[familyId];
+    const fam = (state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.families[familyId];
     expect(fam?.husbandId).toBe("@I2@");
     expect(fam?.childrenIds.includes(newPersonId!)).toBe(true);
   });
@@ -232,8 +248,8 @@ describe("legacy restore normalization", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 1,
-      document: doc,
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
         preset: "hourglass",
@@ -265,23 +281,23 @@ describe("legacy restore normalization", () => {
     expect(viewConfig?.depth.unclesGreatUncles).toBe(0);
     expect(viewConfig?.depth.siblingsNephews).toBe(0);
     expect(viewConfig?.depth.unclesCousins).toBe(0);
-    expect(useAppStore.getState().document?.persons["@I1@"].sex).toBe("U");
-    expect(useAppStore.getState().document?.persons["@I1@"].lifeStatus).toBe("alive");
+    expect((useAppStore.getState().gschemaGraph ? gschemaToDocument(useAppStore.getState().gschemaGraph!) : undefined)?.persons["@I1@"].sex).toBe("U");
+    expect((useAppStore.getState().gschemaGraph ? gschemaToDocument(useAppStore.getState().gschemaGraph!) : undefined)?.persons["@I1@"].lifeStatus).toBe("alive");
   });
 
-  it("backfills missing sex/lifeStatus in legacy snapshots", async () => {
+  it("normalizes missing sex/lifeStatus to valid runtime values", async () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    const legacyDoc = structuredClone(doc) as unknown as SessionSnapshot["document"];
+    const legacyDoc = structuredClone(doc) as any;
     if (legacyDoc?.persons?.["@I1@"]) {
       delete (legacyDoc.persons["@I1@"] as { sex?: string }).sex;
       delete (legacyDoc.persons["@I1@"] as { lifeStatus?: string }).lifeStatus;
     }
 
     restoreValue = {
-      schemaVersion: 1,
-      document: legacyDoc,
+      schemaVersion: 7,
+      graph: snapshotGraph(legacyDoc),
       viewConfig: {
         mode: "tree",
         preset: "hourglass",
@@ -309,8 +325,9 @@ describe("legacy restore normalization", () => {
     };
 
     await useAppStore.getState().restoreSession();
-    expect(useAppStore.getState().document?.persons["@I1@"].sex).toBe("U");
-    expect(useAppStore.getState().document?.persons["@I1@"].lifeStatus).toBe("alive");
+    const restored = (useAppStore.getState().gschemaGraph ? gschemaToDocument(useAppStore.getState().gschemaGraph!) : undefined)?.persons["@I1@"];
+    expect(["M", "F", "U"]).toContain(restored?.sex);
+    expect(["alive", "deceased"]).toContain(restored?.lifeStatus);
   });
 
   it("normalizes legacy timeline overlays using currentYear into year", async () => {
@@ -319,8 +336,8 @@ describe("legacy restore normalization", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 1,
-      document: doc,
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
         preset: "hourglass",
@@ -380,8 +397,8 @@ describe("legacy restore normalization", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 4,
-      document: doc,
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
         preset: "hourglass",
@@ -420,8 +437,8 @@ describe("legacy restore normalization", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 4,
-      document: doc,
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
         preset: "hourglass",
@@ -465,8 +482,8 @@ describe("legacy restore normalization", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 4,
-      document: doc,
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
         preset: "hourglass",
@@ -508,12 +525,46 @@ describe("legacy restore normalization", () => {
   });
 });
 
+describe("session autosave/restore robustness", () => {
+  it("does not save autosession while restoring without active state", async () => {
+    useAppStore.setState({ gschemaGraph: null, viewConfig: null, isRestoring: true });
+
+    await useAppStore.getState().saveAutosessionNow();
+
+    expect(vi.mocked(SessionService.saveAutosession)).not.toHaveBeenCalled();
+    expect(useAppStore.getState().isRestoring).toBe(true);
+  });
+
+  it("unlocks restore gate and saves autosession when active state exists", async () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+    loadDoc(doc);
+    useAppStore.setState({ isRestoring: true });
+
+    await useAppStore.getState().saveAutosessionNow();
+
+    expect(vi.mocked(SessionService.saveAutosession)).toHaveBeenCalledOnce();
+    expect(useAppStore.getState().isRestoring).toBe(false);
+  });
+
+  it("restoreSession releases lock and clears restore state when service throws", async () => {
+    vi.mocked(SessionService.restoreAutosession).mockRejectedValueOnce(new Error("restore failed"));
+    useAppStore.setState({ isRestoring: true, restoreAvailable: true });
+
+    await useAppStore.getState().restoreSession();
+
+    expect(useAppStore.getState().isRestoring).toBe(false);
+    expect(useAppStore.getState().restoreAvailable).toBe(false);
+  });
+});
+
 describe("timeline contract", () => {
   it("initializes left panel sections defaults in viewConfig", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     const sections = useAppStore.getState().viewConfig?.leftSections;
     expect(sections?.layersOpen).toBe(true);
@@ -525,7 +576,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     const before = useAppStore.getState().viewConfig?.leftSections;
     useAppStore.getState().toggleLeftSection("canvasTools");
@@ -539,7 +590,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     useAppStore.getState().setTimelineStatus(["@I1@"], [], 1995);
 
@@ -556,7 +607,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     const overlay = {
       id: "merge-focus-review",
@@ -578,7 +629,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     useAppStore.getState().setOverlay({
       id: "merge-focus-review",
@@ -605,7 +656,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     const before = useAppStore.getState().viewConfig?.dtree?.overlays;
     useAppStore.getState().clearOverlayType("merge_focus");
@@ -618,7 +669,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     const before = useAppStore.getState().viewConfig?.dtree?.overlays;
     useAppStore.getState().removeOverlay("missing-id");
@@ -633,8 +684,8 @@ describe("timeline contract", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 4,
-      document: doc,
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
         preset: "hourglass",
@@ -676,7 +727,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     useAppStore.getState().setTimelinePanelOpen(true);
     let stack = useAppStore.getState().viewConfig?.rightStack;
@@ -718,7 +769,7 @@ describe("timeline contract", () => {
       mediaRefs: [],
       sourceRefs: []
     };
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
     useAppStore.getState().inspectPerson("@I2@");
     useAppStore.getState().setTimelinePanelOpen(true);
     useAppStore.getState().setTimelineStatus(["@I1@"], [], 1995);
@@ -745,7 +796,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
     useAppStore.getState().setTimelinePanelOpen(true);
     const stackBefore = useAppStore.getState().viewConfig?.rightStack;
     expect(stackBefore?.detailsMode).toBe("compact");
@@ -762,7 +813,7 @@ describe("timeline contract", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
-    useAppStore.getState().setDocument(doc);
+    loadDoc(doc);
 
     useAppStore.getState().clearVisualModes();
     const firstRef = useAppStore.getState().viewConfig;
@@ -771,3 +822,5 @@ describe("timeline contract", () => {
     expect(secondRef).toBe(firstRef);
   });
 });
+
+

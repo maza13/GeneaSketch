@@ -1,4 +1,4 @@
-export type BirthEstimatorVersion = "legacy" | "v2";
+export type BirthEstimatorVersion = "v2";
 
 export type BirthEstimatorConfig = {
   domainMinYear: number;

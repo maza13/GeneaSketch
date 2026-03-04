@@ -1,6 +1,12 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { createNewTree } from "@/core/edit/commands";
+import { documentToGSchema } from "@/core/gschema/GedcomBridge";
 import { useAppStore } from "@/state/store";
+
+function loadDoc(doc: any) {
+    const version = doc?.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
+    useAppStore.getState().loadGraph({ graph: documentToGSchema(doc, version).graph, source: "ged" });
+}
 
 describe("Collateral Sliders vNext - Deterministic Tests", () => {
     beforeEach(() => {
@@ -11,7 +17,6 @@ describe("Collateral Sliders vNext - Deterministic Tests", () => {
 
         useAppStore.setState((s) => ({
             ...s,
-            document: doc,
             viewConfig: {
                 mode: "tree",
                 preset: "all_direct_ancestors",
@@ -36,6 +41,7 @@ describe("Collateral Sliders vNext - Deterministic Tests", () => {
                 }
             }
         }));
+        loadDoc(doc);
     });
 
     it("couples Slider C with Slider A (Increasing C sets A to at least 1)", () => {
@@ -112,7 +118,7 @@ describe("Collateral Sliders vNext - Deterministic Tests", () => {
         doc.families["@F3@"] = { id: "@F3@", husbandId: "@I4@", wifeId: "@I20@", events: [], childrenIds: ["@I5@"] };
         doc.persons["@I5@"] = { id: "@I5@", name: "Cousin", famc: ["@F3@"], fams: [], sex: "M", lifeStatus: "alive", events: [], mediaRefs: [], sourceRefs: [] };
 
-        useAppStore.setState(s => ({ ...s, document: doc }));
+        loadDoc(doc);
 
         // C=1 -> should have Father, Mother, Uncle. NO Cousin.
         useAppStore.getState().setDepth("unclesCousins", 1);
@@ -127,3 +133,4 @@ describe("Collateral Sliders vNext - Deterministic Tests", () => {
         expect(nodes).toContain("@I5@");
     });
 });
+

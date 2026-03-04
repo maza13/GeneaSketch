@@ -1,9 +1,9 @@
-import type { GeneaDocument, Person } from "@/types/domain";
+import type { GraphDocument, Person } from "@/types/domain";
 import { SectionCard } from "@/ui/common/StandardModal";
 
 type Props = {
   person: Person;
-  document: GeneaDocument;
+  document: GraphDocument;
 };
 
 const MAPPED_TAGS = new Set(["NOTE"]);
@@ -60,4 +60,5 @@ export function PersonExtensionsSection({ person, document }: Props) {
     </div>
   );
 }
+
 

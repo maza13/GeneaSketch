@@ -1,0 +1,38 @@
+[
+  {
+    "opId": "op-edge-0004",
+    "opSeq": 4,
+    "type": "QUARANTINE",
+    "timestamp": 1772539204,
+    "actorId": "importer:fixture",
+    "importId": "imp-edge-1",
+    "reason": "Unmapped GEDCOM extension",
+    "context": "@I10@",
+    "originalGedcomVersion": "5.5.1",
+    "ast": {
+      "level": 1,
+      "tag": "_CUSTOM",
+      "value": "ROOT",
+      "children": [
+        {
+          "level": 2,
+          "tag": "_CHILD",
+          "value": "A",
+          "children": [
+            {
+              "level": 3,
+              "tag": "_GRAND",
+              "value": "B",
+              "children": []
+            }
+          ]
+        }
+      ],
+      "sourceLines": [
+        "1 _CUSTOM ROOT",
+        "2 _CHILD A",
+        "3 _GRAND B"
+      ]
+    }
+  }
+]

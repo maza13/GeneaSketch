@@ -1,7 +1,7 @@
-import type { Event, GeneaDocument, Person } from "@/types/domain";
+﻿import type { Event, GraphDocument, Person } from "@/types/domain";
 import type { DiagnosticFixAction, DiagnosticFixExecutionResult } from "./types";
 
-function cloneDoc(doc: GeneaDocument): GeneaDocument {
+function cloneDoc(doc: GraphDocument): GraphDocument {
   return {
     persons: structuredClone(doc.persons),
     families: structuredClone(doc.families),
@@ -80,9 +80,9 @@ function trimEvents(person: Person, type: "BIRT" | "DEAT", keep: "earliest" | "l
 }
 
 export function applyDiagnosticFixes(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   actions: DiagnosticFixAction[]
-): { nextDoc: GeneaDocument; result: DiagnosticFixExecutionResult } {
+): { nextDoc: GraphDocument; result: DiagnosticFixExecutionResult } {
   const nextDoc = cloneDoc(doc);
   const errors: string[] = [];
   const touchedPersons = new Set<string>();
@@ -351,3 +351,4 @@ export function applyDiagnosticFixes(
 
   return { nextDoc, result };
 }
+

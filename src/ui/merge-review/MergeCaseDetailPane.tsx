@@ -1,11 +1,11 @@
-import type { GeneaDocument, MergeHypothesis } from "@/types/domain";
+import type { GraphDocument, MergeHypothesis } from "@/types/domain";
 import type { MergeReviewCase, MergeReviewSession } from "@/types/merge-review";
 import { MERGE_STRINGS_ES } from "@/ui/merge-review/strings.es";
 
 type Props = {
   session: MergeReviewSession;
-  incomingDoc: GeneaDocument;
-  baseDoc: GeneaDocument;
+  incomingDoc: GraphDocument;
+  baseDoc: GraphDocument;
   onSelectCandidate: (incomingId: string, candidateIndex: number) => void;
   onSelectHypothesis: (incomingId: string, hypothesisIndex: number) => void;
   onApplyDecision: (incomingId: string) => void;
@@ -13,7 +13,7 @@ type Props = {
   onOpenTechnical: (incomingId: string) => void;
 };
 
-function candidateLabel(reviewCase: MergeReviewCase, baseDoc: GeneaDocument, index: number): string {
+function candidateLabel(reviewCase: MergeReviewCase, baseDoc: GraphDocument, index: number): string {
   const candidate = reviewCase.candidates[index];
   if (candidate.source === "synthetic-create") return "Crear persona nueva";
   if (!candidate.baseId) return "Candidato sin base";
@@ -177,3 +177,4 @@ export function MergeCaseDetailPane({
     </div>
   );
 }
+

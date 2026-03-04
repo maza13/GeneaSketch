@@ -7,18 +7,21 @@ import {
     unlinkParent,
     unlinkSpouse,
     updateFamily,
+    updateNoteRecord,
     updatePerson,
     type PersonInput
 } from "@/core/edit/commands";
 
 export type { PersonInput };
 import type { GeneaDocument } from "@/types/domain";
-
-// PersonPatch is used in the store, let's define it here or import it if shared.
+import { normalizePersonSurnames } from "@/core/naming/surname";
 // For now, I'll define it to keep the engine working.
 export type PersonPatch = {
     name?: string;
     surname?: string;
+    surnamePaternal?: string;
+    surnameMaternal?: string;
+    surnameOrder?: "paternal_first" | "maternal_first" | "single";
     birthDate?: string;
     birthPlace?: string;
     deathDate?: string;
@@ -40,14 +43,23 @@ export type PersonPatch = {
 export const GeneaEngine = {
     // Re-exports from commands for central access
     createNewTree,
+    /** @deprecated Use GraphMutations.createPersonInGraph instead */
     createPerson,
+    /** @deprecated Use GraphMutations.updatePersonInGraph instead */
     updatePerson,
+    /** @deprecated Use GraphMutations.updateFamilyInGraph instead */
     updateFamily,
+    /** @deprecated Use GraphMutations.linkRelationInGraph instead */
     linkExistingRelation,
+    /** @deprecated Use GraphMutations.unlinkRelationInGraph instead */
     unlinkChild,
+    /** @deprecated Use GraphMutations.unlinkRelationInGraph instead */
     unlinkParent,
+    /** @deprecated Use GraphMutations.unlinkRelationInGraph instead */
     unlinkSpouse,
+    /** @deprecated Use GraphMutations.createPersonInGraph and GraphMutations.linkRelationInGraph instead */
     addRelation,
+    updateNoteRecord,
 
     /**
      * Normalizes legacy document fields for GSchema 0.3.x compatibility.
@@ -85,6 +97,11 @@ export const GeneaEngine = {
                     primary: true
                 }];
             }
+            const canonical = normalizePersonSurnames(person);
+            person.surname = canonical.surname;
+            person.surnamePaternal = canonical.surnamePaternal;
+            person.surnameMaternal = canonical.surnameMaternal;
+            person.surnameOrder = canonical.surnameOrder;
 
             person.events = person.events.map((event, index) => ({
                 ...event,
@@ -124,6 +141,7 @@ export const GeneaEngine = {
     },
 
     /**
+     * @deprecated Use GraphMutations.unlinkRelationInGraph instead.
      * Unified wrapper for unlinking any relation type.
      */
     unlinkAny(doc: GeneaDocument, personId: string, relatedId: string, type: "parent" | "child" | "spouse"): GeneaDocument {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { resolvePersonId } from "@/core/ai/matching";
 import type { GeneaDocument } from "@/types/domain";
 
@@ -11,7 +11,7 @@ function sampleDoc(): GeneaDocument {
     },
     families: {},
     media: {},
-    metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+    metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
   };
 }
 
@@ -28,4 +28,5 @@ describe("ai matching", () => {
     expect(resolved.candidates[0].score).toBeGreaterThan(0);
   });
 });
+
 

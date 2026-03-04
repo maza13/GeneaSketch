@@ -1,76 +1,60 @@
-﻿# TODO Estructurado de Pendientes - GeneaSketch
+﻿# GeneaSketch Master Backlog & Roadmap
 
-Fuente de verdad para pendientes de release, integracion tecnica y el "Paradigm Shift" 0.4.0.
+## 🎯 Current Focus: GSchema 0.4.0 Finalization
+The project is transitioning to a structured task management system in the `todos/` directory using the `file-todos` skill.
 
-## 🚀 Prioridad Inmediata: GSchema 0.1.0 (Update 0.4.0)
-
-### GS-001
-- ID: GS-001
-- Titulo: Revisión final y aprobación del Implementation Plan 0.4.0
-- Contexto: El store ya está desacoplado (INT-005). Necesitamos el OK final en el diseño de GSchema.
-- Accion concreta: Revisar `implementation_plan.md` y `gschema_0.1.x_tech_spec.md`.
-- Prioridad: Alta
-- Estado: Pendiente
-- Relacion con release: si, 0.4.0
-
-### INT-001 (Core Inference)
-- ID: INT-001
-- Titulo: Estabilizar pipeline de inferencia con GSchema
-- Contexto: Adaptar el motor de inferencia V2 para trabajar sobre el nuevo formato de grafos/claims.
-- Accion concreta: Terminar refinamiento de mensajes de evidencia y ocultar redundancias.
-- Prioridad: Alta
-- Estado: En curso
-- Relacion con release: si, 0.4.0
-
-### QA-004 (Arquitectura)
-- ID: QA-004
-- Titulo: Limpieza de implementaciones redundantes de grafos
-- Contexto: Eliminar `src/core/genegraph` y unificar todo bajo el nuevo GSchema.
-- Accion concreta: Auditar y borrar código muerto tras la transición.
-- Prioridad: Media
-- Estado: Pendiente
-- Relacion con release: si, 0.4.0
+### Active Queue (Source of Truth: `todos/`)
+Prioridad operativa (Ciclo 0.5.0):
+1. `020` (`pending`, `p2`): Soporte para Prefijos, Sufijos y Títulos (NPFX, NSFX, TITL).
+2. `021` (`pending`, `p2`): Coerción robusta de Fechas y Lugares informales.
+3. `010` (`ready`, `p1`): Eliminación total del motor legado.
+4. `018` (`ready`, `p1`): Ciclo de pruebas manuales y pulido UX.
+5. `006` (`pending`, `p2`): Error boundaries (opcional para 0.4.x/0.5.0).
 
 ---
 
-## 🛠️ Integración UI/Frontend
+## 📅 Roadmap
 
-### INT-002
-- ID: INT-002
-- Titulo: Consolidar PersonDetailShell
-- Contexto: Retirar rutas antiguas y dejar el shell modular como único punto de entrada.
-- Accion concreta: Completar wiring de secciones y auditoría.
-- Prioridad: Alta
-- Estado: Pendiente
-- Relacion con release: si, 0.3.7+
+### 0.4.0 - Paradigma GSchema (Hardened) ✅
+- ✅ Contract Freeze & Wiki First (Issue D1)
+- ✅ Deterministic Journal & Hashing (Issue D2)
+- ✅ Lossless Quarantine (AST) (Issue D3)
+- ✅ First-class Citations (Issue D1)
+- ✅ Final Integration in DocSlice (Issue 001)
+- ✅ Refactor de App.tsx (Issue 002)
+- ✅ Wiki GFM Standardization (Issue 004)
+- ✅ Project Root Hygiene (Issue 005)
+- ✅ Performance & State Audit (Issue 003)
 
-### INT-003
-- ID: INT-003
-- Titulo: SuggestionInput Unificado
-- Contexto: Estandarizar props y comportamiento en todos los editores.
-- Accion concreta: Definir contrato único.
-- Prioridad: Media
-- Estado: Pendiente
+### 0.5.0 - Collaboration & Scale [STABLE TARGET]
+1. `010` (`ready`, `p1`): Total removal of Legacy Engine (Cleanup)
+2. `018` (`ready`, `p1`): Manual Testing Cycle & UX Polishing (Final Gate)
+3. `009` (`pending`, `p2`): CRDT Sync offline-first (Architecture)
+4. Advanced Evidence Gate visualization
 
----
-
-## ✅ Histórico de Completados (Reciente)
-
-- **INT-005**: Desacoplado `store.ts`. Slices creados, lógica extraída a `GeneaEngine` y `UiEngine`. ✅
-- **FIX**: Corregida regresión de carga de archivos (init `viewConfig`). ✅
-- **QA-001**: Baseline estabilizado y Gate de CI activo (`baseline-qa001.yml`). ✅
-- **REL-001**: Deuda de changelog 0.3.1-0.3.6 cerrada. ✅
-- **REL-002**: Normalización de encoding UTF-8 completada. ✅
+### 0.6.0+ - AI & Intelligence
+- Automated evidence inference pipeline
+- Predictive genealogy assistant
 
 ---
 
-## 📦 Inventario de Archivos Untracked (A integrar en 0.4.0)
+## 🛠️ Task Management
+We use the **file-todos** system.
+- Files: `todos/{ID}-{status}-{priority}-{desc}.md`
+- Statuses: `pending`, `ready`, `complete`
+- Source of truth for operational status: YAML frontmatter in `todos/`
+- `docs/TODO.md` is for roadmap/reference; execution is in `todos/`
+- Protocolo operativo:
+  - `pending`: item descubierto, requiere triage/definicion de accion.
+  - `ready`: aprobado para implementacion inmediata.
+  - `complete`: cerrado con evidencia (work log + checks ejecutados).
+  - Regla: no ejecutar trabajo nuevo fuera de `todos/`; `docs/TODO.md` solo resume estado global.
 
-- `src/core/graph/locationMarkers.ts` (Consolidar en core)
-- `src/core/inference/birthRangeLocalV2.ts` (Core motor)
-- `src/ui/person/BirthRangeApplyConfirmPanel.tsx` (UI nueva)
-- `src/tests/inference.*.test.ts` (Mover a baseline final)
-- `src/tests/person-events-*.test.ts` (UI baseline)
+*Historical Reference:*
+- [0.4.0 Hardening Detailed Log](/docs/archive/0.4.0_HARDENING_DETAILED.md)
+- [GSCHEMA_EVOLUTION_PLAN.md](/.agents/GSCHEMA_EVOLUTION_PLAN.md)
 
 ---
-*Nota: Este archivo se limpia periódicamente para mantener el foco en la siguiente gran entrega.*
+
+## 🛡️ Recinto de Operaciones Finalizadas
+Las fases detalladas de endurecimiento (D1-D3, E1-E4, y Saneamiento Operacional) han sido archivadas en `docs/archive/0.4.0_HARDENING_DETAILED.md`.

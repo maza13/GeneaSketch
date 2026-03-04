@@ -1,6 +1,6 @@
-import JSZip from "jszip";
 import type { Family, GedExportVersion, GedExportWarning, GeneaDocument, Person, SourceRef } from "@/types/domain";
-import { serializeGsk, type GskMetadata } from "@/core/gskFormat";
+import { normalizePersonSurnames } from "@/core/naming/surname";
+import { ERROR_CODES } from "@/core/gschema/errorCatalog";
 
 export type GedExportWarningCollector = {
   push: (warning: GedExportWarning) => void;
@@ -28,6 +28,43 @@ function warn(warnings: GedExportWarningCollector | undefined, warning: GedExpor
   warnings?.push(warning);
 }
 
+export const GEDCOM_CHUNK_MAX_BYTES = 180;
+
+function splitUtf8ByBytes(value: string, maxBytes: number): string[] {
+  if (maxBytes <= 0) return [value];
+  const encoder = new TextEncoder();
+  const chunks: string[] = [];
+  let current = "";
+  let currentBytes = 0;
+
+  for (const char of value) {
+    const charBytes = encoder.encode(char).byteLength;
+    if (currentBytes > 0 && currentBytes + charBytes > maxBytes) {
+      chunks.push(current);
+      current = char;
+      currentBytes = charBytes;
+      continue;
+    }
+    current += char;
+    currentBytes += charBytes;
+  }
+  chunks.push(current);
+  return chunks;
+}
+
+function pushLongValue(out: string[], level: number, tag: string, value: string) {
+  const chunks = splitUtf8ByBytes(value, GEDCOM_CHUNK_MAX_BYTES);
+  if (chunks.length <= 1) {
+    out.push(line(level, tag, value));
+    return;
+  }
+  out.push(line(level, tag, chunks[0]));
+  for (let i = 1; i < chunks.length; i += 1) {
+    const chunk = chunks[i];
+    out.push(line(level + 1, "CONC", chunk));
+  }
+}
+
 function pushSourceRef(out: string[], level: number, ref: SourceRef) {
   out.push(line(level, "SOUR", ref.id));
   if (ref.page) out.push(line(level + 1, "PAGE", ref.page));
@@ -39,9 +76,26 @@ function pushSourceRef(out: string[], level: number, ref: SourceRef) {
 function pushInlineNote(out: string[], level: number, note: string) {
   const parts = note.split(/\r?\n/);
   if (parts.length === 0) return;
-  out.push(line(level, "NOTE", parts[0] || ""));
+  pushLongValue(out, level, "NOTE", parts[0] || "");
   for (let i = 1; i < parts.length; i += 1) {
-    out.push(line(level + 1, "CONT", parts[i] || ""));
+    pushLongValue(out, level + 1, "CONT", parts[i] || "");
+  }
+}
+
+function pushRawTags(out: string[], level: number, rawTags: Record<string, string[]> | undefined) {
+  if (!rawTags) return;
+  for (const [tag, values] of Object.entries(rawTags)) {
+    if (tag === "NOTE") {
+      for (const note of values || []) pushInlineNote(out, level, note);
+      continue;
+    }
+    for (const value of values || []) {
+      if (!value) {
+        out.push(line(level, tag));
+        continue;
+      }
+      pushLongValue(out, level, tag, value);
+    }
   }
 }
 
@@ -88,39 +142,59 @@ function pushEvent(out: string[], level: number, event: NonNullable<Person["even
 function personToGed(person: Person, options?: SerializeGedOptions): string[] {
   const out: string[] = [];
   const warnings = options?.warnings;
+  const canonicalSurnames = normalizePersonSurnames(person);
+  const gedSurname = canonicalSurnames.surname || person.surname;
   out.push(xline(0, person.id, "INDI"));
   if (person.names?.length) {
     for (const entry of person.names) {
-      const nameVal = entry.value || (entry.surname ? `${entry.given || person.name} /${entry.surname}/` : person.name);
+      const effectiveSurname = entry.surname || gedSurname;
+      const nameVal = entry.value || (effectiveSurname ? `${entry.given || person.name} /${effectiveSurname}/` : person.name);
       out.push(line(1, "NAME", nameVal));
       if (entry.given) out.push(line(2, "GIVN", entry.given));
-      if (entry.surname) out.push(line(2, "SURN", entry.surname));
+      if (effectiveSurname) out.push(line(2, "SURN", effectiveSurname));
       if (entry.nickname) out.push(line(2, "NICK", entry.nickname));
       if (entry.type && entry.type !== "primary") out.push(line(2, "TYPE", entry.type.toUpperCase()));
     }
   } else {
-    const nameVal = person.surname ? `${person.name} /${person.surname}/` : person.name;
+    const nameVal = gedSurname ? `${person.name} /${gedSurname}/` : person.name;
     out.push(line(1, "NAME", nameVal));
   }
   out.push(line(1, "SEX", person.sex));
-  for (const famc of person.famc) out.push(line(1, "FAMC", famc));
-  if ((person.famcLinks || []).some((link) => link.pedi && link.pedi !== "UNKNOWN")) {
-    warn(warnings, {
-      code: "GED_PEDI_STRUCT_DROPPED",
-      entity: person.id,
-      message: "famcLinks.PEDI estructurado no se serializa aún en el perfil GED actual; se conserva en modelo interno.",
-      level: "info"
-    });
+  const famcOrder: string[] = [];
+  const seenFamc = new Set<string>();
+  for (const famc of person.famc || []) {
+    if (seenFamc.has(famc)) continue;
+    seenFamc.add(famc);
+    famcOrder.push(famc);
+  }
+  for (const link of person.famcLinks || []) {
+    if (seenFamc.has(link.familyId)) continue;
+    seenFamc.add(link.familyId);
+    famcOrder.push(link.familyId);
+  }
+  for (const familyId of famcOrder) {
+    out.push(line(1, "FAMC", familyId));
+    const link = (person.famcLinks || []).find((entry) => entry.familyId === familyId);
+    if (link?.pedi) out.push(line(2, "PEDI", link.pedi));
+    if (link?.quality) out.push(line(2, "QUAY", link.quality));
+    if (link?.pedi === "UNKNOWN" && link.reference?.includes("nature:STE")) {
+      warn(warnings, {
+        code: ERROR_CODES.PEDI_STE_DEGRADED_TO_UNKNOWN,
+        entity: person.id,
+        message: "ParentChild nature=STE se degrada a PEDI UNKNOWN en GEDCOM.",
+        level: "info"
+      });
+    }
   }
   for (const fams of person.fams) out.push(line(1, "FAMS", fams));
   for (const m of person.mediaRefs) out.push(line(1, "OBJE", m));
   for (const ref of person.sourceRefs || []) pushSourceRef(out, 1, ref);
   for (const noteRef of person.noteRefs || []) out.push(line(1, "NOTE", noteRef));
-  for (const inlineNote of person.rawTags?.NOTE || []) pushInlineNote(out, 1, inlineNote);
+  pushRawTags(out, 1, person.rawTags);
 
   if (person.events.some((ev) => ev.type === "OTHER")) {
     warn(warnings, {
-      code: "GED_EVENT_OTHER_DROPPED",
+      code: ERROR_CODES.GED_EVENT_OTHER_DROPPED,
       entity: person.id,
       message: "Eventos OTHER se exportan como OTHER/TYPE y pueden no ser compatibles con algunos consumidores.",
       level: "warn"
@@ -131,7 +205,7 @@ function personToGed(person: Person, options?: SerializeGedOptions): string[] {
   const hasDeathEvent = events.some((event) => event.type === "DEAT");
   if (person.lifeStatus === "deceased" && !hasDeathEvent) {
     warn(warnings, {
-      code: "GED_DEAT_IMPLICIT",
+      code: ERROR_CODES.GED_DEAT_IMPLICIT,
       entity: person.id,
       message: "Persona marcada como fallecida sin evento DEAT explicito.",
       level: "warn"
@@ -163,11 +237,11 @@ function familyToGed(family: Family, options?: SerializeGedOptions): string[] {
     pushEvent(out, 1, ev);
   }
   for (const noteRef of family.noteRefs || []) out.push(line(1, "NOTE", noteRef));
-  for (const inlineNote of family.rawTags?.NOTE || []) pushInlineNote(out, 1, inlineNote);
+  pushRawTags(out, 1, family.rawTags);
   pushChangeMeta(out, 1, family.change);
   if (family.events.some((ev) => ev.type !== "MARR" && ev.type !== "DIV")) {
     warn(warnings, {
-      code: "GED_FAM_EVENT_DROPPED",
+      code: ERROR_CODES.GED_FAM_EVENT_DROPPED,
       entity: family.id,
       message: "Eventos de familia fuera de MARR/DIV no se exportan en el perfil GED actual.",
       level: "warn"
@@ -175,7 +249,7 @@ function familyToGed(family: Family, options?: SerializeGedOptions): string[] {
   }
   if ((family.relationNotes || []).length > 0) {
     warn(warnings, {
-      code: "GED_RELATION_NOTES_DROPPED",
+      code: ERROR_CODES.GED_RELATION_NOTES_DROPPED,
       entity: family.id,
       message: "relationNotes no se exporta en el perfil GED actual; se conserva en modelo interno.",
       level: "info"
@@ -215,7 +289,7 @@ export function serializeGedcom(doc: GeneaDocument, options?: SerializeGedOption
     out.push(xline(0, source.id, "SOUR"));
     if (source.title) out.push(line(1, "TITL", source.title));
     if (source.text) out.push(line(1, "TEXT", source.text));
-    for (const note of source.rawTags?.NOTE || []) pushInlineNote(out, 1, note);
+    pushRawTags(out, 1, source.rawTags);
     pushChangeMeta(out, 1, source.change);
   });
   Object.values(doc.notes || {}).forEach((note) => {
@@ -231,34 +305,18 @@ export function serializeGedcom(doc: GeneaDocument, options?: SerializeGedOption
 
   if (Object.values(doc.media).some((m) => Boolean(m.bytes || m.dataUrl))) {
     warn(warnings, {
-      code: "GED_MEDIA_BINARY_NOT_EMBEDDED",
+      code: ERROR_CODES.GED_MEDIA_BINARY_NOT_EMBEDDED,
       message: "GED plano no embebe binarios de media; solo se exportan referencias OBJE/FILE.",
       level: "info"
     });
   }
   if ((doc.metadata.importProvenance || []).length > 0) {
     warn(warnings, {
-      code: "GED_METADATA_EXTENSION_DROPPED",
+      code: ERROR_CODES.GED_METADATA_EXTENSION_DROPPED,
       message: "Metadatos extendidos de GeneaSketch (provenance) no se incluyen en GED plano.",
       level: "info"
     });
   }
   out.push("0 TRLR");
   return `${out.join("\n")}\n`;
-}
-
-export async function serializeGedzip(doc: GeneaDocument, mediaPolicy: "embed" | "reference", gskMeta?: GskMetadata): Promise<Blob> {
-  const zip = new JSZip();
-  zip.file("data.ged", serializeGedcom(doc, { version: "7.0.3" }));
-  if (mediaPolicy === "embed") {
-    for (const m of Object.values(doc.media)) {
-      if (m.fileName && m.bytes) {
-        zip.file(m.fileName, m.bytes);
-      }
-    }
-  }
-  if (gskMeta) {
-    zip.file("geneasketch.json", serializeGsk(gskMeta));
-  }
-  return zip.generateAsync({ type: "blob" });
 }

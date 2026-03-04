@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { normalizeActionsWithSafety } from "@/core/ai/safety";
 import type { AiResolvedAction } from "@/types/ai";
 import type { GeneaDocument } from "@/types/domain";
@@ -14,7 +14,7 @@ function buildDoc(): GeneaDocument {
       "@F1@": { id: "@F1@", husbandId: "@I1@", wifeId: "@I2@", childrenIds: [], events: [] }
     },
     media: {},
-    metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+    metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
   };
 }
 
@@ -35,3 +35,4 @@ describe("ai safety wizard", () => {
     expect(result.annotations[0]?.candidateGroups?.related.length).toBeGreaterThan(0);
   });
 });
+

@@ -1,9 +1,9 @@
-﻿import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 import { PersonalTimeline } from "@/ui/person/PersonalTimeline";
 import { SectionCard } from "@/ui/common/StandardModal";
 
 type Props = {
-  document: GeneaDocument;
+  document: GraphDocument;
   personId: string;
   onSelectPerson: (personId: string) => void;
 };
@@ -12,7 +12,7 @@ export function PersonTimelineSection({ document, personId, onSelectPerson }: Pr
   return (
     <div className="gs-sections-container">
       <SectionCard
-        title="Línea de tiempo personal"
+        title="L�nea de tiempo personal"
         icon="timeline"
       >
         <PersonalTimeline document={document} personId={personId} onSelectPerson={onSelectPerson} />
@@ -20,3 +20,4 @@ export function PersonTimelineSection({ document, personId, onSelectPerson }: Pr
     </div>
   );
 }
+

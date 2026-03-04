@@ -1,4 +1,4 @@
-import { calculateDiff, type DataDiff } from "@/core/edit/diff";
+﻿import { calculateDiff, type DataDiff } from "@/core/edit/diff";
 import { applyDiff } from "@/core/edit/merge";
 import { scoreMatch, type MatchCandidate, type MatchResult } from "@/core/edit/personMatcher";
 import type { MergeAction, MergeExplain, MergeHypothesis, MergeRiskLevel, Person } from "@/types/domain";
@@ -13,7 +13,7 @@ import type {
   MergeReviewSession,
   MergeSessionPreview
 } from "@/types/merge-review";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 
 type CaseStatus = MergeReviewCase["status"];
 
@@ -292,8 +292,8 @@ function candidateFromMatchCandidate(candidate: MatchCandidate): MergeReviewCand
 function candidateFromAutoMatch(
   incomingPerson: Person,
   basePerson: Person,
-  incomingDoc: GeneaDocument,
-  baseDoc: GeneaDocument
+  incomingDoc: GraphDocument,
+  baseDoc: GraphDocument
 ): MergeReviewCandidateOption {
   const scored = scoreMatch(incomingPerson, basePerson, incomingDoc, baseDoc);
   return {
@@ -486,8 +486,8 @@ function buildPriorityMap(matchResult: MatchResult): Map<string, number> {
 
 function createCaseCandidates(
   incomingId: string,
-  baseDoc: GeneaDocument,
-  incomingDoc: GeneaDocument,
+  baseDoc: GraphDocument,
+  incomingDoc: GraphDocument,
   matchResult: MatchResult
 ): { candidates: MergeReviewCandidateOption[]; preferredBaseId?: string } {
   const out: MergeReviewCandidateOption[] = [];
@@ -540,8 +540,8 @@ function withSessionPatch(session: MergeReviewSession, patch: Partial<MergeRevie
 }
 
 export function buildInitialReviewSession(
-  baseDoc: GeneaDocument,
-  incomingDoc: GeneaDocument,
+  baseDoc: GraphDocument,
+  incomingDoc: GraphDocument,
   matchResult: MatchResult,
   preset: MergeReviewPreset = "balanced",
   contextId?: string,
@@ -898,8 +898,8 @@ function toDiffEvidenceCandidate(
 }
 
 export function computeSessionPreview(
-  baseDoc: GeneaDocument,
-  incomingDoc: GeneaDocument,
+  baseDoc: GraphDocument,
+  incomingDoc: GraphDocument,
   session: MergeReviewSession,
   matchResult?: MatchResult
 ): MergeSessionPreview {
@@ -1003,3 +1003,4 @@ export function caseMatchesSearch(reviewCase: MergeReviewCase, incomingPerson: P
   const text = `${reviewCase.incomingId} ${incomingPerson?.name || ""} ${incomingPerson?.surname || ""}`.toLowerCase();
   return text.includes(token);
 }
+

@@ -3,115 +3,177 @@ import { AppState, DocSlice } from "../types";
 import { GeneaEngine } from "@/core/engine/GeneaEngine";
 import { UiEngine } from "@/core/engine/UiEngine";
 import { ensureExpanded } from "../helpers/graphHelpers";
+import { documentToGSchema } from "@/core/gschema/GedcomBridge";
+import { GraphMutations } from "@/core/gschema/GraphMutations";
+import { projectGraphDocument } from "@/core/read-model/selectors";
+
+function mapRelType(type: string): "parent" | "child" | "spouse" {
+    if (["father", "mother", "parent"].includes(type)) return "parent";
+    if (["son", "daughter", "child"].includes(type)) return "child";
+    return "spouse";
+}
 
 export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, get) => ({
-    document: null,
+    gschemaGraph: null,
+    graphRevision: 0,
     expandedGraph: { nodes: [], edges: [] },
 
-    setDocument: (doc) => set((state) => {
-        const normalized = GeneaEngine.normalizeDocument(doc);
-        if (!normalized) return { document: null, expandedGraph: { nodes: [], edges: [] } };
+    loadGraph: (payload) => set((state) => {
+        const finalGraph = payload.graph;
+        const finalDoc = projectGraphDocument(finalGraph);
 
-        let viewConfig = state.viewConfig;
-        if (!viewConfig) {
-            const firstPersonId = Object.keys(normalized.persons)[0] || "";
-            viewConfig = UiEngine.createDefaultViewConfig(firstPersonId);
-        } else if (!viewConfig.focusPersonId) {
-            const firstPersonId = Object.keys(normalized.persons)[0] || "";
-            viewConfig = { ...viewConfig, focusPersonId: firstPersonId, homePersonId: firstPersonId };
+        if (!finalGraph || !finalDoc) {
+            return {
+                gschemaGraph: null,
+                graphRevision: state.graphRevision + 1,
+                expandedGraph: { nodes: [], edges: [] }
+            };
         }
 
+        const firstPersonId = Object.keys(finalDoc.persons)[0] || "";
+        let viewConfig = state.viewConfig;
+        if (!viewConfig) {
+            viewConfig = UiEngine.createDefaultViewConfig(firstPersonId);
+        } else if (!viewConfig.focusPersonId) {
+            viewConfig = { ...viewConfig, focusPersonId: firstPersonId, homePersonId: firstPersonId };
+        }
+        const selectedPersonId = state.selectedPersonId && finalDoc.persons[state.selectedPersonId]
+            ? state.selectedPersonId
+            : firstPersonId || null;
+
         return {
-            document: normalized,
+            gschemaGraph: finalGraph,
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: finalDoc.xrefToUid,
+            uidToXref: finalDoc.uidToXref,
             viewConfig,
-            expandedGraph: ensureExpanded(normalized, viewConfig)
+            selectedPersonId,
+            expandedGraph: ensureExpanded(finalDoc, viewConfig)
         };
     }),
 
-    applyDiagnosticDocument: (nextDoc) => set((state) => ({
-        document: nextDoc,
-        expandedGraph: ensureExpanded(nextDoc, state.viewConfig)
-    })),
-
     createNewTreeDoc: () => {
         const newDoc = GeneaEngine.createNewTree();
-        get().setDocument(newDoc);
+        const graph = documentToGSchema(newDoc, "7.0.x").graph;
+        get().loadGraph({ graph, source: "mock" });
     },
 
     updatePersonById: (personId, patch) => set((state) => {
-        if (!state.document) return {};
-        const nextDoc = GeneaEngine.updatePerson(state.document, personId, patch as any);
+        if (!state.gschemaGraph) return {};
+        const graphUid = state.xrefToUid?.[personId];
+        if (!graphUid) return {};
+        GraphMutations.updatePersonInGraph(state.gschemaGraph, graphUid, patch as any);
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return {};
         return {
-            document: nextDoc,
-            expandedGraph: ensureExpanded(nextDoc, state.viewConfig)
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: tempDoc.xrefToUid,
+            uidToXref: tempDoc.uidToXref,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig)
         };
     }),
 
     updateSelectedPerson: (patch) => {
-        const { document, selectedPersonId, updatePersonById } = get();
-        if (!document || !selectedPersonId) return;
+        const { selectedPersonId, updatePersonById } = get();
+        if (!selectedPersonId) return;
         updatePersonById(selectedPersonId, patch);
     },
 
     createStandalonePerson: (input) => set((state) => {
-        if (!state.document) return {};
-        const { next, personId } = GeneaEngine.createPerson(state.document, input);
+        if (!state.gschemaGraph) return {};
+        const { node } = GraphMutations.createPersonInGraph(state.gschemaGraph, input);
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return {};
+        // We know node.uid is the created person's UID, and tempDoc.uidToXref gives us the xref ID to select
+        const newXrefId = tempDoc.uidToXref?.[node.uid];
         return {
-            document: next,
-            expandedGraph: ensureExpanded(next, state.viewConfig),
-            selectedPersonId: personId
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: tempDoc.xrefToUid,
+            uidToXref: tempDoc.uidToXref,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig),
+            selectedPersonId: newXrefId || node.uid
         };
     }),
 
     createPersonRecord: (input) => {
         const state = get();
-        if (!state.document) return null;
-        const { next, personId } = GeneaEngine.createPerson(state.document, input);
+        if (!state.gschemaGraph) return null;
+        const { node } = GraphMutations.createPersonInGraph(state.gschemaGraph, input);
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return null;
+        const newXrefId = tempDoc.uidToXref?.[node.uid];
         set({
-            document: next,
-            expandedGraph: ensureExpanded(next, state.viewConfig)
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: tempDoc.xrefToUid,
+            uidToXref: tempDoc.uidToXref,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig)
         });
-        return personId;
+        return newXrefId || node.uid;
     },
 
     updateFamilyById: (familyId, patch) => set((state) => {
-        if (!state.document) return {};
-        const nextDoc = GeneaEngine.updateFamily(state.document, familyId, patch);
+        if (!state.gschemaGraph) return {};
+        const graphUid = state.xrefToUid?.[familyId];
+        if (!graphUid) return {};
+        GraphMutations.updateFamilyInGraph(state.gschemaGraph, graphUid, patch);
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return {};
         return {
-            document: nextDoc,
-            expandedGraph: ensureExpanded(nextDoc, state.viewConfig)
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: tempDoc.xrefToUid,
+            uidToXref: tempDoc.uidToXref,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig)
         };
     }),
 
     linkExistingRelation: (anchorId, existingPersonId, type) => set((state) => {
-        if (!state.document) return {};
-        const nextDoc = GeneaEngine.linkExistingRelation(state.document, anchorId, existingPersonId, type);
+        if (!state.gschemaGraph) return {};
+        const anchorUid = state.xrefToUid?.[anchorId];
+        const existingUid = state.xrefToUid?.[existingPersonId];
+        if (!anchorUid || !existingUid) return {};
+        GraphMutations.linkRelationInGraph(state.gschemaGraph, anchorUid, existingUid, mapRelType(type));
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return {};
         return {
-            document: nextDoc,
-            expandedGraph: ensureExpanded(nextDoc, state.viewConfig)
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: tempDoc.xrefToUid,
+            uidToXref: tempDoc.uidToXref,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig)
         };
     }),
 
     unlinkRelation: (personId, relatedId, type) => set((state) => {
-        if (!state.document) return {};
-        let nextDoc = state.document;
-        if (type === "parent") nextDoc = GeneaEngine.unlinkParent(nextDoc, personId, relatedId);
-        else if (type === "child") nextDoc = GeneaEngine.unlinkChild(nextDoc, personId, relatedId);
-        else if (type === "spouse") nextDoc = GeneaEngine.unlinkSpouse(nextDoc, personId, relatedId);
-
+        if (!state.gschemaGraph) return {};
+        const personUid = state.xrefToUid?.[personId];
+        const relatedUid = state.xrefToUid?.[relatedId];
+        if (!personUid || !relatedUid) return {};
+        GraphMutations.unlinkRelationInGraph(state.gschemaGraph, personUid, relatedUid, mapRelType(type));
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return {};
         return {
-            document: nextDoc,
-            expandedGraph: ensureExpanded(nextDoc, state.viewConfig)
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: tempDoc.xrefToUid,
+            uidToXref: tempDoc.uidToXref,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig)
         };
     }),
 
     addRelationFromAnchor: (anchorId, type, input, targetFamilyId) => set((state) => {
-        if (!state.document) return {};
-        const { next, personId } = GeneaEngine.addRelation(state.document, anchorId, type, input, targetFamilyId);
+        if (!state.gschemaGraph) return {};
+        const anchorUid = state.xrefToUid?.[anchorId];
+        if (!anchorUid) return {};
+        const targetFamUid = targetFamilyId ? state.xrefToUid?.[targetFamilyId] : undefined;
+        const { node } = GraphMutations.createPersonInGraph(state.gschemaGraph, input);
+        GraphMutations.linkRelationInGraph(state.gschemaGraph, anchorUid, node.uid, mapRelType(type), targetFamUid);
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return {};
+        const newXrefId = tempDoc.uidToXref?.[node.uid];
         return {
-            document: next,
-            expandedGraph: ensureExpanded(next, state.viewConfig),
-            selectedPersonId: personId
+            graphRevision: state.graphRevision + 1,
+            xrefToUid: tempDoc.xrefToUid,
+            uidToXref: tempDoc.uidToXref,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig),
+            selectedPersonId: newXrefId || node.uid
         };
     }),
 
@@ -119,5 +181,24 @@ export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, ge
         const { selectedPersonId, addRelationFromAnchor } = get();
         if (!selectedPersonId) return;
         addRelationFromAnchor(selectedPersonId, type, input, targetFamilyId);
-    }
+    },
+
+    updateNoteRecord: (noteId, text) => set((state) => {
+        if (!state.gschemaGraph) return {};
+
+        const graphUid = state.xrefToUid?.[noteId] || noteId;
+        const node = state.gschemaGraph.node(graphUid);
+        if (node && node.type === "Note") {
+            (node as any).text = text;
+        } else {
+            console.warn("note update failed: missing node or not a Note in graph");
+        }
+
+        const tempDoc = projectGraphDocument(state.gschemaGraph);
+        if (!tempDoc) return {};
+        return {
+            graphRevision: state.graphRevision + 1,
+            expandedGraph: ensureExpanded(tempDoc, state.viewConfig)
+        };
+    })
 });

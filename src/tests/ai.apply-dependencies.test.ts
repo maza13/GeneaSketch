@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { applyApprovedAiReview } from "@/core/ai/apply";
 import type { AiReviewDraft } from "@/types/ai";
 import type { GeneaDocument } from "@/types/domain";
@@ -21,7 +21,7 @@ function baseDoc(): GeneaDocument {
     },
     families: {},
     media: {},
-    metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+    metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
   };
 }
 
@@ -91,3 +91,4 @@ describe("ai apply dependencies", () => {
     expect([family.husbandId, family.wifeId]).toContain(createdId!);
   });
 });
+

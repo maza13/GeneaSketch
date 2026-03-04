@@ -1,4 +1,5 @@
 import type { Event, Family, GeneaDocument, PendingRelationType, Person } from "@/types/domain";
+import { normalizePersonSurnames } from "@/core/naming/surname";
 
 export type PersonInput = {
   name: string;
@@ -151,6 +152,10 @@ export function createNewTree(): GeneaDocument {
   };
 }
 
+/**
+ * @deprecated Use GraphMutations.createPersonInGraph instead.
+ * Legacy helper for creating a person in a GeneaDocument.
+ */
 export function createPerson(doc: GeneaDocument, input: PersonInput): { next: GeneaDocument; personId: string } {
   const next = cloneDoc(doc);
   const personId = nextId(Object.keys(next.persons), "I");
@@ -172,6 +177,11 @@ export function createPerson(doc: GeneaDocument, input: PersonInput): { next: Ge
     mediaRefs: [],
     sourceRefs: []
   };
+  const canonicalSurnames = normalizePersonSurnames(person);
+  person.surname = canonicalSurnames.surname;
+  person.surnamePaternal = canonicalSurnames.surnamePaternal;
+  person.surnameMaternal = canonicalSurnames.surnameMaternal;
+  person.surnameOrder = canonicalSurnames.surnameOrder;
   upsertEvent(person, "BIRT", { create: !!(input.birthDate || input.birthPlace), date: input.birthDate, place: input.birthPlace });
   upsertEvent(person, "DEAT", { create: lifeStatus === "deceased" || !!(input.deathDate || input.deathPlace), date: input.deathDate, place: input.deathPlace });
 
@@ -188,12 +198,19 @@ export function createPerson(doc: GeneaDocument, input: PersonInput): { next: Ge
   return { next, personId };
 }
 
+/**
+ * @deprecated Use GraphMutations.updatePersonInGraph instead.
+ * Legacy helper for updating a person in a GeneaDocument.
+ */
 export function updatePerson(
   doc: GeneaDocument,
   personId: string,
   patch: {
     name?: string;
     surname?: string;
+    surnamePaternal?: string;
+    surnameMaternal?: string;
+    surnameOrder?: "paternal_first" | "maternal_first" | "single";
     birthDate?: string;
     birthPlace?: string;
     deathDate?: string;
@@ -220,12 +237,28 @@ export function updatePerson(
   if (!person) return next;
   if (patch.name !== undefined) person.name = patch.name.trim();
   if (patch.surname !== undefined) person.surname = patch.surname.trim() || undefined;
+  if (patch.surnamePaternal !== undefined) person.surnamePaternal = patch.surnamePaternal.trim() || undefined;
+  if (patch.surnameMaternal !== undefined) person.surnameMaternal = patch.surnameMaternal.trim() || undefined;
+  if (patch.surnameOrder !== undefined) person.surnameOrder = patch.surnameOrder;
   if (patch.sex !== undefined) person.sex = patch.sex;
   if (patch.lifeStatus !== undefined) person.lifeStatus = patch.lifeStatus;
   if (patch.isPlaceholder !== undefined) person.isPlaceholder = patch.isPlaceholder;
 
   if (Array.isArray(patch.names)) {
     person.names = patch.names.map((item) => ({ ...item }));
+  }
+
+  if (
+    patch.surname !== undefined ||
+    patch.surnamePaternal !== undefined ||
+    patch.surnameMaternal !== undefined ||
+    patch.surnameOrder !== undefined
+  ) {
+    const canonical = normalizePersonSurnames(person);
+    person.surname = canonical.surname;
+    person.surnamePaternal = canonical.surnamePaternal;
+    person.surnameMaternal = canonical.surnameMaternal;
+    person.surnameOrder = canonical.surnameOrder;
   }
 
   if (patch.change !== undefined) {
@@ -361,6 +394,10 @@ export function updatePerson(
   return next;
 }
 
+/**
+ * @deprecated Use GraphMutations.updateFamilyInGraph instead.
+ * Legacy helper for updating a family in a GeneaDocument.
+ */
 export function updateFamily(doc: GeneaDocument, familyId: string, patch: FamilyPatch): GeneaDocument {
   const next = cloneDoc(doc);
   const family = next.families[familyId];
@@ -522,6 +559,10 @@ function linkAsSibling(doc: GeneaDocument, anchorId: string, newPersonId: string
   if (!doc.persons[newPersonId].famc.includes(family.id)) doc.persons[newPersonId].famc.push(family.id);
 }
 
+/**
+ * @deprecated Use GraphMutations.createPersonInGraph and GraphMutations.linkRelationInGraph instead.
+ * Legacy high-level command for adding a relation.
+ */
 export function addRelation(
   doc: GeneaDocument,
   anchorId: string,
@@ -543,6 +584,10 @@ export function addRelation(
   return { next, personId };
 }
 
+/**
+ * @deprecated Use GraphMutations.linkRelationInGraph instead.
+ * Legacy high-level command for linking an existing person.
+ */
 export function linkExistingRelation(
   doc: GeneaDocument,
   anchorId: string,
@@ -562,6 +607,9 @@ export function linkExistingRelation(
   return next;
 }
 
+/**
+ * @deprecated Use GraphMutations.unlinkRelationInGraph instead with type 'parent'.
+ */
 export function unlinkParent(doc: GeneaDocument, childId: string, parentId: string): GeneaDocument {
   const next = cloneDoc(doc);
   const child = next.persons[childId];
@@ -595,6 +643,9 @@ export function unlinkParent(doc: GeneaDocument, childId: string, parentId: stri
   return next;
 }
 
+/**
+ * @deprecated Use GraphMutations.unlinkRelationInGraph instead with type 'child'.
+ */
 export function unlinkChild(doc: GeneaDocument, parentId: string, childId: string): GeneaDocument {
   const next = cloneDoc(doc);
   const child = next.persons[childId];
@@ -613,6 +664,9 @@ export function unlinkChild(doc: GeneaDocument, parentId: string, childId: strin
   return next;
 }
 
+/**
+ * @deprecated Use GraphMutations.unlinkRelationInGraph instead with type 'spouse'.
+ */
 export function unlinkSpouse(doc: GeneaDocument, personId: string, spouseId: string): GeneaDocument {
   const next = cloneDoc(doc);
   const person = next.persons[personId];
@@ -629,6 +683,16 @@ export function unlinkSpouse(doc: GeneaDocument, personId: string, spouseId: str
       spouse.fams = spouse.fams.filter(id => id !== famId);
       break;
     }
+  }
+  return next;
+}
+export function updateNoteRecord(doc: GeneaDocument, noteId: string, text: string): GeneaDocument {
+  const next = cloneDoc(doc);
+  if (!next.notes) next.notes = {};
+  if (!next.notes[noteId]) {
+    next.notes[noteId] = { id: noteId, text };
+  } else {
+    next.notes[noteId].text = text;
   }
   return next;
 }

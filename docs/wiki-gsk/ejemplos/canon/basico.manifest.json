@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "0.4.0",
+  "graphId": "graph-basico-0001",
+  "createdAt": "2026-03-03T10:00:00.000Z",
+  "updatedAt": "2026-03-03T10:00:20.000Z",
+  "graphDerivedFromOpSeq": 1,
+  "journalHeadOpSeq": 1,
+  "stats": {
+    "personCount": 1,
+    "unionCount": 0,
+    "edgeCount": 0,
+    "claimCount": 1,
+    "mediaCount": 0
+  },
+  "mediaFiles": [],
+  "security": {
+    "mode": "none",
+    "signature": {
+      "mode": "none"
+    },
+    "encryption": {
+      "mode": "none"
+    }
+  },
+  "graphHash": "sha256:7916f834328135494c1c0505efa3c6613b3c2f918fa80a641ca1bf4eaf506719",
+  "journalHash": "sha256:39a7d65f6ec882d7de0304a9fbd2112a7dfd2c1d7478579eb957b3a98dbabdaf",
+  "encryption": "none",
+  "signature": "none",
+  "mediaEntries": [],
+  "integrity": {
+    "algorithm": "sha256",
+    "packageHash": "sha256:2b104136edd865c96307cfdb526b58ff4c5f8a1ccbb2ab43cf86230cf47407dc",
+    "entries": [
+      {
+        "path": "graph.json",
+        "sha256": "sha256:7916f834328135494c1c0505efa3c6613b3c2f918fa80a641ca1bf4eaf506719",
+        "bytes": 651,
+        "role": "graph",
+        "canonicalized": true
+      },
+      {
+        "path": "journal.jsonl",
+        "sha256": "sha256:39a7d65f6ec882d7de0304a9fbd2112a7dfd2c1d7478579eb957b3a98dbabdaf",
+        "bytes": 656,
+        "role": "journal",
+        "canonicalized": true
+      },
+      {
+        "path": "manifest.json",
+        "sha256": "sha256:5e55f7f3523d06d600b6894f0d2174ea41ac14a69628c5b7d4010e63d27a9c81",
+        "bytes": 971,
+        "role": "manifest",
+        "canonicalized": true
+      }
+    ]
+  }
+}

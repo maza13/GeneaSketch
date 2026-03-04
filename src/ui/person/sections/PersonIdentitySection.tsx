@@ -1,23 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
-import type { GeneaDocument, Person } from "@/types/domain";
+import type { GraphDocument, Person } from "@/types/domain";
 import type { PersonEditorPatch } from "@/types/editor";
 import { splitSurnames } from "@/ui/person/personDetailUtils";
+import { normalizePersonSurnames, type SurnameOrder } from "@/core/naming/surname";
 import { SuggestionInput } from "@/ui/components/SuggestionInput";
 import { getNameSuggestions, getPlaceSuggestions, getSurnameSuggestions, normalizePlace } from "@/core/edit/suggestions";
 import { SectionCard } from "../../common/StandardModal";
 
 type Props = {
   person: Person;
-  document: GeneaDocument;
+  document: GraphDocument;
   onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
 };
 
 export function PersonIdentitySection({ person, document, onSavePerson }: Props) {
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(person.name === "(Sin nombre)" ? "" : person.name);
-  const surnames = useMemo(() => splitSurnames(person.surname), [person.surname]);
+  const canonical = useMemo(() => normalizePersonSurnames(person), [person.surname, person.surnamePaternal, person.surnameMaternal, person.surnameOrder]);
+  const surnames = useMemo(
+    () => ({
+      paternal: canonical.surnamePaternal || splitSurnames(person.surname).paternal,
+      maternal: canonical.surnameMaternal || splitSurnames(person.surname).maternal
+    }),
+    [canonical.surnameMaternal, canonical.surnamePaternal, person.surname]
+  );
   const [paternalSurname, setPaternalSurname] = useState(surnames.paternal);
   const [maternalSurname, setMaternalSurname] = useState(surnames.maternal);
+  const [surnameOrder, setSurnameOrder] = useState<SurnameOrder>(canonical.surnameOrder || "paternal_first");
   const [sex, setSex] = useState<"M" | "F" | "U">(person.sex || "U");
 
   const birtEvent = person.events.find(e => e.type === "BIRT");
@@ -35,8 +44,10 @@ export function PersonIdentitySection({ person, document, onSavePerson }: Props)
     setEditMode(false);
     setName(person.name === "(Sin nombre)" ? "" : person.name);
     const split = splitSurnames(person.surname);
-    setPaternalSurname(split.paternal);
-    setMaternalSurname(split.maternal);
+    const normalized = normalizePersonSurnames(person);
+    setPaternalSurname(normalized.surnamePaternal || split.paternal);
+    setMaternalSurname(normalized.surnameMaternal || split.maternal);
+    setSurnameOrder(normalized.surnameOrder || "paternal_first");
     setSex(person.sex || "U");
 
     const bE = person.events.find(e => e.type === "BIRT");
@@ -46,7 +57,7 @@ export function PersonIdentitySection({ person, document, onSavePerson }: Props)
     setResidence(person.residence || person.events.find(e => e.type === "RESI")?.place || "");
 
     setMessage("");
-  }, [person.id, person.name, person.surname, person.sex, person.birthPlace, person.deathPlace, person.residence, person.events]);
+  }, [person.id, person.name, person.surname, person.surnamePaternal, person.surnameMaternal, person.surnameOrder, person.sex, person.birthPlace, person.deathPlace, person.residence, person.events]);
 
   return (
     <SectionCard title="Identidad y Filiación" icon="fingerprint">
@@ -102,6 +113,16 @@ export function PersonIdentitySection({ person, document, onSavePerson }: Props)
                   suggestions={getSurnameSuggestions(document, null, null).map(s => s.maternal)}
                   placeholder="Ej: Lopez"
                 />
+              </div>
+            </div>
+            <div className="gs-fact-row">
+              <span className="gs-fact-label">Orden de apellidos</span>
+              <div className="gs-fact-value-container">
+                <select value={surnameOrder} onChange={(event) => setSurnameOrder(event.target.value as SurnameOrder)}>
+                  <option value="paternal_first">Paterno - Materno</option>
+                  <option value="maternal_first">Materno - Paterno</option>
+                  <option value="single">Único</option>
+                </select>
               </div>
             </div>
           </>
@@ -168,10 +189,19 @@ export function PersonIdentitySection({ person, document, onSavePerson }: Props)
             <button
               className="accent-solid"
               onClick={() => {
-                const surname = [paternalSurname.trim(), maternalSurname.trim()].filter(Boolean).join(" ");
+                const normalized = normalizePersonSurnames({
+                  surname: undefined,
+                  surnamePaternal: paternalSurname,
+                  surnameMaternal: maternalSurname,
+                  surnameOrder
+                });
+                const surname = normalized.surname || [paternalSurname.trim(), maternalSurname.trim()].filter(Boolean).join(" ");
                 onSavePerson(person.id, {
                   name: name.trim() || "(Sin nombre)",
                   surname,
+                  surnamePaternal: normalized.surnamePaternal,
+                  surnameMaternal: normalized.surnameMaternal,
+                  surnameOrder: normalized.surnameOrder,
                   sex,
                   birthPlace: birthPlace.trim(),
                   deathPlace: deathPlace.trim(),
@@ -263,3 +293,4 @@ export function PersonIdentitySection({ person, document, onSavePerson }: Props)
     </SectionCard>
   );
 }
+

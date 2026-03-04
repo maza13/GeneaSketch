@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { serializeGedcom } from "@/core/gedcom/serializer";
 import { FileIOService } from "@/io/fileIOService";
 import type { GeneaDocument } from "@/types/domain";
@@ -22,12 +22,12 @@ function sampleDoc(): GeneaDocument {
     families: {},
     media: {},
     metadata: {
-      sourceFormat: "GSZ",
+      sourceFormat: "GSK",
       gedVersion: "7.0.x",
       importProvenance: [
         {
-          fileName: "source.gsz",
-          sourceFormat: "GSZ",
+          fileName: "source.gsk",
+          sourceFormat: "GSK",
           sourceGedVersion: "7.0.x",
           importedAt: "2026-01-01T00:00:00.000Z"
         }
@@ -49,3 +49,4 @@ describe("ged legacy export", () => {
     expect(result.warnings.some((w) => w.code === "GED_DEAT_IMPLICIT")).toBe(true);
   });
 });
+

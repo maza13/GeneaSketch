@@ -15,6 +15,7 @@ interface StandardModalProps {
     tabs?: StandardModalTab[];
     activeTab?: string;
     onTabChange?: (tabId: string) => void;
+    headerActions?: ReactNode;
     footer?: ReactNode;
     children: ReactNode;
     className?: string;
@@ -32,6 +33,7 @@ export function StandardModal({
     tabs,
     activeTab,
     onTabChange,
+    headerActions,
     footer,
     children,
     className = ""
@@ -51,9 +53,12 @@ export function StandardModal({
                 {/* Header */}
                 <div className="gs-modal-header">
                     <h3>{title}</h3>
-                    <button className="icon-btn" onClick={onClose} aria-label="Cerrar">
-                        <span className="material-symbols-outlined">close</span>
-                    </button>
+                    <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                        {headerActions}
+                        <button className="icon-btn" onClick={onClose} aria-label="Cerrar">
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Tab Navigation (Optional) */}
@@ -88,6 +93,10 @@ export function StandardModal({
             </div>
         </div>
     );
+
+    if (typeof document === "undefined" || !document.body) {
+        return modalContent;
+    }
 
     return createPortal(modalContent, document.body);
 }

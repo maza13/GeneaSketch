@@ -2,7 +2,12 @@ import { StateCreator } from "zustand";
 import { AppState, ViewSlice } from "../types";
 import { ensureExpanded } from "../helpers/graphHelpers";
 import { withFocusHistory } from "../helpers/sessionHelpers";
+import { projectGraphDocument } from "@/core/read-model/selectors";
 import { UiEngine } from "@/core/engine/UiEngine";
+import type { ActiveOverlay } from "@/types/domain";
+
+const defaultDtree = () => ({ isVertical: true, collapsedNodeIds: [] as string[], overlays: [] as ActiveOverlay[] });
+const defaultRightStack = () => ({ detailsMode: "expanded" as const, timelineMode: "compact" as const, detailsAutoCompactedByTimeline: false });
 
 export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) => ({
     viewConfig: null,
@@ -19,7 +24,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         const viewConfig = { ...state.viewConfig, focusFamilyId: familyId };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
@@ -28,7 +33,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         const viewConfig = { ...state.viewConfig, mode };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
@@ -37,19 +42,26 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         const viewConfig = { ...state.viewConfig, preset };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
     setDepth: (kind, depth) => set((state) => {
         if (!state.viewConfig) return {};
+        const nextDepth = { ...state.viewConfig.depth, [kind]: depth };
+        if (kind === "unclesCousins" && depth > 0 && nextDepth.unclesGreatUncles < 1) {
+            nextDepth.unclesGreatUncles = 1;
+        }
+        if (kind === "unclesGreatUncles" && depth === 0 && nextDepth.unclesCousins > 0) {
+            nextDepth.unclesCousins = 0;
+        }
         const viewConfig = {
             ...state.viewConfig,
-            depth: { ...state.viewConfig.depth, [kind]: depth }
+            depth: nextDepth
         };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
@@ -61,7 +73,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
@@ -117,7 +129,42 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
 
     setTimelinePanelOpen: (open) => set((state) => {
         if (!state.viewConfig) return {};
-        return { viewConfig: { ...state.viewConfig, timelinePanelOpen: open } };
+        const current = state.viewConfig;
+        const currentStack = { ...defaultRightStack(), ...(current.rightStack || {}) };
+        const overlays = current.dtree?.overlays || [];
+        const nextOverlays = open ? overlays : overlays.filter((overlay) => overlay.type !== "timeline");
+        const stack = open
+            ? {
+                ...currentStack,
+                timelineMode: "expanded" as const,
+                detailsMode: "compact" as const,
+                detailsAutoCompactedByTimeline: true
+            }
+            : {
+                ...currentStack,
+                timelineMode: "compact" as const,
+                detailsMode: currentStack.detailsAutoCompactedByTimeline ? "expanded" as const : currentStack.detailsMode,
+                detailsAutoCompactedByTimeline: false
+            };
+
+        if (
+            current.timelinePanelOpen === open &&
+            currentStack.detailsMode === stack.detailsMode &&
+            currentStack.timelineMode === stack.timelineMode &&
+            currentStack.detailsAutoCompactedByTimeline === stack.detailsAutoCompactedByTimeline &&
+            nextOverlays === overlays
+        ) {
+            return {};
+        }
+
+        return {
+            viewConfig: {
+                ...current,
+                timelinePanelOpen: open,
+                rightStack: stack,
+                dtree: { ...(current.dtree || defaultDtree()), overlays: nextOverlays }
+            }
+        };
     }),
 
     setRightStackState: (patch) => set((state) => {
@@ -167,10 +214,30 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
 
     setTimelineStatus: (livingIds, deceasedIds, year, eventPersonIds) => set((state) => {
         if (!state.viewConfig) return {};
+        const current = state.viewConfig;
+        const overlays = current.dtree?.overlays || [];
+        const timelineOverlay: ActiveOverlay = {
+            id: "timeline-simulation",
+            type: "timeline",
+            priority: 100,
+            config: { year, livingIds, deceasedIds, eventPersonIds }
+        };
+        const idx = overlays.findIndex((overlay) => overlay.type === "timeline");
+        let nextOverlays = overlays;
+        if (idx >= 0) {
+            const existing = overlays[idx];
+            const same = JSON.stringify(existing.config) === JSON.stringify(timelineOverlay.config);
+            if (!same || existing.id !== timelineOverlay.id || existing.priority !== timelineOverlay.priority) {
+                nextOverlays = [...overlays];
+                nextOverlays[idx] = timelineOverlay;
+            }
+        } else {
+            nextOverlays = [...overlays, timelineOverlay];
+        }
         return {
             viewConfig: {
-                ...state.viewConfig,
-                timelineStatus: { livingIds, deceasedIds, year, eventPersonIds }
+                ...current,
+                dtree: { ...(current.dtree || defaultDtree()), overlays: nextOverlays }
             }
         };
     }),
@@ -202,7 +269,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
@@ -214,7 +281,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
@@ -229,65 +296,94 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         };
         return {
             viewConfig,
-            expandedGraph: ensureExpanded(state.document, viewConfig)
+            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
         } as Partial<AppState>;
     }),
 
     setOverlay: (overlay) => set((state) => {
         if (!state.viewConfig) return {};
-        const next = [...(state.viewConfig.dtree?.overlays || [])];
+        const current = state.viewConfig.dtree?.overlays || [];
+        const next = [...current];
         const idx = next.findIndex(o => o.id === overlay.id);
-        if (idx >= 0) next[idx] = overlay;
+        if (idx >= 0) {
+            if (JSON.stringify(next[idx]) === JSON.stringify(overlay)) return {};
+            next[idx] = overlay;
+        }
         else next.push(overlay);
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), overlays: next }
+                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: next }
             }
         };
     }),
 
     removeOverlay: (id) => set((state) => {
         if (!state.viewConfig) return {};
-        const next = (state.viewConfig.dtree?.overlays || []).filter(o => o.id !== id);
+        const current = state.viewConfig.dtree?.overlays || [];
+        const next = current.filter(o => o.id !== id);
+        if (next.length === current.length) return {};
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), overlays: next }
+                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: next }
             }
         };
     }),
 
     clearOverlayType: (type) => set((state) => {
         if (!state.viewConfig) return {};
-        const next = (state.viewConfig.dtree?.overlays || []).filter(o => o.type !== type);
+        const current = state.viewConfig.dtree?.overlays || [];
+        const next = current.filter(o => o.type !== type);
+        if (next.length === current.length) return {};
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), overlays: next }
+                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: next }
             }
         };
     }),
 
     clearAllOverlays: () => set((state) => {
         if (!state.viewConfig) return {};
+        if ((state.viewConfig.dtree?.overlays || []).length === 0) return {};
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), overlays: [] }
+                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: [] }
             }
         };
     }),
 
     clearVisualModes: () => set((state) => {
         if (!state.viewConfig) return {};
+        const current = state.viewConfig;
+        const currentStack = { ...defaultRightStack(), ...(current.rightStack || {}) };
+        const nextStack = {
+            ...currentStack,
+            timelineMode: "compact" as const,
+            detailsMode: currentStack.detailsAutoCompactedByTimeline ? "expanded" as const : currentStack.detailsMode,
+            detailsAutoCompactedByTimeline: false
+        };
+        const needsOverlayClear = (current.dtree?.overlays || []).length > 0;
+        const needsTimelineClose = !!current.timelinePanelOpen;
+        const needsFamilyReset = current.focusFamilyId !== null;
+        const needsStackChange =
+            currentStack.timelineMode !== nextStack.timelineMode ||
+            currentStack.detailsMode !== nextStack.detailsMode ||
+            !!currentStack.detailsAutoCompactedByTimeline !== !!nextStack.detailsAutoCompactedByTimeline;
+        if (!needsOverlayClear && !needsTimelineClose && !needsFamilyReset && !needsStackChange) return {};
         return {
             viewConfig: {
-                ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), overlays: [] }
+                ...current,
+                timelinePanelOpen: false,
+                focusFamilyId: null,
+                rightStack: nextStack,
+                dtree: { ...(current.dtree || defaultDtree()), overlays: [] }
             }
         };
     }),
 
     fitToScreen: () => set((state) => ({ fitNonce: state.fitNonce + 1 }))
 });
+
