@@ -32,7 +32,7 @@ function ShellSideToggle({ side, collapsed, onClick }: ShellSideToggleProps) {
 
 type AppShellProps = {
     topbar: React.ReactNode;
-    statusBar: React.ReactNode;
+    footer: React.ReactNode;
     leftPanel: React.ReactNode;
     rightPanel: React.ReactNode;
     canvas: React.ReactNode;
@@ -46,7 +46,7 @@ type AppShellProps = {
 
 export function AppShell({
     topbar,
-    statusBar,
+    footer,
     leftPanel,
     rightPanel,
     canvas,
@@ -82,7 +82,7 @@ export function AppShell({
                 )}
             </main>
 
-            {statusBar}
+            {footer}
         </div>
     );
 }

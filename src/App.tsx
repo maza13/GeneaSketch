@@ -32,9 +32,9 @@ import { PersonWorkspacePanel } from "@/ui/PersonWorkspacePanel";
 import { PersonDetailPanel } from "@/ui/PersonDetailPanel";
 import { PersonPickerModal } from "@/ui/PersonPickerModal";
 import { RightPanel } from "@/ui/RightPanel";
-import { StatusBar } from "@/ui/StatusBar";
 import { TimelineRightPanel } from "@/ui/TimelineRightPanel";
 import { TopMenuBar } from "@/ui/TopMenuBar";
+import { AppFooter } from "@/ui/shell/AppFooter";
 import { PanelErrorBoundary } from "@/ui/common/PanelErrorBoundary";
 import { SearchCenterPanel } from "@/ui/search/SearchCenterPanel";
 import { AiAssistantModal } from "@/ui/ai/AiAssistantModal";
@@ -615,7 +615,17 @@ export function App() {
                     />
                 }
 
-                statusBar={<StatusBar message={status} />}
+                footer={
+                    <AppFooter
+                        statusMessage={status}
+                        personCount={document ? Object.keys(document.persons).length : null}
+                        familyCount={document ? Object.keys(document.families).length : null}
+                        sourceCount={document ? Object.keys(document.sources ?? {}).length : null}
+                        engineMode={viewConfig ? "DTree" : null}
+                        isSaved={false}
+                        appVersion="0.4.4"
+                    />
+                }
                 leftPanel={
                     <PanelErrorBoundary panelName="Panel izquierdo">
                         <LeftPanel
