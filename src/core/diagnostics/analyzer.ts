@@ -1,4 +1,4 @@
-import { GeneaDocument } from "../../types/domain";
+﻿import { GraphDocument } from "../../types/domain";
 import { DiagnosticIssue, DiagnosticReport, DiagnosticCategory } from "./types";
 import { planDiagnosticFixOptions } from "./fixPlanner";
 
@@ -11,7 +11,7 @@ function getYearFromEvent(events: { type: string; date?: string }[] | undefined,
     return match ? parseInt(match[1], 10) : undefined;
 }
 
-export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
+export function analyzeGeneaDocument(doc: GraphDocument): DiagnosticReport {
     const issues: DiagnosticIssue[] = [];
 
     const categoryCounts: Record<DiagnosticCategory, number> = {
@@ -47,11 +47,11 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
             addIssue("INFO_EMPTY_NAME", "data_quality", "info", pId, "La persona no tiene un nombre definido o usa un placeholder temporario.");
         } else if (/\d/.test(person.name)) {
             // New rule: Name contains numbers
-            addIssue("WARN_NAME_CONTAINS_NUMBERS", "data_quality", "warning", pId, `El nombre "${person.name}" contiene números.`);
+            addIssue("WARN_NAME_CONTAINS_NUMBERS", "data_quality", "warning", pId, `El nombre "${person.name}" contiene nÃºmeros.`);
         }
 
         if (person.famc.length === 0 && person.fams.length === 0) {
-            addIssue("INFO_ORPHAN_PERSON", "structural", "info", pId, "La persona está aislada en el árbol (no tiene padres ni parejas/hijos).");
+            addIssue("INFO_ORPHAN_PERSON", "structural", "info", pId, "La persona estÃ¡ aislada en el Ã¡rbol (no tiene padres ni parejas/hijos).");
         }
 
         // Check for multiple BIRT/DEAT
@@ -61,7 +61,7 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
             addIssue("WARN_MULTIPLE_BIRT", "data_quality", "warning", pId, `La persona tiene ${birtCount} eventos de nacimiento.`);
         }
         if (deatCount > 1) {
-            addIssue("WARN_MULTIPLE_DEAT", "data_quality", "warning", pId, `La persona tiene ${deatCount} eventos de defunción.`);
+            addIssue("WARN_MULTIPLE_DEAT", "data_quality", "warning", pId, `La persona tiene ${deatCount} eventos de defunciÃ³n.`);
         }
 
         const seenFamc = new Set<string>();
@@ -70,7 +70,7 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
                 addIssue("ERR_PERSON_MISSING_FAMC", "structural", "error", pId, `La persona apunta a la familia de origen ${famId}, pero esa familia no existe en el documento.`, famId);
             } else {
                 if (seenFamc.has(famId)) {
-                    addIssue("ERR_DUP_FAM_IN_PERSON", "structural", "error", pId, `La persona lista a la familia ${famId} más de una vez como 'famc'.`, famId);
+                    addIssue("ERR_DUP_FAM_IN_PERSON", "structural", "error", pId, `La persona lista a la familia ${famId} mÃ¡s de una vez como 'famc'.`, famId);
                 }
                 seenFamc.add(famId);
 
@@ -88,7 +88,7 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
                 addIssue("ERR_PERSON_MISSING_FAMS", "structural", "error", pId, `La persona apunta a la familia conyugal ${famId}, pero esa familia no existe en el documento.`, famId);
             } else {
                 if (seenFams.has(famId)) {
-                    addIssue("ERR_DUP_FAM_IN_PERSON", "structural", "error", pId, `La persona lista a la familia ${famId} más de una vez como 'fams'.`, famId);
+                    addIssue("ERR_DUP_FAM_IN_PERSON", "structural", "error", pId, `La persona lista a la familia ${famId} mÃ¡s de una vez como 'fams'.`, famId);
                 }
                 seenFams.add(famId);
 
@@ -118,7 +118,7 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
             addIssue("WARN_CONFLICTING_ROLES", "data_quality", "warning", pId, "La persona tiene sexo Femenino pero figura como 'Husband' en al menos una familia.");
         }
         if (isHusbandInSomeFam && isWifeInSomeFam) {
-            addIssue("WARN_CONFLICTING_ROLES", "data_quality", "warning", pId, "La persona actúa de 'Husband' en una familia y de 'Wife' en otra, roles conflictivos.");
+            addIssue("WARN_CONFLICTING_ROLES", "data_quality", "warning", pId, "La persona actÃºa de 'Husband' en una familia y de 'Wife' en otra, roles conflictivos.");
         }
 
         // Chronology within person
@@ -127,14 +127,14 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
 
         if (birtYear && deatYear) {
             if (deatYear < birtYear) {
-                addIssue("WARN_CHRONOLOGY_DEAT_BEFORE_BIRT", "chronological", "warning", pId, `La fecha de defunción (aprox. ${deatYear}) es anterior a la fecha de nacimiento (aprox. ${birtYear}).`);
+                addIssue("WARN_CHRONOLOGY_DEAT_BEFORE_BIRT", "chronological", "warning", pId, `La fecha de defunciÃ³n (aprox. ${deatYear}) es anterior a la fecha de nacimiento (aprox. ${birtYear}).`);
             } else if (deatYear - birtYear > 120) {
-                addIssue("WARN_CHRONOLOGY_TOO_OLD", "chronological", "warning", pId, `La persona vivió al menos ${deatYear - birtYear} años (nació ${birtYear}, murió ${deatYear}), asumiendo un máximo de 120 años humanos es inusual.`);
+                addIssue("WARN_CHRONOLOGY_TOO_OLD", "chronological", "warning", pId, `La persona viviÃ³ al menos ${deatYear - birtYear} aÃ±os (naciÃ³ ${birtYear}, muriÃ³ ${deatYear}), asumiendo un mÃ¡ximo de 120 aÃ±os humanos es inusual.`);
             }
         } else if (birtYear && !deatYear && person.lifeStatus !== "deceased") {
             const currentYear = new Date().getFullYear();
             if (currentYear - birtYear > 120) {
-                addIssue("INFO_CHRONOLOGY_LIKELY_DEAD", "chronological", "info", pId, `La persona no tiene defunción registrada ni está marcada como fallecida, pero nació hace ${currentYear - birtYear} años. Probablemente haya fallecido.`);
+                addIssue("INFO_CHRONOLOGY_LIKELY_DEAD", "chronological", "info", pId, `La persona no tiene defunciÃ³n registrada ni estÃ¡ marcada como fallecida, pero naciÃ³ hace ${currentYear - birtYear} aÃ±os. Probablemente haya fallecido.`);
             }
         }
     }
@@ -142,9 +142,9 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
     // --- PASS 2: Families ---
     for (const [fId, fam] of Object.entries(doc.families)) {
         if (!fam.husbandId && !fam.wifeId && fam.childrenIds.length === 0) {
-            addIssue("INFO_EMPTY_FAMILY", "data_quality", "info", fId, "La familia está completamente vacía (sin cónyuges ni hijos).");
+            addIssue("INFO_EMPTY_FAMILY", "data_quality", "info", fId, "La familia estÃ¡ completamente vacÃ­a (sin cÃ³nyuges ni hijos).");
         } else if ((fam.husbandId || fam.wifeId) && fam.childrenIds.length === 0 && !fam.events?.some(e => e.type === "MARR")) {
-            addIssue("INFO_ORPHAN_FAMILY", "structural", "info", fId, "La familia tiene cónyuges pero no tiene fecha de matrimonio ni hijos.");
+            addIssue("INFO_ORPHAN_FAMILY", "structural", "info", fId, "La familia tiene cÃ³nyuges pero no tiene fecha de matrimonio ni hijos.");
         }
 
         if (fam.husbandId) {
@@ -193,20 +193,20 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
                 const hBirt = getYearFromEvent(doc.persons[fam.husbandId].events, "BIRT");
                 const hDeat = getYearFromEvent(doc.persons[fam.husbandId].events, "DEAT");
                 if (hBirt !== undefined && marrYear < hBirt + 13) {
-                    addIssue("WARN_CHRONOLOGY_MARR_TOO_EARLY", "chronological", "warning", fId, `Matrimonio en ${marrYear}, el esposo nació en ${hBirt} (tendría ${marrYear - hBirt} años).`, fam.husbandId);
+                    addIssue("WARN_CHRONOLOGY_MARR_TOO_EARLY", "chronological", "warning", fId, `Matrimonio en ${marrYear}, el esposo naciÃ³ en ${hBirt} (tendrÃ­a ${marrYear - hBirt} aÃ±os).`, fam.husbandId);
                 }
                 if (hDeat !== undefined && marrYear > hDeat) {
-                    addIssue("WARN_CHRONOLOGY_MARR_AFTER_DEAT", "chronological", "warning", fId, `Matrimonio en ${marrYear}, pero el esposo falleció en ${hDeat}.`, fam.husbandId);
+                    addIssue("WARN_CHRONOLOGY_MARR_AFTER_DEAT", "chronological", "warning", fId, `Matrimonio en ${marrYear}, pero el esposo falleciÃ³ en ${hDeat}.`, fam.husbandId);
                 }
             }
             if (fam.wifeId && doc.persons[fam.wifeId]) {
                 const wBirt = getYearFromEvent(doc.persons[fam.wifeId].events, "BIRT");
                 const wDeat = getYearFromEvent(doc.persons[fam.wifeId].events, "DEAT");
                 if (wBirt !== undefined && marrYear < wBirt + 13) {
-                    addIssue("WARN_CHRONOLOGY_MARR_TOO_EARLY", "chronological", "warning", fId, `Matrimonio en ${marrYear}, la esposa nació en ${wBirt} (tendría ${marrYear - wBirt} años).`, fam.wifeId);
+                    addIssue("WARN_CHRONOLOGY_MARR_TOO_EARLY", "chronological", "warning", fId, `Matrimonio en ${marrYear}, la esposa naciÃ³ en ${wBirt} (tendrÃ­a ${marrYear - wBirt} aÃ±os).`, fam.wifeId);
                 }
                 if (wDeat !== undefined && marrYear > wDeat) {
-                    addIssue("WARN_CHRONOLOGY_MARR_AFTER_DEAT", "chronological", "warning", fId, `Matrimonio en ${marrYear}, pero la esposa falleció en ${wDeat}.`, fam.wifeId);
+                    addIssue("WARN_CHRONOLOGY_MARR_AFTER_DEAT", "chronological", "warning", fId, `Matrimonio en ${marrYear}, pero la esposa falleciÃ³ en ${wDeat}.`, fam.wifeId);
                 }
             }
         }
@@ -215,7 +215,7 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
         const seenChildren = new Set<string>();
         for (const childId of fam.childrenIds) {
             if (seenChildren.has(childId)) {
-                addIssue("ERR_DUP_CHILD_IN_FAM", "structural", "error", fId, `El hijo ${childId} aparece listado múltiples veces en la misma familia.`, childId);
+                addIssue("ERR_DUP_CHILD_IN_FAM", "structural", "error", fId, `El hijo ${childId} aparece listado mÃºltiples veces en la misma familia.`, childId);
             }
             seenChildren.add(childId);
 
@@ -244,14 +244,14 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
                                 if (hBirt >= childBirt) {
                                     addIssue("ERR_CHRONOLOGY_PARENT_BIRT_AFTER_CHILD", "chronological", "error", fId, `La fecha de nacimiento del padre (${hBirt}) es posterior o igual a la del hijo ${childId} (${childBirt}).`, fam.husbandId);
                                 } else if (childBirt - hBirt < 12) {
-                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_YOUNG", "chronological", "warning", fId, `El padre tenía ${childBirt - hBirt} años al nacer su hijo ${childId}.`, fam.husbandId);
+                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_YOUNG", "chronological", "warning", fId, `El padre tenÃ­a ${childBirt - hBirt} aÃ±os al nacer su hijo ${childId}.`, fam.husbandId);
                                 } else if (childBirt - hBirt > 80) {
-                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_OLD", "chronological", "warning", fId, `El padre tenía ${childBirt - hBirt} años al nacer su hijo ${childId}.`, fam.husbandId);
+                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_OLD", "chronological", "warning", fId, `El padre tenÃ­a ${childBirt - hBirt} aÃ±os al nacer su hijo ${childId}.`, fam.husbandId);
                                 }
                             }
                             // Father deat check (+9 months)
                             if (hDeat !== undefined && childBirt > hDeat + 1) { // +1 year leeway for posthumous birth
-                                addIssue("ERR_CHRONOLOGY_CHILD_BIRT_AFTER_DEAT", "chronological", "error", fId, `El hijo ${childId} nació en ${childBirt}, más de un año después de la defunción del padre en ${hDeat}.`, fam.husbandId);
+                                addIssue("ERR_CHRONOLOGY_CHILD_BIRT_AFTER_DEAT", "chronological", "error", fId, `El hijo ${childId} naciÃ³ en ${childBirt}, mÃ¡s de un aÃ±o despuÃ©s de la defunciÃ³n del padre en ${hDeat}.`, fam.husbandId);
                             }
                         }
                         if (fam.wifeId && doc.persons[fam.wifeId]) {
@@ -262,13 +262,13 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
                                 if (wBirt >= childBirt) {
                                     addIssue("ERR_CHRONOLOGY_PARENT_BIRT_AFTER_CHILD", "chronological", "error", fId, `La fecha de nacimiento de la madre (${wBirt}) es posterior o igual a la del hijo ${childId} (${childBirt}).`, fam.wifeId);
                                 } else if (childBirt - wBirt < 12) {
-                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_YOUNG", "chronological", "warning", fId, `La madre tenía ${childBirt - wBirt} años al nacer su hijo ${childId}.`, fam.wifeId);
+                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_YOUNG", "chronological", "warning", fId, `La madre tenÃ­a ${childBirt - wBirt} aÃ±os al nacer su hijo ${childId}.`, fam.wifeId);
                                 } else if (childBirt - wBirt > 55) {
-                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_OLD", "chronological", "warning", fId, `La madre tenía ${childBirt - wBirt} años al nacer su hijo ${childId}.`, fam.wifeId);
+                                    addIssue("WARN_CHRONOLOGY_PARENT_TOO_OLD", "chronological", "warning", fId, `La madre tenÃ­a ${childBirt - wBirt} aÃ±os al nacer su hijo ${childId}.`, fam.wifeId);
                                 }
                             }
                             if (wDeat !== undefined && childBirt > wDeat) {
-                                addIssue("ERR_CHRONOLOGY_CHILD_BIRT_AFTER_DEAT", "chronological", "error", fId, `El hijo ${childId} nació en ${childBirt}, después de la defunción de la madre en ${wDeat}.`, fam.wifeId);
+                                addIssue("ERR_CHRONOLOGY_CHILD_BIRT_AFTER_DEAT", "chronological", "error", fId, `El hijo ${childId} naciÃ³ en ${childBirt}, despuÃ©s de la defunciÃ³n de la madre en ${wDeat}.`, fam.wifeId);
                             }
                         }
                     }
@@ -285,7 +285,7 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
     const dfsCycle = (pId: string): boolean => {
         // Return true if cycle found
         if (currentStack.has(pId)) {
-            addIssue("ERR_CYCLE_DETECTED", "relationships", "error", pId, `Múltiples relaciones apuntan en ciclo. La persona ${pId} termina siendo su propio ancestro.`);
+            addIssue("ERR_CYCLE_DETECTED", "relationships", "error", pId, `MÃºltiples relaciones apuntan en ciclo. La persona ${pId} termina siendo su propio ancestro.`);
             return true;
         }
         if (visited.has(pId)) return false;
@@ -326,3 +326,4 @@ export function analyzeGeneaDocument(doc: GeneaDocument): DiagnosticReport {
 
     return report;
 }
+

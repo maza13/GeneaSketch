@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { caseMatchesSearch } from "@/core/edit/reviewSession";
 import type { MergeHypothesis } from "@/types/domain";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 import type { MergeReviewCase, MergeReviewSession } from "@/types/merge-review";
 
 type Props = {
   session: MergeReviewSession;
   mode: "auto_deep" | "expert_workbench";
-  incomingDoc: GeneaDocument;
+  incomingDoc: GraphDocument;
   onSelectCase: (incomingId: string) => void;
   onSearchChange: (search: string) => void;
   onToggleLowSection: (visible: boolean) => void;
@@ -47,7 +47,7 @@ function VirtualCaseList({
 }: {
   ids: string[];
   session: MergeReviewSession;
-  incomingDoc: GeneaDocument;
+  incomingDoc: GraphDocument;
   selectedCaseId: string | null;
   onSelectCase: (incomingId: string) => void;
   maxHeight: number;
@@ -253,3 +253,4 @@ export function MergeInboxPane({
     </div>
   );
 }
+

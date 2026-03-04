@@ -1,5 +1,5 @@
-import type { AiInputContext } from "@/types/ai";
-import type { GeneaDocument, Person } from "@/types/domain";
+﻿import type { AiInputContext } from "@/types/ai";
+import type { GraphDocument, Person } from "@/types/domain";
 
 export function personLabel(person: Person): string {
   const fullName = `${person.name}${person.surname ? ` ${person.surname}` : ""}`.trim();
@@ -13,7 +13,7 @@ export function personLabel(person: Person): string {
   return `${fullName} [${person.id}] sexo=${person.sex} estado=${person.lifeStatus} nac=${birth || "?"} def=${death || "?"} famc=${person.famc.length} fams=${person.fams.length} ${generation}`;
 }
 
-function summarizePersonNetwork(doc: GeneaDocument, anchorPersonId: string, includeSecondHop: boolean): string[] {
+function summarizePersonNetwork(doc: GraphDocument, anchorPersonId: string, includeSecondHop: boolean): string[] {
   const anchor = doc.persons[anchorPersonId];
   if (!anchor) return [];
   const ids = new Set<string>([anchor.id]);
@@ -46,7 +46,7 @@ function summarizePersonNetwork(doc: GeneaDocument, anchorPersonId: string, incl
     .map(personLabel);
 }
 
-function summarizeGlobalIndex(doc: GeneaDocument, expanded: boolean): string[] {
+function summarizeGlobalIndex(doc: GraphDocument, expanded: boolean): string[] {
   const persons = Object.values(doc.persons)
     .slice(0, expanded ? 200 : 80)
     .map(personLabel);
@@ -70,7 +70,7 @@ function summarizeGlobalIndex(doc: GeneaDocument, expanded: boolean): string[] {
   return [...persons, ...families];
 }
 
-export function buildAiContextSnapshot(doc: GeneaDocument, context: AiInputContext, expanded: boolean): string {
+export function buildAiContextSnapshot(doc: GraphDocument, context: AiInputContext, expanded: boolean): string {
   const header = [
     `persons=${Object.keys(doc.persons).length}`,
     `families=${Object.keys(doc.families).length}`,
@@ -85,3 +85,4 @@ export function buildAiContextSnapshot(doc: GeneaDocument, context: AiInputConte
 
   return [header, ...lines].join("\n");
 }
+

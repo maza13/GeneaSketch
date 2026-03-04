@@ -1,6 +1,6 @@
 import type { ExpandedGraph, ExpandedNode, GeneaDocument } from "@/types/domain";
 
-export type LayoutEngine = "legacy" | "vnext" | "v2";
+export type LayoutEngine = "vnext" | "v2";
 
 export type LayoutPoint = {
   x: number;

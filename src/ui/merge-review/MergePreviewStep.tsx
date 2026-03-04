@@ -30,7 +30,7 @@ export function MergePreviewStep({ diff, preview, diagnostics, onExportAudit }: 
         rows={[
           { label: "Base", value: `${diff.summary.compatibilitySummary?.baseFormat ?? "N/D"} (${diff.summary.compatibilitySummary?.baseVersion ?? "N/D"})` },
           { label: "Entrante", value: `${diff.summary.compatibilitySummary?.incomingFormat ?? "N/D"} (${diff.summary.compatibilitySummary?.incomingVersion ?? "N/D"})` },
-          { label: "Normalizado", value: `${diff.summary.compatibilitySummary?.normalizedTo.sourceFormat ?? "GSZ"} (${diff.summary.compatibilitySummary?.normalizedTo.gedVersion ?? "7.0.x"})`, tone: "accent" }
+          { label: "Normalizado", value: `${diff.summary.compatibilitySummary?.normalizedTo.sourceFormat ?? "GSK"} (${diff.summary.compatibilitySummary?.normalizedTo.gedVersion ?? "7.0.x"})`, tone: "accent" }
         ]}
       />
       {preview.merged.metadata.mergeAudit && (

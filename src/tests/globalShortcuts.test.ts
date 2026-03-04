@@ -10,6 +10,7 @@ function buildActions(spySave?: ReturnType<typeof vi.fn>): ShortcutActions {
     goBack: vi.fn(),
     goForward: vi.fn(),
     fitToScreen: vi.fn(),
+    centerFocus: vi.fn(),
     openAiSettings: vi.fn(),
     toggleLeftPanel: vi.fn(),
     toggleRightPanel: vi.fn(),

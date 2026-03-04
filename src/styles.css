@@ -498,100 +498,326 @@ pre {
   }
 }
 
-.app {
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  TOPBAR — App header (desktop + web)                        ║
+   ║  Estructura: [brand + A|B|C] [menus…] [───] [quick actions] ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+.app-container,
+.app-root-wrapper {
   height: 100%;
-  display: grid;
-  grid-template-rows: auto auto 1fr;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .topbar {
   height: 44px;
-  padding: 0 16px;
   display: flex;
-  align-items: center;
-  background: var(--bg-topbar);
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  gap: 12px;
-  pointer-events: auto;
+  align-items: stretch;
+  background: var(--gs-paper-deep);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
+  z-index: 200;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
-.brand {
+/* The nav fills the full topbar */
+.topbar-nav {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  overflow: visible;
+}
+
+/* ── Brand section: logo + appname + layout switcher ─── */
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 0 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.topbar-logo {
+  color: var(--gs-accent-gold);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.topbar-appname {
   font-family: var(--gs-font-header);
-  font-size: clamp(18px, 2.5vw, 28px);
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
   color: var(--gs-ink-primary);
   white-space: nowrap;
 }
 
-@media (max-width: 1024px) {
-  .topbar {
-    gap: 8px;
-    padding: 0 12px;
-  }
-
-  .brand {
-    font-size: 18px;
-  }
-}
-
-/* ── Dropdown menu bar ────────────────────────── */
-
-.menu-bar {
-  flex: 0 1 auto;
+/* ── Layout switcher: segmented A | B | C ───────────── */
+.layout-switcher {
   display: flex;
-  gap: 4px;
-  overflow: visible;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 1px;
 }
 
+.layout-switcher-btn {
+  height: 22px;
+  min-width: 22px;
+  padding: 0 7px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-family: var(--gs-font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gs-ink-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  box-shadow: none;
+  transform: none;
+}
+
+.layout-switcher-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gs-ink-secondary);
+  transform: none;
+  box-shadow: none;
+}
+
+.layout-switcher-btn--active {
+  background: var(--gs-accent-gold);
+  color: var(--gs-paper-deep);
+  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.35);
+}
+
+.layout-switcher-btn--active:hover {
+  background: var(--gs-accent-gold);
+  color: var(--gs-paper-deep);
+  box-shadow: 0 1px 6px rgba(217, 119, 6, 0.5);
+}
+
+/* ── Menu groups section (center/left) ──────────────── */
+.topbar-menus {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+}
+
+/* ── Quick-action buttons section (right) ───────────── */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.topbar-action-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--gs-ink-muted);
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease, border-color 100ms ease;
+  box-shadow: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.topbar-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--gs-accent-gold);
+  transform: none;
+  box-shadow: none;
+}
+
+.topbar-action-btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.topbar-action-btn .material-symbols-outlined {
+  font-size: 18px;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 18;
+}
+
+.topbar-action-label {
+  font-family: var(--gs-font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: inherit;
+}
+
+/* ── Light theme overrides (UX-RULE-002) ────────────── */
+[data-theme="light"] .topbar {
+  background: #ffffff;
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .topbar-brand {
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .topbar-appname {
+  color: var(--gs-ink-primary);
+}
+
+[data-theme="light"] .layout-switcher {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .layout-switcher-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--gs-ink-secondary);
+}
+
+[data-theme="light"] .topbar-actions {
+  border-left-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .topbar-action-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--gs-accent-gold);
+}
+
+/* ── Warm/Pergamino theme overrides ──────────────────── */
+[data-theme="warm"] .topbar {
+  background: #1c1610;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── TopMenuBar — compliant con UX-RULE-001/002/003 ────────────────────── */
+
+/* Override: the menu-bar is now a flex row that fills its container */
+.menu-bar {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  overflow: visible;
+  padding: 0;
+}
+
+.menu-bar-left {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex: 1;
+}
+
+.menu-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  border-left: 1px solid var(--line);
+}
+
+/* ── Trigger buttons ──────────────────────────────── */
 .menu-group-wrapper {
   position: relative;
 }
 
 .menu-trigger {
-  border: 1px solid transparent;
+  height: 100%;
+  border: none;
   background: transparent;
   color: var(--gs-ink-secondary);
-  border-radius: var(--gs-radius-sm);
-  padding: 6px 14px;
-  font-size: 13.5px;
-  font-weight: 600;
+  border-radius: 0;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: background 100ms ease, color 100ms ease;
   box-shadow: none;
+  white-space: nowrap;
+  position: relative;
 }
 
 .menu-trigger:hover {
-  background: var(--menu-hover-bg);
-  color: var(--accent-strong);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gs-ink-primary);
   transform: none;
   box-shadow: none;
 }
 
 .menu-trigger--open {
-  background: var(--menu-open-bg);
-  color: var(--accent-strong);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--gs-accent-gold);
+}
+
+/* ── Quick-action icon buttons (right side) ─────── */
+.menu-bar-action {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--gs-radius-sm);
+  color: var(--gs-ink-secondary);
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease, border-color 100ms ease;
+  box-shadow: none;
+  padding: 0;
+}
+
+.menu-bar-action:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--line);
+  color: var(--gs-accent-gold);
   transform: none;
   box-shadow: none;
 }
 
+.menu-bar-action:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.menu-bar-action .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* ── Dropdown panel ──────────────────────────────── */
 .menu-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 2px);
   left: 0;
-  min-width: 220px;
+  min-width: 240px;
   background: var(--bg-dropdown);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border-radius: var(--gs-radius-md);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   z-index: 2000;
-  animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: dropdownFadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .menu-dropdown--right {
@@ -602,98 +828,118 @@ pre {
 @keyframes dropdownFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-4px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
+/* ── Dropdown items ──────────────────────────────── */
 .menu-dropdown-item {
   width: 100%;
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr) auto;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
+  gap: 6px;
   text-align: left;
   border: 1px solid transparent;
-  border-radius: 7px;
-  padding: 8px 10px;
+  border-radius: var(--gs-radius-sm);
+  padding: 7px 10px;
+  font-family: var(--gs-font-ui);
   font-size: 13px;
   font-weight: 500;
   background: transparent;
   color: var(--ink-1);
   cursor: pointer;
-  transition: background 80ms ease;
+  transition: background 80ms ease, color 80ms ease;
   box-shadow: none;
 }
 
 .menu-dropdown-item:hover:not(:disabled) {
-  background: var(--menu-hover-bg);
-  color: var(--accent-strong);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gs-ink-primary);
   transform: none;
   box-shadow: none;
 }
 
 .menu-dropdown-item:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
+/* Icon column — material symbol OR checkmark */
+.menu-dropdown-check {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ink-muted);
+}
+
+.menu-dropdown-check .material-symbols-outlined {
+  font-size: 16px;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 16;
+}
+
+/* When checked=true: show golden checkmark glyph (✓) */
+.menu-dropdown-item--checked .menu-dropdown-check {
+  color: var(--accent);
+}
+
 .menu-dropdown-label {
   flex: 1;
-}
-
-.menu-dropdown-check {
-  width: 16px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--accent);
-  opacity: 0.3;
-}
-
-.menu-dropdown-item--checked .menu-dropdown-check {
-  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu-dropdown-shortcut {
-  margin-left: 24px;
-  font-size: 11.5px;
-  font-weight: 500;
+  font-family: var(--gs-font-mono);
+  font-size: 11px;
+  font-weight: 400;
   color: var(--ink-muted);
-  opacity: 0.7;
+  opacity: 0.65;
+  white-space: nowrap;
+  margin-left: 16px;
 }
 
 .menu-dropdown-separator {
   height: 1px;
-  margin: 5px 6px;
+  margin: 4px 6px;
   background: var(--line);
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .menu-dropdown-label-item {
-  font-size: 11px;
+  font-family: var(--gs-font-ui);
+  font-size: 10.5px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.06em;
   color: var(--ink-muted);
-  padding: 7px 10px 5px 10px;
+  padding: 8px 10px 4px 10px;
 }
 
+/* ── Submenu (nested) ─────────────────────────────── */
 .menu-dropdown-submenu {
   position: relative;
 }
 
 .menu-dropdown-item--submenu {
-  grid-template-columns: 16px minmax(0, 1fr) 14px;
+  grid-template-columns: 22px minmax(0, 1fr) 16px;
 }
 
 .menu-dropdown-chevron {
   justify-self: end;
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .menu-dropdown--nested {
@@ -708,6 +954,26 @@ pre {
 
 .menu-dropdown-submenu:hover>.menu-dropdown--nested {
   display: block;
+}
+
+/* ── Light theme overrides (UX-RULE-002) ─────────── */
+[data-theme="light"] .menu-trigger:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--gs-ink-primary);
+}
+
+[data-theme="light"] .menu-trigger--open {
+  background: rgba(0, 0, 0, 0.07);
+  color: var(--gs-accent-gold);
+}
+
+[data-theme="light"] .menu-bar-action:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .menu-dropdown-item:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--gs-ink-primary);
 }
 
 button {
@@ -4543,7 +4809,7 @@ select:focus {
   display: flex;
   gap: 12px;
   padding: 16px 18px;
-  background: var(--surface-1, rgba(255,255,255,0.04));
+  background: var(--surface-1, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--line);
   border-radius: 10px;
   align-items: flex-start;
@@ -5131,4 +5397,656 @@ select:focus {
 
 .v2-rel-row:hover .v2-rel-actions {
   opacity: 1;
+}
+
+.wiki-toc-item:hover {
+  background: var(--bg-btn-hover);
+  color: var(--ink-0);
+  transform: none;
+  box-shadow: none;
+}
+
+.wiki-toc-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.wiki-toc-item--h1 {
+  padding-left: 10px;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.wiki-toc-item--h2 {
+  padding-left: 18px;
+  font-size: 12px;
+}
+
+.wiki-toc-item--h3 {
+  padding-left: 28px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.wiki-toc-item--h3:hover,
+.wiki-toc-item--h3.active {
+  opacity: 1;
+}
+
+/* ── Keep old wiki close btn style ──────────────────── */
+.wiki-close-btn {
+  background: transparent;
+  border-color: var(--line-soft);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PERSON DETAIL PANEL V2 — component styles
+   Uses existing design tokens: --gs-*, --ink-*, --line-*, --accent-*
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero row ── */
+.v2-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.v2-avatar {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.v2-avatar-icon {
+  font-size: 32px !important;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.v2-hero-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.v2-gedcom-id {
+  font-family: var(--gs-font-mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+}
+
+.v2-person-name {
+  font-size: 22px !important;
+  margin: 4px 0 4px !important;
+  line-height: 1.15;
+}
+
+.v2-life-dates {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+
+/* ── Badge chips ── */
+.v2-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.v2-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--gs-radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.v2-chip--sex {
+  background: var(--bg-card);
+  color: var(--ink-1);
+}
+
+.v2-chip--alive {
+  background: rgba(20, 184, 166, 0.12);
+  border-color: rgba(20, 184, 166, 0.3);
+  color: var(--gs-success);
+}
+
+.v2-chip--deceased {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--gs-error);
+}
+
+/* ── Alert in empty relations ── */
+.v2-empty-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Relations grouped list ── */
+.v2-relations {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.v2-rel-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.v2-rel-group-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  padding: 2px 0 6px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 4px;
+}
+
+.v2-rel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 8px;
+  border-radius: 8px;
+  transition: background 120ms ease;
+}
+
+.v2-rel-row:hover {
+  background: var(--bg-btn-hover);
+}
+
+.v2-rel-name {
+  font-size: 13px;
+  color: var(--ink-0);
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-rel-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.v2-rel-row:hover .v2-rel-actions {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PERSON DETAIL PANEL V3 — compact hero + tab editor
+   ═══════════════════════════════════════════════════════════════════ */
+
+.v3-hero-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.v3-avatar-sm {
+  width: 48px !important;
+  height: 48px !important;
+  flex-shrink: 0;
+}
+
+.v3-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.v3-hero-name {
+  font-family: var(--gs-font-header);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-0);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v3-chips-compact {
+  flex-shrink: 0;
+  margin-top: 0;
+  gap: 4px !important;
+}
+
+.v3-footer-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PERSON FAMILIES SECTION — UX-RULE-006 expand-in-place + §8.2 hover
+   ═══════════════════════════════════════════════════════════════════ */
+
+.gs-sections-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Quick-add action bar ── */
+.fam-action-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.fam-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px !important;
+  padding: 4px 10px !important;
+  height: auto !important;
+}
+
+.fam-add-btn .material-symbols-outlined {
+  font-size: 14px;
+}
+
+/* ── Link existing family panel ── */
+.fam-link-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-elev-2);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.fam-link-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+
+.fam-link-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fam-link-select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.fam-link-role {
+  min-width: 110px;
+}
+
+.fam-link-btn {
+  white-space: nowrap;
+}
+
+.fam-link-msg {
+  margin-top: 4px;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+/* ── Empty state ── */
+.fam-empty-state {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-style: italic;
+  padding: 4px 0 8px;
+}
+
+/* ── List of family cards ── */
+.fam-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── FamilyCard (view + edit) ── */
+.family-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+/* Expanded edit state (§8.1 CSS) */
+.family-card.editing {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+}
+
+/* ── Card header ── */
+.family-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-elev-2);
+  border-bottom: 1px solid var(--line-soft);
+  gap: 8px;
+}
+
+.family-card.editing .family-card-head {
+  border-bottom-color: var(--accent);
+}
+
+.family-card-id {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.family-card-badge {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.family-card-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Inline destructive confirm row (UX-RULE-007 / §8.5) */
+.family-card-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  background: color-mix(in srgb, var(--gs-error) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gs-error) 25%, transparent);
+  border-radius: 6px;
+}
+
+.family-card-confirm-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gs-error);
+  white-space: nowrap;
+}
+
+/* ── Card body (view mode) ── */
+.family-card-body {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.family-card-person-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.family-card-row-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  width: 46px;
+  flex-shrink: 0;
+}
+
+.family-card-row-empty {
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.family-card-children-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.family-card-children-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+/* ── ChipButton for children in view mode ── */
+.fam-person-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--line);
+  border-radius: var(--gs-radius-full);
+  padding: 2px 8px 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-0);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.fam-person-chip:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── hover-reveal person rows (§8.2) ── */
+.person-row {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: background var(--transition-fast, 120ms);
+}
+
+.person-row:hover {
+  background: var(--bg-btn-hover);
+}
+
+.person-row-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink-0);
+}
+
+.person-row-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition-fast, 120ms);
+}
+
+.person-row:hover .person-row-actions {
+  opacity: 1;
+}
+
+/* ── Inline editor (FamilyInlineEditor) ── */
+.family-inline-editor {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.family-editor-msg {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.family-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.family-editor-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.family-editor-select,
+.family-editor-input {
+  flex: 1;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--bg-modal) 90%, white 10%);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+  color: var(--ink-0);
+  transition: border-color 120ms ease;
+}
+
+.family-editor-select:focus,
+.family-editor-input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* ── Children sub-section ── */
+.family-editor-children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-elev-2);
+  border-radius: 8px;
+  border: 1px solid var(--line-soft);
+}
+
+.family-editor-section-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+
+.family-editor-child-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 120ms ease;
+}
+
+.family-editor-child-row:hover {
+  background: var(--bg-btn-hover);
+}
+
+.fam-person-link {
+  font-size: 13px;
+  color: var(--ink-0);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.fam-person-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.family-child-confirm {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.family-editor-add-child-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+/* ── Create person accordion ── */
+.family-editor-create-persona {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.family-editor-summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  list-style: none;
+  background: var(--bg-elev-2);
+  user-select: none;
+}
+
+.family-editor-summary:hover {
+  background: var(--bg-btn-hover);
+}
+
+.family-editor-create-grid {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Footer ── */
+.family-editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
+  margin-top: 4px;
 }

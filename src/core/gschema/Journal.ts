@@ -1,35 +1,23 @@
-/**
- * GSchema 0.1.x — Append-Only Journal
- *
- * The Journal is a sequential log of all operations applied to a GSchemaGraph.
- * It enables:
- * - Persistence: serialize the journal, replay it to reconstruct the graph.
- * - Undo (future): walk back the journal.
- * - CRDT Sync (future): merge journals from multiple devices.
- * - Audit: full history of who changed what and when.
- *
- * The Journal itself is stateless — it just stores operations.
- * GSchemaGraph is the live engine that applies and records operations.
+﻿/**
+ * GSchema 0.1.x - Append-Only Journal
  */
 
 import type { GSchemaOperation } from "./types";
 import { GSchemaGraph } from "./GSchemaGraph";
-
-// ─────────────────────────────────────────────
-// Serialization helpers
-// ─────────────────────────────────────────────
+import { isKnownEdgeType } from "./EdgeNormalization";
+import { canonicalizeJson } from "./canonicalJson";
 
 /** Serialize a list of operations to JSONL (one JSON object per line). */
 export function serializeJournalToJsonl(ops: readonly GSchemaOperation[]): string {
-    return ops.map(op => JSON.stringify(op)).join("\n");
+    return ops.map((op) => canonicalizeJson(op)).join("\n");
 }
 
 /** Parse a JSONL string back into an array of operations. */
 export function parseJournalFromJsonl(jsonl: string): GSchemaOperation[] {
     return jsonl
         .split("\n")
-        .filter(line => line.trim().length > 0)
-        .map(line => {
+        .filter((line) => line.trim().length > 0)
+        .map((line) => {
             try {
                 return JSON.parse(line) as GSchemaOperation;
             } catch {
@@ -39,84 +27,254 @@ export function parseJournalFromJsonl(jsonl: string): GSchemaOperation[] {
         .filter((op): op is GSchemaOperation => op !== null);
 }
 
-// ─────────────────────────────────────────────
-// Replay
-// ─────────────────────────────────────────────
+export function validateOpSeq(ops: readonly GSchemaOperation[]): { ok: boolean; reason?: string } {
+    if (ops.length === 0) return { ok: true };
+    const seen = new Set<number>();
+    let max = -1;
+    for (const op of ops) {
+        if (seen.has(op.opSeq)) return { ok: false, reason: `duplicate opSeq: ${op.opSeq}` };
+        seen.add(op.opSeq);
+        if (op.opSeq > max) max = op.opSeq;
+    }
+    for (let expected = 0; expected <= max; expected++) {
+        if (!seen.has(expected)) return { ok: false, reason: `gap at opSeq=${expected}` };
+    }
+    return { ok: true };
+}
 
 /**
- * Reconstructs a GSchemaGraph by replaying an ordered list of operations.
- *
- * This is equivalent to loading a .gsk package's journal.jsonl and
- * rebuilding the graph from scratch — the "Event Sourcing" pattern.
+ * Reindexes the journal to ensure a monotonic, gap-less opSeq sequence starting from 0.
  */
-export function replayJournal(ops: GSchemaOperation[]): GSchemaGraph {
-    const graph = GSchemaGraph.create();
+export function reindexJournal(ops: GSchemaOperation[]): GSchemaOperation[] {
+    return ops.map((op, idx) => ({ ...op, opSeq: idx }));
+}
+
+export async function computeJournalHash(ops: readonly GSchemaOperation[]): Promise<string> {
+    const payload = serializeJournalToJsonl(ops);
+    const bytes = new TextEncoder().encode(payload);
+    const webCrypto = (globalThis as { crypto?: { subtle?: SubtleCrypto } }).crypto;
+    if (webCrypto?.subtle) {
+        const digest = await webCrypto.subtle.digest("SHA-256", bytes);
+        const hex = Array.from(new Uint8Array(digest))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+        return `sha256:${hex}`;
+    }
+    const { createHash } = await import("node:crypto");
+    return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+}
+
+type GraphInternals = {
+    _nodes: Map<string, unknown>;
+    _edges: Map<string, { uid: string; fromUid: string; toUid: string; deleted?: boolean }>;
+    _claims: Map<string, Map<string, Array<{ uid: string; isPreferred: boolean; quality: string; lifecycle: string }>>>;
+    _quarantine: GSchemaOperation[];
+    _adjacency: { out: Map<string, Set<string>>; in: Map<string, Set<string>> };
+    _journal: GSchemaOperation[];
+    _nextOpSeq: number;
+};
+
+export interface JournalApplyReport {
+    skippedUnknownEdges: Array<{ opSeq: number; edgeUid: string; edgeType: string; opId: string }>;
+}
+
+function getInternals(graph: GSchemaGraph): GraphInternals {
+    return graph as unknown as GraphInternals;
+}
+
+function validateGaplessFromFirst(ops: readonly GSchemaOperation[]): { ok: boolean; reason?: string } {
+    if (ops.length === 0) return { ok: true };
+    for (let i = 1; i < ops.length; i++) {
+        const prev = ops[i - 1];
+        const current = ops[i];
+        if (current.opSeq !== prev.opSeq + 1) {
+            return {
+                ok: false,
+                reason: `gap or disorder at opSeq=${current.opSeq} (expected ${prev.opSeq + 1})`,
+            };
+        }
+    }
+    return { ok: true };
+}
+
+function applyOpsToGraphInternals(
+    internals: GraphInternals,
+    ops: readonly GSchemaOperation[],
+    report: JournalApplyReport
+): void {
+    const indexEdge = (edge: { uid: string; fromUid: string; toUid: string }) => {
+        if (!internals._adjacency.out.has(edge.fromUid)) internals._adjacency.out.set(edge.fromUid, new Set());
+        if (!internals._adjacency.in.has(edge.toUid)) internals._adjacency.in.set(edge.toUid, new Set());
+        internals._adjacency.out.get(edge.fromUid)!.add(edge.uid);
+        internals._adjacency.in.get(edge.toUid)!.add(edge.uid);
+    };
+
+    const deIndexEdge = (edge: { uid: string; fromUid: string; toUid: string }) => {
+        internals._adjacency.out.get(edge.fromUid)?.delete(edge.uid);
+        internals._adjacency.in.get(edge.toUid)?.delete(edge.uid);
+    };
 
     for (const op of ops) {
         switch (op.type) {
             case "ADD_NODE":
-                // Directly set since addNode would double-record to journal
-                (graph as unknown as { _nodes: Map<string, unknown> })
-                    ._nodes.set(op.node.uid, op.node);
+                internals._nodes.set(op.node.uid, op.node);
                 break;
             case "ADD_EDGE":
-                (graph as unknown as { _edges: Map<string, unknown> })
-                    ._edges.set(op.edge.uid, op.edge);
+                if (!isKnownEdgeType(op.edge.type)) {
+                    report.skippedUnknownEdges.push({
+                        opSeq: op.opSeq,
+                        edgeUid: op.edge.uid,
+                        edgeType: op.edge.type,
+                        opId: op.opId,
+                    });
+                    internals._quarantine.push({
+                        opId: `quarantine:unknown-edge:${op.opId}`,
+                        opSeq: op.opSeq,
+                        type: "QUARANTINE",
+                        timestamp: op.timestamp,
+                        actorId: op.actorId,
+                        importId: `journal:${op.opId}`,
+                        ast: {
+                            level: 1,
+                            tag: "_GSK_EDGE_UNKNOWN",
+                            value: JSON.stringify(op.edge),
+                            children: [],
+                            sourceLines: [JSON.stringify(op)],
+                        },
+                        reason: "unknown_edge_type",
+                        context: op.edge.uid,
+                    });
+                    break;
+                }
+                internals._edges.set(op.edge.uid, op.edge);
+                if (!op.edge.deleted) indexEdge(op.edge);
                 break;
             case "ADD_CLAIM":
-                graph.addClaim(op.claim, op.actorId);
+                if (!internals._claims.has(op.claim.nodeUid)) internals._claims.set(op.claim.nodeUid, new Map());
+                {
+                    const byPred = internals._claims.get(op.claim.nodeUid)!;
+                    if (!byPred.has(op.claim.predicate)) byPred.set(op.claim.predicate, []);
+                    const claims = byPred.get(op.claim.predicate)!;
+                    if (claims.some((claim) => claim.uid === op.claim.uid)) {
+                        break;
+                    }
+                    if (op.claim.isPreferred) {
+                        for (const claim of claims) claim.isPreferred = false;
+                    }
+                    claims.push(op.claim as unknown as { uid: string; isPreferred: boolean; quality: string; lifecycle: string });
+                }
                 break;
             case "SET_PREF_CLAIM":
-                graph.setPreferredClaim(op.nodeUid, op.predicate, op.claimUid, op.actorId);
+                {
+                    const claims = internals._claims.get(op.nodeUid)?.get(op.predicate) ?? [];
+                    for (const claim of claims) {
+                        claim.isPreferred = claim.uid === op.claimUid;
+                    }
+                }
                 break;
             case "RETRACT_CLAIM":
-                graph.retractClaim(op.claimUid, op.reason, op.actorId);
+                for (const byPred of internals._claims.values()) {
+                    for (const claims of byPred.values()) {
+                        const target = claims.find((claim) => claim.uid === op.claimUid);
+                        if (target) {
+                            target.lifecycle = "retracted";
+                            target.isPreferred = false;
+                        }
+                    }
+                }
                 break;
             case "SOFT_DELETE_NODE":
-                graph.softDeleteNode(op.nodeUid, op.reason, op.actorId);
+                {
+                    const node = internals._nodes.get(op.nodeUid) as { deleted?: boolean } | undefined;
+                    if (node) node.deleted = true;
+                }
                 break;
             case "SOFT_DELETE_EDGE":
-                graph.softDeleteEdge(op.edgeUid, op.reason, op.actorId);
+                {
+                    const edge = internals._edges.get(op.edgeUid);
+                    if (edge) {
+                        edge.deleted = true;
+                        deIndexEdge(edge);
+                    }
+                }
+                break;
+            case "REPAIR_CREATE_UNION":
+            case "REPAIR_CREATE_MEMBER_EDGE":
+            case "REPAIR_RELINK_PARENT_CHILD":
+                // Repair ops are audit entries; graph state is already reflected in snapshot/import flow.
                 break;
             case "QUARANTINE":
-                // Already captured in quarantine log, no action needed
+                if (!internals._quarantine.some((existing) => existing.opId === op.opId)) {
+                    internals._quarantine.push(op);
+                }
                 break;
             case "INITIAL_IMPORT":
-                // Metadata-only, no graph change
                 break;
         }
     }
-
-    return graph;
 }
 
-// ─────────────────────────────────────────────
-// Compaction
-// ─────────────────────────────────────────────
+export function applyJournalOps(
+    graph: GSchemaGraph,
+    ops: readonly GSchemaOperation[],
+    options: { appendToJournal?: boolean; strictOpSeq?: boolean } = {}
+): JournalApplyReport {
+    const report: JournalApplyReport = { skippedUnknownEdges: [] };
+    if (ops.length === 0) return report;
+    const { appendToJournal = true, strictOpSeq = true } = options;
+
+    if (strictOpSeq) {
+        const seqCheck = validateGaplessFromFirst(ops);
+        if (!seqCheck.ok) {
+            throw new Error(`Invalid incremental journal opSeq: ${seqCheck.reason}`);
+        }
+    }
+
+    const internals = getInternals(graph);
+    applyOpsToGraphInternals(internals, ops, report);
+
+    if (appendToJournal) {
+        internals._journal.push(...ops);
+    }
+
+    const maxApplied = ops.reduce((max, op) => Math.max(max, op.opSeq), -1);
+    internals._nextOpSeq = Math.max(internals._nextOpSeq, maxApplied + 1);
+    return report;
+}
+
+export function replayJournalWithReport(
+    ops: GSchemaOperation[]
+): { graph: GSchemaGraph; report: JournalApplyReport } {
+    const seqCheck = validateOpSeq(ops);
+    if (!seqCheck.ok) {
+        throw new Error(`Invalid journal opSeq: ${seqCheck.reason}`);
+    }
+
+    const graph = GSchemaGraph.create();
+    const internals = getInternals(graph);
+    const report: JournalApplyReport = { skippedUnknownEdges: [] };
+    applyOpsToGraphInternals(internals, ops, report);
+
+    internals._journal = [...ops];
+    const maxOpSeq = ops.reduce((max, op) => Math.max(max, op.opSeq), -1);
+    internals._nextOpSeq = maxOpSeq + 1;
+    return { graph, report };
+}
+
+/**
+ * Reconstructs a GSchemaGraph by replaying an ordered list of operations.
+ */
+export function replayJournal(ops: GSchemaOperation[]): GSchemaGraph {
+    return replayJournalWithReport(ops).graph;
+}
 
 /**
  * Compact the journal by removing operations that have been superseded.
- *
- * Rules:
- * - If a node was added and later soft-deleted, keep only a single ADD_NODE
- *   followed by the SOFT_DELETE_NODE. Remove intermediate mutations on that node.
- * - If a claim was added and later retracted, remove the ADD_CLAIM.
- * - Collapse multiple SET_PREF_CLAIM for the same predicate into only the last one.
- *
- * Returns a new, shorter operation array. The graph produced by replaying
- * the compacted journal MUST be identical to the original.
- *
- * NOTE: This is a "safe" compaction — it never removes information that
- * cannot be reconstructed. CRDT sync relies on the full journal,
- * so compact only locally after all sync has been resolved.
  */
 export function compactJournal(ops: GSchemaOperation[]): GSchemaOperation[] {
     const result: GSchemaOperation[] = [];
 
-    // Track the last SET_PREF_CLAIM per (nodeUid, predicate)
-    const lastPref = new Map<string, number>(); // key → index in result
-
-    // Track retracted claim UIDs
+    const lastPref = new Map<string, number>();
     const retractedClaims = new Set<string>();
 
     for (const op of ops) {
@@ -124,16 +282,13 @@ export function compactJournal(ops: GSchemaOperation[]): GSchemaOperation[] {
             retractedClaims.add(op.claimUid);
         }
         if (op.type === "ADD_CLAIM" && retractedClaims.has(op.claim.uid)) {
-            // Skip — this claim was immediately retracted, no interesting history
             continue;
         }
         if (op.type === "SET_PREF_CLAIM") {
             const key = `${op.nodeUid}::${op.predicate}`;
             const prev = lastPref.get(key);
             if (prev !== undefined) {
-                // Remove the previous SET_PREF_CLAIM for this predicate
                 result.splice(prev, 1);
-                // Update all subsequent indices
                 for (const [k, idx] of lastPref.entries()) {
                     if (idx > prev) lastPref.set(k, idx - 1);
                 }
@@ -145,10 +300,6 @@ export function compactJournal(ops: GSchemaOperation[]): GSchemaOperation[] {
 
     return result;
 }
-
-// ─────────────────────────────────────────────
-// Journal Stats
-// ─────────────────────────────────────────────
 
 export interface JournalStats {
     totalOps: number;
@@ -176,6 +327,6 @@ export function analyzeJournal(ops: readonly GSchemaOperation[]): JournalStats {
         byType,
         actorCounts,
         earliestTimestamp: earliest,
-        latestTimestamp: latest
+        latestTimestamp: latest,
     };
 }

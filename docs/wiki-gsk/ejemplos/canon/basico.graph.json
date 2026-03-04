@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "0.4.0",
+  "graphId": "graph-basico-0001",
+  "createdAt": "2026-03-03T10:00:00.000Z",
+  "updatedAt": "2026-03-03T10:00:20.000Z",
+  "nodes": {
+    "p-juan": {
+      "uid": "p-juan",
+      "type": "Person",
+      "xref": "@I1@",
+      "sex": "M",
+      "isLiving": false,
+      "createdAt": "2026-03-03T10:00:00.000Z"
+    }
+  },
+  "edges": {},
+  "claims": {
+    "p-juan": {
+      "person.name.full": [
+        {
+          "uid": "c-juan-name-1",
+          "nodeUid": "p-juan",
+          "predicate": "person.name.full",
+          "value": "Juan Perez",
+          "provenance": {
+            "actorId": "importer:fixture",
+            "timestamp": 1772532005,
+            "method": "fixture:basico"
+          },
+          "quality": "reviewed",
+          "lifecycle": "active",
+          "evidenceGate": "unassessed",
+          "isPreferred": true,
+          "createdAt": "2026-03-03T10:00:05.000Z"
+        }
+      ]
+    }
+  },
+  "quarantine": []
+}

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { rankPersonCandidatesWithContext, resolvePersonMatch } from "@/core/ai/matching";
 import type { GeneaDocument } from "@/types/domain";
 
@@ -10,7 +10,7 @@ function buildDoc(): GeneaDocument {
     },
     families: {},
     media: {},
-    metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+    metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
   };
 }
 
@@ -28,3 +28,4 @@ describe("ai matching context", () => {
     expect(match.candidates[0]?.id).toBe("@I1@");
   });
 });
+

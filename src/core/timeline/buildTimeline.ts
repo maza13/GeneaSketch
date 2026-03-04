@@ -1,6 +1,6 @@
-import { estimatePersonBirthYear } from "@/core/inference/dateInference";
+ï»¿import { estimatePersonBirthYear } from "@/core/inference/dateInference";
 import { normalizeGedcomTimelineDate, certaintyRank } from "@/core/timeline/dateNormalization";
-import type { ExpandedGraph, GeneaDocument, ViewConfig } from "@/types/domain";
+import type { ExpandedGraph, GraphDocument, ViewConfig } from "@/types/domain";
 import type { TimelineDateCertainty, TimelineEventType, TimelineItem } from "@/types/editor";
 
 type EventCandidate = {
@@ -25,7 +25,7 @@ function fullName(name?: string, surname?: string): string {
 }
 
 function collectScopePersonIds(
-  document: GeneaDocument,
+  document: GraphDocument,
   expandedGraph: ExpandedGraph,
   viewConfig: ViewConfig
 ): Set<string> {
@@ -63,7 +63,7 @@ function pickBestCandidate(candidates: EventCandidate[]): EventCandidate | null 
   return [...candidates].sort(compareCandidates)[0] ?? null;
 }
 
-function fallbackBirthYearFromContext(document: GeneaDocument, personId: string): number {
+function fallbackBirthYearFromContext(document: GraphDocument, personId: string): number {
   const person = document.persons[personId];
   if (!person) return new Date().getFullYear() - 30;
 
@@ -99,7 +99,7 @@ function fallbackBirthYearFromContext(document: GeneaDocument, personId: string)
 }
 
 function makePersonItem(
-  document: GeneaDocument,
+  document: GraphDocument,
   personId: string,
   eventType: "BIRT" | "DEAT",
   candidate: EventCandidate
@@ -118,12 +118,12 @@ function makePersonItem(
   }
 
   const eventLabel = eventType === "BIRT" ? "Nacimiento" : "Defuncion";
-  const detail = `Persona: ${personName} (${person.id})${candidate.detailSuffix ? ` · ${candidate.detailSuffix}` : ""}`;
+  const detail = `Persona: ${personName} (${person.id})${candidate.detailSuffix ? ` Â· ${candidate.detailSuffix}` : ""}`;
 
   return {
     id: `person:${personId}:${eventType}`,
     eventType,
-    label: `${personName} — ${eventLabel}`,
+    label: `${personName} â€” ${eventLabel}`,
     detail,
     displayDate: candidate.displayDate,
     sortDate: candidate.sortDate,
@@ -137,7 +137,7 @@ function makePersonItem(
 }
 
 function buildPersonEvent(
-  document: GeneaDocument,
+  document: GraphDocument,
   personId: string,
   eventType: "BIRT" | "DEAT"
 ): TimelineItem | null {
@@ -158,11 +158,8 @@ function buildPersonEvent(
   });
 
   if (eventType === "BIRT") {
-    const hasManualOrExact = candidates.some(
-      (candidate) => candidate.certainty === "exact" || candidate.certainty === "estimated_manual"
-    );
-
-    if (!hasManualOrExact) {
+    // Preserve user-entered informal/undated dates; infer only when no birth signal exists.
+    if (candidates.length === 0) {
       const inferred = estimatePersonBirthYear(personId, document);
       const inferredYear =
         typeof inferred?.suggestedYear === "number"
@@ -181,7 +178,7 @@ function buildPersonEvent(
           sortDate: inferredDate,
           sortTimestamp: inferredDate.getTime(),
           displayDate: `~${inferredYear} (calculada)`,
-          detailSuffix: `Fecha calculada solo de referencia · ${rangeText}`
+          detailSuffix: `Fecha calculada solo de referencia Â· ${rangeText}`
         });
       }
     }
@@ -193,7 +190,7 @@ function buildPersonEvent(
   return makePersonItem(document, personId, eventType, best);
 }
 
-function makeFamilyLabel(document: GeneaDocument, familyId: string, eventType: "MARR" | "DIV"): string {
+function makeFamilyLabel(document: GraphDocument, familyId: string, eventType: "MARR" | "DIV"): string {
   const family = document.families[familyId]!;
   const left =
     family.husbandId
@@ -203,11 +200,11 @@ function makeFamilyLabel(document: GeneaDocument, familyId: string, eventType: "
     family.wifeId
       ? fullName(document.persons[family.wifeId]?.name, document.persons[family.wifeId]?.surname)
       : "Sin madre";
-  return `${left} + ${right} — ${eventType === "MARR" ? "Matrimonio" : "Divorcio"}`;
+  return `${left} + ${right} â€” ${eventType === "MARR" ? "Matrimonio" : "Divorcio"}`;
 }
 
 function buildFamilyEvent(
-  document: GeneaDocument,
+  document: GraphDocument,
   familyId: string,
   eventType: "MARR" | "DIV"
 ): TimelineItem | null {
@@ -242,7 +239,7 @@ function buildFamilyEvent(
     id: `family:${familyId}:${eventType}`,
     eventType,
     label: makeFamilyLabel(document, familyId, eventType),
-    detail: `Familia: ${family.id}${best.detailSuffix ? ` · ${best.detailSuffix}` : ""}`,
+    detail: `Familia: ${family.id}${best.detailSuffix ? ` Â· ${best.detailSuffix}` : ""}`,
     displayDate: best.displayDate,
     sortDate: best.sortDate,
     sortTimestamp: best.sortTimestamp,
@@ -270,7 +267,7 @@ function compareTimelineItems(left: TimelineItem, right: TimelineItem): number {
 }
 
 export function buildTimeline(
-  document: GeneaDocument,
+  document: GraphDocument,
   expandedGraph: ExpandedGraph,
   viewConfig: ViewConfig
 ): TimelineItem[] {
@@ -311,3 +308,4 @@ export function buildTimeline(
 
   return items.sort(compareTimelineItems);
 }
+

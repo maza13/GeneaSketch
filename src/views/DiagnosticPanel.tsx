@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { GeneaDocument } from "@/types/domain";
+import { GraphDocument } from "@/types/domain";
 import { analyzeGeneaDocument } from "@/core/diagnostics/analyzer";
 import { applyDiagnosticFixes } from "@/core/diagnostics/fixExecutor";
 import {
@@ -11,13 +11,13 @@ import {
 } from "@/core/diagnostics/types";
 
 type Props = {
-  document: GeneaDocument | null;
+  document: GraphDocument | null;
   parseErrors: string[];
   parseWarnings: string[];
   onClose: () => void;
   onSelectPerson: (id: string, name: string) => void;
   onSelectFamily: (id: string) => void;
-  onApplyDocument: (nextDoc: GeneaDocument) => void;
+  onApplyDocument: (nextDoc: GraphDocument) => void;
 };
 
 const CATEGORY_LABELS: Record<DiagnosticCategory, string> = {
@@ -267,3 +267,5 @@ export function DiagnosticPanel({
     </div>
   );
 }
+
+

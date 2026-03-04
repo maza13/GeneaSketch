@@ -1,0 +1,420 @@
+/* ============================================================
+   GENEASKETCH — DESIGN TOKENS v2.0
+   src/styles/tokens.css
+
+   TRES TEMAS CONFIRMADOS:
+   · [data-theme="dark"]  → Azul Medianoche + Azul eléctrico  (DEFAULT)
+   · [data-theme="warm"]  → Pergamino / Beige cálido
+   · [data-theme="light"] → Blanco puro + azul frío
+
+   FUENTE DE VERDAD. Nunca hardcodear valores.
+   Referencia: wiki-uxdesign
+   ============================================================ */
+
+
+/* ============================================================
+   OSCURO — AZUL MEDIANOCHE  (dark-first, tema por defecto)
+   Acento: Azul eléctrico #4d8ef0
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+
+  /* Superficies — familia azul profundo */
+  --surface-base:          #080c16;
+  --surface-elevated:      #0d1422;
+  --surface-overlay:       #111c2e;
+  --surface-subtle:        #162236;
+  --surface-border:        #1c2c44;
+  --surface-border-subtle: #131e30;
+
+  /* Texto — blancos azulados */
+  --text-primary:   #dce8f8;
+  --text-secondary: #6a82a8;
+  --text-muted:     #2e4060;
+  --text-inverse:   #080c16;
+
+  /* Acento principal — azul eléctrico */
+  --accent-primary:        #4d8ef0;
+  --accent-primary-hover:  #63a8ff;
+  --accent-primary-muted:  rgba(77, 142, 240, 0.12);
+  --accent-primary-border: rgba(77, 142, 240, 0.25);
+
+  /* Acento secundario — cyan-verde */
+  --accent-secondary:       #4acea8;
+  --accent-secondary-muted: rgba(74, 206, 168, 0.12);
+
+  /* Semánticos */
+  --color-danger:        #e05060;
+  --color-danger-muted:  rgba(224, 80, 96, 0.12);
+  --color-warning:       #e09030;
+  --color-warning-muted: rgba(224, 144, 48, 0.12);
+  --color-info:          #4d8ef0;
+  --color-info-muted:    rgba(77, 142, 240, 0.12);
+  --color-success:       #4acea8;
+  --color-success-muted: rgba(74, 206, 168, 0.12);
+
+  /* Gráficas — vibrantes sobre azul oscuro */
+  --chart-1:    #4d8ef0;   /* azul eléctrico */
+  --chart-2:    #4acea8;   /* cyan-verde */
+  --chart-3:    #9b7fe8;   /* púrpura */
+  --chart-4:    #f0a04d;   /* naranja */
+  --chart-5:    #f05a6a;   /* rosa-rojo */
+  --chart-6:    #38c8d8;   /* cyan */
+  --chart-grid: #111c2e;
+  --chart-axis: #1c2c44;
+
+  /* Nodos D3 — azules oscuros diferenciados, sutiles */
+  --node-male:        #1a3a6e;
+  --node-female:      #4a2a6e;
+  --node-unknown:     #162236;
+  --node-border:      #1c2c44;
+  --node-selected:    #4d8ef0;
+  --node-highlight:   rgba(77, 142, 240, 0.18);
+  --edge-default:     #1c2c44;
+  --edge-direct:      #203858;
+  --edge-consanguine: #3a1a4a;
+
+  /* Sombras */
+  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.50);
+  --shadow-md:     0 4px 16px rgba(0, 0, 0, 0.60);
+  --shadow-lg:     0 8px 40px rgba(0, 0, 0, 0.70);
+  --shadow-accent: 0 0 24px rgba(77, 142, 240, 0.15);
+}
+
+
+/* ============================================================
+   CÁLIDO — PERGAMINO  [data-theme="warm"]
+   Acento: Naranja-ámbar #b86020
+   ============================================================ */
+[data-theme="warm"] {
+
+  --surface-base:          #f2ede4;
+  --surface-elevated:      #faf6ee;
+  --surface-overlay:       #fffdf8;
+  --surface-subtle:        #e8e0d2;
+  --surface-border:        #d0c4ae;
+  --surface-border-subtle: #dbd2c0;
+
+  --text-primary:   #1c1710;
+  --text-secondary: #706050;
+  --text-muted:     #a89878;
+  --text-inverse:   #fffdf8;
+
+  --accent-primary:        #b86020;
+  --accent-primary-hover:  #cc7230;
+  --accent-primary-muted:  rgba(184, 96, 32, 0.10);
+  --accent-primary-border: rgba(184, 96, 32, 0.25);
+
+  --accent-secondary:       #2a7a58;
+  --accent-secondary-muted: rgba(42, 122, 88, 0.12);
+
+  --color-danger:        #b04030;
+  --color-danger-muted:  rgba(176, 64, 48, 0.10);
+  --color-warning:       #907020;
+  --color-warning-muted: rgba(144, 112, 32, 0.10);
+  --color-info:          #3a6890;
+  --color-info-muted:    rgba(58, 104, 144, 0.10);
+  --color-success:       #2a7a58;
+  --color-success-muted: rgba(42, 122, 88, 0.10);
+
+  --chart-1:    #b86020;
+  --chart-2:    #2a7a58;
+  --chart-3:    #3a6890;
+  --chart-4:    #7a4a90;
+  --chart-5:    #b03a40;
+  --chart-6:    #4a8870;
+  --chart-grid: #e8e0d2;
+  --chart-axis: #c8b898;
+
+  /* Nodos — sutiles y cálidos, diferenciados sin estridencia */
+  --node-male:        #e8f0f8;   /* azul muy pálido */
+  --node-female:      #f4ece8;   /* rosa-crema muy pálido */
+  --node-unknown:     #ede8e0;   /* beige neutro */
+  --node-border:      #c8b898;
+  --node-selected:    #b86020;
+  --node-highlight:   rgba(184, 96, 32, 0.12);
+  --edge-default:     #c8b898;
+  --edge-direct:      #b0a080;
+  --edge-consanguine: #c09080;
+
+  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md:     0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-lg:     0 8px 40px rgba(0, 0, 0, 0.12);
+  --shadow-accent: 0 0 20px rgba(184, 96, 32, 0.15);
+}
+
+
+/* ============================================================
+   CLARO — BLANCO PURO  [data-theme="light"]
+   Acento: Naranja oscuro #d06020
+   Nodos y gráficas más vivos que en v3
+   ============================================================ */
+[data-theme="light"] {
+
+  --surface-base:          #f0f4f8;
+  --surface-elevated:      #ffffff;
+  --surface-overlay:       #fafdff;
+  --surface-subtle:        #e4eaf2;
+  --surface-border:        #c8d4e0;
+  --surface-border-subtle: #d8e2ec;
+
+  --text-primary:   #0e1824;
+  --text-secondary: #4a6080;
+  --text-muted:     #90a8c0;
+  --text-inverse:   #ffffff;
+
+  --accent-primary:        #d06020;
+  --accent-primary-hover:  #e07030;
+  --accent-primary-muted:  rgba(208, 96, 32, 0.08);
+  --accent-primary-border: rgba(208, 96, 32, 0.22);
+
+  --accent-secondary:       #1a8060;
+  --accent-secondary-muted: rgba(26, 128, 96, 0.10);
+
+  --color-danger:        #c03040;
+  --color-danger-muted:  rgba(192, 48, 64, 0.08);
+  --color-warning:       #b06010;
+  --color-warning-muted: rgba(176, 96, 16, 0.08);
+  --color-info:          #2060b0;
+  --color-info-muted:    rgba(32, 96, 176, 0.08);
+  --color-success:       #1a8060;
+  --color-success-muted: rgba(26, 128, 96, 0.08);
+
+  /* Gráficas — vivos, con contraste real sobre blanco */
+  --chart-1:    #d06020;   /* naranja */
+  --chart-2:    #1a9870;   /* verde esmeralda */
+  --chart-3:    #2060c8;   /* azul cobalto */
+  --chart-4:    #7840c0;   /* púrpura */
+  --chart-5:    #c02848;   /* rojo-rosa */
+  --chart-6:    #0898b8;   /* cyan oscuro */
+  --chart-grid: #e4eaf2;
+  --chart-axis: #c8d4e0;
+
+  /* Nodos — colores propios, saturados pero no agresivos */
+  --node-male:        #c8e0f8;   /* azul cielo medio */
+  --node-female:      #f0d8f0;   /* lavanda medio */
+  --node-unknown:     #dde8f0;   /* gris-azul neutro */
+  --node-border:      #a8c0d8;
+  --node-selected:    #d06020;
+  --node-highlight:   rgba(208, 96, 32, 0.12);
+  --edge-default:     #b8c8d8;
+  --edge-direct:      #90a8c0;
+  --edge-consanguine: #c0a0c8;
+
+  --shadow-sm:     0 1px 3px rgba(14, 24, 36, 0.08);
+  --shadow-md:     0 4px 16px rgba(14, 24, 36, 0.10);
+  --shadow-lg:     0 8px 40px rgba(14, 24, 36, 0.12);
+  --shadow-accent: 0 0 20px rgba(208, 96, 32, 0.12);
+}
+
+
+/* ============================================================
+   TOKENS GLOBALES — independientes del tema
+   ============================================================ */
+:root {
+
+  /* Tipografía — familias */
+  --font-ui:      'IBM Plex Sans', system-ui, sans-serif;
+  --font-display: 'IBM Plex Serif', Georgia, serif;
+  --font-mono:    'IBM Plex Mono', 'Fira Code', monospace;
+
+  /* Tipografía — escala */
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-base: 14px;
+  --text-md:   15px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+  --text-3xl:  36px;
+
+  /* Tipografía — pesos */
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* Tipografía — interlineado */
+  --leading-tight:   1.25;
+  --leading-normal:  1.50;
+  --leading-relaxed: 1.70;
+
+  /* Espaciado (escala 4px) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Bordes y radios */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* Transiciones */
+  --transition-fast: 100ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 350ms ease;
+
+  /* Z-index */
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-modal:    200;
+  --z-tooltip:  300;
+  --z-toast:    400;
+
+  /* Layout */
+  --titlebar-height:   32px;
+  --sidebar-width:     260px;
+  --sidebar-collapsed: 52px;
+  --right-panel-width: 320px;
+  --panel-header:      48px;
+  --toolbar-height:    40px;
+  --modal-max-width:   900px;
+}
+
+
+/* ============================================================
+   RESET BASE
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--surface-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+
+/* ============================================================
+   MATERIAL SYMBOLS OUTLINED
+   ============================================================ */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+  font-size: 20px;
+  line-height: 1;
+  user-select: none;
+  vertical-align: middle;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.material-symbols-outlined.accent { color: var(--accent-primary); }
+.material-symbols-outlined.muted  { color: var(--text-muted); }
+
+.icon-sm { font-size: 16px; }
+.icon-md { font-size: 18px; }
+.icon-lg { font-size: 20px; }
+.icon-xl { font-size: 24px; }
+
+
+/* ============================================================
+   UTILIDADES TIPOGRÁFICAS
+   ============================================================ */
+.label-section {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.gedcom-id {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.person-display-name {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  line-height: var(--leading-tight);
+}
+
+
+/* ============================================================
+   HELPER D3 — leer tokens en runtime (TypeScript)
+
+   const getCssVar = (v: string): string =>
+     getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+   ============================================================ */
+
+
+/* ============================================================
+   IMPRESIÓN / PLOTTER A0
+   ============================================================ */
+@media print {
+  :root,
+  [data-theme="dark"],
+  [data-theme="warm"],
+  [data-theme="light"] {
+    --surface-base:          #ffffff;
+    --surface-elevated:      #ffffff;
+    --surface-overlay:       #ffffff;
+    --surface-subtle:        #f5f5f5;
+    --surface-border:        #cccccc;
+    --surface-border-subtle: #e0e0e0;
+    --text-primary:          #000000;
+    --text-secondary:        #333333;
+    --text-muted:            #666666;
+    --accent-primary:        #7a5010;
+    --node-male:             #ddeeff;
+    --node-female:           #ffddee;
+    --node-unknown:          #f0f0f0;
+    --node-border:           #aaaaaa;
+    --node-selected:         #7a5010;
+    --edge-default:          #888888;
+    --edge-direct:           #555555;
+    --edge-consanguine:      #aa6666;
+    --shadow-sm:             none;
+    --shadow-md:             none;
+    --shadow-lg:             none;
+  }
+
+  @page { size: A0 landscape; margin: 15mm; }
+
+  html, body { background: white !important; }
+
+  .no-print,
+  .left-sidebar,
+  .detail-panel,
+  .modal-overlay,
+  .toast-container { display: none !important; }
+
+  .tree-canvas { width: 100% !important; height: 100% !important; }
+  * { box-shadow: none !important; }
+}

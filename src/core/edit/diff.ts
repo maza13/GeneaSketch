@@ -70,7 +70,7 @@ export type DiffSummary = {
         baseVersion: string;
         incomingVersion: string;
         normalizedTo: {
-            sourceFormat: "GSZ";
+            sourceFormat: "GSK";
             gedVersion: "7.0.x";
         };
     };
@@ -399,7 +399,7 @@ export function calculateDiff(
                 baseVersion: baseDoc.metadata.gedVersion,
                 incomingVersion: incomingSafe.metadata.gedVersion,
                 normalizedTo: {
-                    sourceFormat: "GSZ",
+                    sourceFormat: "GSK",
                     gedVersion: "7.0.x"
                 }
             }

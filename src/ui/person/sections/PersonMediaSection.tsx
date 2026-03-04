@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import type { GeneaDocument, Person } from "@/types/domain";
+import type { GraphDocument, Person } from "@/types/domain";
 import type { PersonEditorPatch } from "@/types/editor";
 import { SectionCard } from "@/ui/common/StandardModal";
 
 type Props = {
   person: Person;
-  document: GeneaDocument;
+  document: GraphDocument;
   onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
 };
 
@@ -152,3 +152,4 @@ export function PersonMediaSection({ person, document, onSavePerson }: Props) {
     </div>
   );
 }
+

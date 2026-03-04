@@ -3,6 +3,9 @@ import type { Event, PendingRelationType, Person, SourceRef } from "@/types/doma
 export type PersonEditorPatch = {
   name?: string;
   surname?: string;
+  surnamePaternal?: string;
+  surnameMaternal?: string;
+  surnameOrder?: "paternal_first" | "maternal_first" | "single";
   birthDate?: string;
   birthPlace?: string;
   deathDate?: string;

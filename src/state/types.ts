@@ -1,7 +1,6 @@
 import type {
     ActiveOverlay,
     ExpandedGraph,
-    GeneaDocument,
     PendingRelationType,
     Preset,
     RecentFileEntry,
@@ -13,6 +12,7 @@ import type {
     VisualConfig
 } from "@/types/domain";
 import type { GSchemaGraph } from "@/core/gschema";
+import type { GraphPayload, RecentPayloadV2 } from "@/core/read-model/types";
 
 export type RightStackState = {
     detailsMode: "expanded" | "compact";
@@ -24,17 +24,21 @@ import type { MergeDraftSnapshot } from "@/types/merge-draft";
 import { PersonPatch, PersonInput } from "@/core/engine/GeneaEngine";
 
 export interface DocSlice {
-    document: GeneaDocument | null;
     /**
      * The GSchema graph engine — the new source of truth for 0.4.0+.
-     * When null, the app is operating in legacy-only mode (pre-0.4.0 files).
-     * When set, `document` is a compat projection generated from this graph.
+     * When null, the app is operating in legacy-only mode (pre-0.4.0 files) - wait, now it's the ONLY mode.
      */
     gschemaGraph: GSchemaGraph | null;
+    graphRevision: number;
+    xrefToUid?: Record<string, string>;
+    uidToXref?: Record<string, string>;
     expandedGraph: ExpandedGraph;
-    setDocument: (doc: GeneaDocument | null) => void;
-    applyDiagnosticDocument: (nextDoc: GeneaDocument) => void;
+
+    // Core state loader
+    loadGraph: (payload: GraphPayload) => void;
     createNewTreeDoc: () => void;
+
+    // Mutations
     updatePersonById: (personId: string, patch: PersonPatch) => void;
     updateSelectedPerson: (patch: PersonPatch) => void;
     createStandalonePerson: (input: PersonInput) => void;
@@ -44,6 +48,7 @@ export interface DocSlice {
     unlinkRelation: (personId: string, relatedId: string, type: "parent" | "child" | "spouse") => void;
     addRelationFromAnchor: (anchorId: string, type: PendingRelationType, input: PersonInput, targetFamilyId?: string) => void;
     addRelationFromSelected: (type: PendingRelationType, input: PersonInput, targetFamilyId?: string) => void;
+    updateNoteRecord: (noteId: string, text: string) => void;
 }
 
 export interface ViewSlice {
@@ -92,17 +97,17 @@ export interface SessionSlice {
     parseErrors: string[];
     parseWarnings: string[];
     recentFiles: RecentFileEntry[];
-    recentPayloads: Record<string, any>;
+    recentPayloads: Record<string, RecentPayloadV2>;
     isRestoring: boolean;
     inspectPerson: (personId: string | null) => void;
     goBack: () => void;
     goForward: () => void;
     setParseErrors: (errors: string[]) => void;
     setParseWarnings: (warnings: string[]) => void;
-    addRecentFile: (entry: Omit<RecentFileEntry, "id" | "lastUsedAt">, payload: any) => string;
+    addRecentFile: (entry: Omit<RecentFileEntry, "id" | "lastUsedAt">, payload: RecentPayloadV2) => string;
     removeRecentFile: (id: string) => void;
     clearRecentFiles: () => void;
-    openRecentFile: (id: string) => { entry: RecentFileEntry, payload: any } | null;
+    openRecentFile: (id: string) => { entry: RecentFileEntry, payload: RecentPayloadV2 } | null;
     saveAutosessionNow: () => Promise<void>;
     checkRestoreAvailability: () => Promise<void>;
     restoreSession: () => Promise<void>;

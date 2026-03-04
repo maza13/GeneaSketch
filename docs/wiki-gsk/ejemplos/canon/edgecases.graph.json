@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "0.4.0",
+  "graphId": "graph-edgecases-0001",
+  "createdAt": "2026-03-03T12:00:00.000Z",
+  "updatedAt": "2026-03-03T12:01:00.000Z",
+  "nodes": {
+    "p-ana": {
+      "uid": "p-ana",
+      "type": "Person",
+      "xref": "@I10@",
+      "sex": "F",
+      "isLiving": true,
+      "createdAt": "2026-03-03T12:00:00.000Z"
+    }
+  },
+  "edges": {},
+  "claims": {
+    "p-ana": {
+      "person.name.full": [
+        {
+          "uid": "c-edge-ana-name-1",
+          "nodeUid": "p-ana",
+          "predicate": "person.name.full",
+          "value": "Ana Ruiz",
+          "provenance": {
+            "actorId": "importer:fixture",
+            "timestamp": 1772539201,
+            "method": "fixture:edgecases"
+          },
+          "quality": "verified",
+          "lifecycle": "active",
+          "evidenceGate": "direct",
+          "isPreferred": true,
+          "createdAt": "2026-03-03T12:00:10.000Z",
+          "citations": [
+            {
+              "sourceUid": "s-1",
+              "page": "Folio 12",
+              "transcription": "Acta legible",
+              "confidence": 0.97
+            }
+          ]
+        },
+        {
+          "uid": "c-edge-ana-name-2",
+          "nodeUid": "p-ana",
+          "predicate": "person.name.full",
+          "value": "Ana Ros",
+          "provenance": {
+            "actorId": "importer:fixture",
+            "timestamp": 1772539202,
+            "method": "fixture:edgecases"
+          },
+          "quality": "raw",
+          "lifecycle": "retracted",
+          "evidenceGate": "unassessed",
+          "isPreferred": false,
+          "createdAt": "2026-03-03T12:00:20.000Z"
+        }
+      ]
+    }
+  },
+  "quarantine": [
+    {
+      "opId": "op-edge-0004",
+      "opSeq": 4,
+      "type": "QUARANTINE",
+      "timestamp": 1772539204,
+      "actorId": "importer:fixture",
+      "importId": "imp-edge-1",
+      "reason": "Unmapped GEDCOM extension",
+      "context": "@I10@",
+      "originalGedcomVersion": "5.5.1",
+      "ast": {
+        "level": 1,
+        "tag": "_CUSTOM",
+        "value": "ROOT",
+        "children": [
+          {
+            "level": 2,
+            "tag": "_CHILD",
+            "value": "A",
+            "children": [
+              {
+                "level": 3,
+                "tag": "_GRAND",
+                "value": "B",
+                "children": []
+              }
+            ]
+          }
+        ],
+        "sourceLines": [
+          "1 _CUSTOM ROOT",
+          "2 _CHILD A",
+          "3 _GRAND B"
+        ]
+      }
+    }
+  ]
+}

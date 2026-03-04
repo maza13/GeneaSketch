@@ -1,7 +1,7 @@
 /**
  * GSchema 0.1.x — Core Type Definitions
  *
- * These types represent the GSchema graph model for GeneaSketch 0.4.0.
+ * These types represent the GSchema graph model for GeneaSketch 0.2.0.
  * GSchema is a knowledge graph where every attribute of a person or union
  * is stored as a Claim with full provenance, enabling auditable, lossless
  * genealogical data management.
@@ -91,6 +91,7 @@ export interface GSchemaEdgeBase {
     type: GSchemaEdgeType;
     fromUid: string;
     toUid: string;
+    evidenceGate?: "direct" | "indirect" | "negative" | "unassessed";
     deleted?: boolean;
     createdAt: string;
 }
@@ -103,9 +104,19 @@ export interface ParentChildEdge extends GSchemaEdgeBase {
     type: "ParentChild";
     /** The parent's role (determined by sex or explicit declaration). */
     parentRole: "father" | "mother" | "unknown";
+    /** Required canonical union context for this parent-child link. */
+    unionUid: string;
     /** Nature of the parent-child relationship. */
     nature: "BIO" | "ADO" | "FOS" | "STE" | "SEAL" | "UNK";
     certainty: "high" | "medium" | "low" | "uncertain";
+    /** Optional import assumptions applied by GEDCOM defaults policy. */
+    gedcomAssumptions?: {
+        defaultPolicy: "conservative" | "legacy-aggressive";
+        pediDefaultApplied?: boolean;
+        quayDefaultApplied?: boolean;
+        pediInput?: string;
+        quayInput?: string;
+    };
 }
 
 /**
@@ -185,8 +196,14 @@ export interface GClaim<T = unknown> {
     value: T;
     /** Who, when, and how this assertion was created. */
     provenance: ClaimProvenance;
-    /** Current review status of this claim. */
-    status: "raw" | "reviewed" | "verified" | "disputed" | "retracted";
+    /** Current epistemic quality (independent from lifecycle). */
+    quality: "raw" | "reviewed" | "verified" | "disputed";
+    /** Logical lifecycle state of the claim. */
+    lifecycle: "active" | "retracted";
+    /** Optional evidence gate classification for review workflows. */
+    evidenceGate?: "direct" | "indirect" | "negative" | "unassessed";
+    /** Optional structured citations supporting this claim. */
+    citations?: ClaimCitation[];
     /**
      * True if this is the claim to use when rendering the UI or exporting.
      * At most ONE claim per (nodeUid, predicate) should have isPreferred: true.
@@ -209,6 +226,13 @@ export interface ClaimProvenance {
     method: string;
 }
 
+export interface ClaimCitation {
+    sourceUid: string;
+    transcription?: string;
+    page?: string;
+    confidence?: number;
+}
+
 // ─────────────────────────────────────────────
 // Specialized Claim Value Types
 // ─────────────────────────────────────────────
@@ -229,6 +253,8 @@ export interface ParsedDate {
     raw: string;
     /** True if this date was inferred, not directly attested. */
     isInferred?: boolean;
+    /** True if the date has a non-standard or informal format. */
+    isInformal?: boolean;
 }
 
 /** A geographic reference, potentially linked to a standard gazetteer. */
@@ -260,11 +286,16 @@ export type GSchemaOperationType =
     | "RETRACT_CLAIM"
     | "SOFT_DELETE_NODE"
     | "SOFT_DELETE_EDGE"
+    | "REPAIR_CREATE_UNION"
+    | "REPAIR_CREATE_MEMBER_EDGE"
+    | "REPAIR_RELINK_PARENT_CHILD"
     | "QUARANTINE"
     | "INITIAL_IMPORT";
 
 export interface GSchemaOperationBase {
     opId: string;
+    /** Monotonic sequence number used for deterministic replay ordering. */
+    opSeq: number;
     type: GSchemaOperationType;
     /** Unix timestamp of the operation. */
     timestamp: number;
@@ -311,13 +342,50 @@ export interface SoftDeleteEdgeOperation extends GSchemaOperationBase {
     reason?: string;
 }
 
+export interface RepairCreateUnionOperation extends GSchemaOperationBase {
+    type: "REPAIR_CREATE_UNION";
+    synthetic: true;
+    method: string;
+    unionUid: string;
+    childUid: string;
+    parentUids: string[];
+}
+
+export interface RepairCreateMemberEdgeOperation extends GSchemaOperationBase {
+    type: "REPAIR_CREATE_MEMBER_EDGE";
+    synthetic: true;
+    method: string;
+    edgeUid: string;
+    unionUid: string;
+    parentUid: string;
+    role: "HUSB" | "WIFE" | "PART";
+}
+
+export interface RepairRelinkParentChildOperation extends GSchemaOperationBase {
+    type: "REPAIR_RELINK_PARENT_CHILD";
+    synthetic: true;
+    method: string;
+    edgeUid: string;
+    unionUid: string;
+    previousUnionUid?: string;
+}
+
+export interface QuarantineAstNode {
+    level: number;
+    tag: string;
+    value?: string;
+    pointer?: string;
+    children: QuarantineAstNode[];
+    sourceLines?: string[];
+}
+
 export interface QuarantineOperation extends GSchemaOperationBase {
     type: "QUARANTINE";
     importId: string;
-    rawTag: string;
-    rawValue?: string;
+    ast: QuarantineAstNode;
     reason: string;
     context?: string;
+    originalGedcomVersion?: string;
 }
 
 export interface InitialImportOperation extends GSchemaOperationBase {
@@ -337,6 +405,9 @@ export type GSchemaOperation =
     | RetractClaimOperation
     | SoftDeleteNodeOperation
     | SoftDeleteEdgeOperation
+    | RepairCreateUnionOperation
+    | RepairCreateMemberEdgeOperation
+    | RepairRelinkParentChildOperation
     | QuarantineOperation
     | InitialImportOperation;
 
@@ -378,6 +449,24 @@ export interface GskPackageManifest {
     graphId: string;
     createdAt: string;
     updatedAt: string;
+    /** Last opSeq represented in graph.json snapshot. */
+    graphDerivedFromOpSeq: number;
+    /** Last opSeq present in journal.jsonl. */
+    journalHeadOpSeq: number;
+    /** Structured media manifest for deterministic integrity checks. */
+    mediaEntries?: GskMediaEntry[];
+    /** Full-package integrity tree + hash. */
+    integrity?: GskIntegrityBlock;
+    /** Security contract block (reserved/no-op in 0.4.0). */
+    security?: GskSecurityBlock;
+    /** SHA-256 over journal.jsonl bytes (hex). */
+    journalHash?: string;
+    /** SHA-256 over graph.json bytes (hex). */
+    graphHash?: string;
+    /** Signature metadata (future cryptographic verification policy). */
+    signature?: string;
+    /** Container encryption mode. */
+    encryption?: "none" | "aes-256-gcm";
     stats: {
         personCount: number;
         unionCount: number;
@@ -389,4 +478,32 @@ export interface GskPackageManifest {
     mediaFiles: string[];
     /** Format of the original source file, if imported. */
     importedFrom?: string;
+}
+
+export interface GskMediaEntry {
+    uid: string;
+    path: string;
+    sha256: string;
+    bytes: number;
+    mime: string;
+}
+
+export interface GskIntegrityEntry {
+    path: string;
+    sha256: string;
+    bytes: number;
+    role: "manifest" | "graph" | "journal" | "quarantine" | "media" | "meta";
+    canonicalized?: boolean;
+}
+
+export interface GskIntegrityBlock {
+    algorithm: "sha256";
+    packageHash: string;
+    entries: GskIntegrityEntry[];
+}
+
+export interface GskSecurityBlock {
+    mode: "none";
+    signature: { mode: "none" };
+    encryption: { mode: "none" };
 }

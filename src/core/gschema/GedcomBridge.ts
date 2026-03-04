@@ -22,12 +22,18 @@ import type {
     Person,
     Family,
     Event as GeneaEvent,
+    SourceRef,
     SourceRecord,
     NoteRecord,
     Media,
     SourceGedVersion,
+    GedExportVersion,
+    ImportWarning,
 } from "@/types/domain";
+import { inferCanonicalSurnameFields, normalizePersonSurnames } from "@/core/naming/surname";
+import { ERROR_CODES } from "./errorCatalog";
 import { GSchemaGraph } from "./GSchemaGraph";
+import { ensureParentChildUnionLinks } from "./FamilyNormalization";
 import type {
     PersonNode,
     UnionNode,
@@ -37,8 +43,10 @@ import type {
     ParentChildEdge,
     MemberEdge,
     GClaim,
+    ClaimCitation,
     ParsedDate,
     GeoRef,
+    QuarantineAstNode,
 } from "./types";
 import {
     PersonPredicates,
@@ -60,6 +68,86 @@ function uid(): string {
 
 function nowIso(): string { return new Date().toISOString(); }
 function nowSec(): number { return Math.floor(Date.now() / 1000); }
+function normalizeDisplayName(raw: string | undefined): string {
+    if (!raw) return "";
+    return raw.replaceAll("/", " ").replace(/\s+/g, " ").trim();
+}
+function safeJsonParse<T>(raw: string | undefined): T | null {
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw) as T;
+    } catch {
+        return null;
+    }
+}
+
+function buildQuarantineAst(tag: string, values: string[]): QuarantineAstNode {
+    const root: QuarantineAstNode = { level: 1, tag, children: [] };
+    const first = values[0]?.trim();
+    const startIndex = first && !/^\d+\s+/.test(first) ? 1 : 0;
+    if (startIndex === 1) root.value = first;
+    const stack: QuarantineAstNode[] = [root];
+
+    for (let i = startIndex; i < values.length; i++) {
+        const raw = values[i]?.trim();
+        if (!raw) continue;
+        const match = raw.match(/^(\d+)\s+([A-Z0-9_]+)(?:\s+(.*))?$/);
+        if (!match) {
+            root.sourceLines = [...(root.sourceLines ?? []), raw];
+            continue;
+        }
+        const level = Number(match[1]);
+        const node: QuarantineAstNode = {
+            level,
+            tag: match[2],
+            value: match[3],
+            children: [],
+        };
+        while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+            stack.pop();
+        }
+        const parent = stack[stack.length - 1] ?? root;
+        parent.children.push(node);
+        stack.push(node);
+    }
+
+    return root;
+}
+
+
+function collectNonPreferredClaimMarkers(graph: GSchemaGraph, nodeUid: string): string[] {
+    const byPredicate = graph.toData().claims[nodeUid] ?? {};
+    const markers: string[] = [];
+    for (const [predicate, claims] of Object.entries(byPredicate)) {
+        for (const claim of claims) {
+            if (claim.lifecycle === "retracted" || claim.isPreferred) continue;
+            // GSK_CONFLICT|v1|<predicate>|<json_payload>
+            markers.push(`GSK_CONFLICT|v1|${predicate}|${JSON.stringify(claim)}`);
+        }
+    }
+    return markers;
+}
+
+/**
+ * Decodes a GSK_CONFLICT|v1 marker and adds it to the graph.
+ * Returns true if the marker was successfully handled.
+ */
+function decodeConflictMarker(graph: GSchemaGraph, nodeUid: string, raw: string): boolean {
+    if (!raw.startsWith("GSK_CONFLICT|v1|")) return false;
+    const parts = raw.split("|");
+    if (parts.length < 4) return false;
+    const predicate = parts[2];
+    const json = parts.slice(3).join("|"); // Rejoin in case JSON contains pipes
+    try {
+        const claimData = JSON.parse(json);
+        // Ensure the claim is NOT preferred when imported as a conflict
+        const c = { ...claimData, nodeUid, predicate, isPreferred: false };
+        graph.addClaim(c);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 function claim<T>(
     nodeUid: string,
@@ -78,14 +166,137 @@ function claim<T>(
             timestamp: nowSec(),
             method,
         },
-        status: "raw",
+        quality: "raw",
+        lifecycle: "active",
+        evidenceGate: "unassessed",
         isPreferred,
         createdAt: nowIso(),
     };
 }
 
+function parseSourceQualityToConfidence(quay?: string): number | undefined {
+    if (quay === "3") return 1.0;
+    if (quay === "2") return 0.75;
+    if (quay === "1") return 0.5;
+    if (quay === "0") return 0.25;
+    return undefined;
+}
+
+function confidenceToQuay(confidence?: number): SourceRef["quality"] | undefined {
+    if (confidence === undefined || Number.isNaN(confidence)) return undefined;
+    if (confidence >= 0.9) return "3";
+    if (confidence >= 0.7) return "2";
+    if (confidence >= 0.4) return "1";
+    return "0";
+}
+
+function extractPlaceRaw(value: unknown): string | undefined {
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : undefined;
+    }
+    if (value && typeof value === "object" && "placeRaw" in (value as Record<string, unknown>)) {
+        const raw = (value as { placeRaw?: unknown }).placeRaw;
+        if (typeof raw === "string") {
+            const trimmed = raw.trim();
+            return trimmed.length > 0 ? trimmed : undefined;
+        }
+    }
+    return undefined;
+}
+
+function buildInformalMirrorNotes(dateValue: ParsedDate | null | undefined): string[] {
+    const raw = dateValue?.raw?.trim();
+    if (!raw || !dateValue?.isInformal) return [];
+    // Mirror only when no explicit year exists to avoid duplicating near-standard content.
+    if (/\b\d{4}\b/.test(raw)) return [];
+    return [`GSK_RAW_DATE ${raw}`];
+}
+
+export type GedcomDefaultPolicy = "conservative" | "legacy-aggressive";
+
+type PedigreeMappingResult = {
+    value: ParentChildEdge["nature"];
+    defaultApplied: boolean;
+    input?: string;
+};
+
+type CertaintyMappingResult = {
+    value: ParentChildEdge["certainty"];
+    defaultApplied: boolean;
+    input?: string;
+};
+
+function pediToNature(pedi: string | undefined, policy: GedcomDefaultPolicy): PedigreeMappingResult {
+    const map: Record<string, ParentChildEdge["nature"]> = {
+        BIRTH: "BIO",
+        ADOPTED: "ADO",
+        FOSTER: "FOS",
+        SEALING: "SEAL",
+        UNKNOWN: "UNK",
+    };
+    if (!pedi) {
+        return {
+            value: policy === "legacy-aggressive" ? "BIO" : "UNK",
+            defaultApplied: true,
+            input: pedi,
+        };
+    }
+    return {
+        value: map[pedi.toUpperCase()] ?? "UNK",
+        defaultApplied: false,
+        input: pedi,
+    };
+}
+
+function quayToCertainty(quay: string | undefined, policy: GedcomDefaultPolicy): CertaintyMappingResult {
+    if (quay === "3") return { value: "high", defaultApplied: false, input: quay };
+    if (quay === "2") return { value: "medium", defaultApplied: false, input: quay };
+    if (quay === "1") return { value: "low", defaultApplied: false, input: quay };
+    if (quay === "0") return { value: "uncertain", defaultApplied: false, input: quay };
+    return {
+        value: policy === "legacy-aggressive" ? "high" : "uncertain",
+        defaultApplied: true,
+        input: quay,
+    };
+}
+
+function natureToPedi(nature: ParentChildEdge["nature"]): "BIRTH" | "ADOPTED" | "FOSTER" | "SEALING" | "UNKNOWN" {
+    if (nature === "BIO") return "BIRTH";
+    if (nature === "ADO") return "ADOPTED";
+    if (nature === "FOS") return "FOSTER";
+    if (nature === "SEAL") return "SEALING";
+    return "UNKNOWN";
+}
+
+function certaintyToQuay(certainty: ParentChildEdge["certainty"]): "0" | "1" | "2" | "3" {
+    if (certainty === "high") return "3";
+    if (certainty === "medium") return "2";
+    if (certainty === "low") return "1";
+    return "0";
+}
+
+function sourceRefsToCitations(
+    refs: SourceRef[] | undefined,
+    xrefMap: Record<string, string>
+): ClaimCitation[] {
+    if (!refs || refs.length === 0) return [];
+    const citations: ClaimCitation[] = [];
+    for (const ref of refs) {
+        const sourceUid = xrefMap[ref.id];
+        if (!sourceUid) continue;
+        citations.push({
+            sourceUid,
+            transcription: ref.text ?? ref.note,
+            page: ref.page,
+            confidence: parseSourceQualityToConfidence(ref.quality),
+        });
+    }
+    return citations;
+}
+
 /** Parse a GEDCOM date string into a loose ParsedDate. Preserves raw for lossless export. */
-function parseGedDate(raw: string | undefined): ParsedDate | null {
+export function parseGedDate(raw: string | undefined): ParsedDate | null {
     if (!raw) return null;
     const s = raw.trim();
     if (!s) return null;
@@ -135,6 +346,20 @@ function parseGedDate(raw: string | undefined): ParsedDate | null {
         day: isNaN(day ?? NaN) ? undefined : day,
         qualifier: qualifier ?? undefined,
         raw: s,
+        isInformal: isNaN(year ?? NaN) && isNaN(month ?? NaN) && isNaN(day ?? NaN),
+    };
+}
+
+/** Parses a place string into a GeoRef with hierarchical parts. */
+export function parsePlaceParts(raw: string | undefined): GeoRef | null {
+    if (!raw) return null;
+    const s = raw.trim();
+    if (!s) return null;
+
+    const parts = s.split(",").map(p => p.trim()).filter(p => p.length > 0);
+    return {
+        placeRaw: s,
+        parts: parts.length > 1 ? parts : undefined,
     };
 }
 
@@ -157,6 +382,12 @@ export interface BridgeImportResult {
     xrefMap: Record<string, string>;
     /** Count of quarantined tags (for UI feedback). */
     quarantineCount: number;
+    /** Non-fatal import warnings generated by bridge mapping defaults/degradations. */
+    warnings: ImportWarning[];
+}
+
+export interface BridgeImportOptions {
+    gedcomDefaultPolicy?: GedcomDefaultPolicy;
 }
 
 /**
@@ -169,12 +400,15 @@ export interface BridgeImportResult {
 export function documentToGSchema(
     doc: GeneaDocument,
     sourceVersion: SourceGedVersion = "unknown",
-    sourceFileName?: string
+    sourceFileName?: string,
+    options: BridgeImportOptions = {}
 ): BridgeImportResult {
     const graph = GSchemaGraph.create();
     const xrefMap: Record<string, string> = {};
     const method = `parsing:gedcom:${sourceVersion}`;
     const importId = uid();
+    const warnings: ImportWarning[] = [];
+    const gedcomDefaultPolicy: GedcomDefaultPolicy = options.gedcomDefaultPolicy ?? "conservative";
 
     // ── 1. Sources ───────────────────────────
     for (const [xref, src] of Object.entries(doc.sources ?? {})) {
@@ -228,6 +462,8 @@ export function documentToGSchema(
         };
         graph.addNode(node);
 
+        const canonicalSurnames = normalizePersonSurnames(person);
+
         // Name claims
         if (person.names && person.names.length > 0) {
             for (let i = 0; i < person.names.length; i++) {
@@ -236,30 +472,61 @@ export function documentToGSchema(
                 if (n.given) graph.addClaim(claim(nodeUid, PersonPredicates.NAME_GIVEN, n.given, method, i === 0));
                 if (n.surname) graph.addClaim(claim(nodeUid, PersonPredicates.NAME_SURNAME, n.surname, method, i === 0));
                 if (n.nickname) graph.addClaim(claim(nodeUid, PersonPredicates.NAME_NICKNAME, n.nickname, method, i === 0));
+                if (n.prefix) graph.addClaim(claim(nodeUid, (PersonPredicates as any).NAME_PREFIX, n.prefix, method, i === 0));
+                if (n.suffix) graph.addClaim(claim(nodeUid, (PersonPredicates as any).NAME_SUFFIX, n.suffix, method, i === 0));
+                if (n.title) graph.addClaim(claim(nodeUid, (PersonPredicates as any).NAME_TITLE, n.title, method, i === 0));
             }
         } else {
             // Fallback: use flat name fields
             graph.addClaim(claim(nodeUid, PersonPredicates.NAME_FULL, person.name, method));
-            if (person.surname) graph.addClaim(claim(nodeUid, PersonPredicates.NAME_SURNAME, person.surname, method));
+            if (person.name && !person.name.includes("/")) {
+                // If it looks like a given name, store it as such to avoid UI fallback
+                graph.addClaim(claim(nodeUid, PersonPredicates.NAME_GIVEN, person.name, method));
+            }
+            if (canonicalSurnames.surname) graph.addClaim(claim(nodeUid, PersonPredicates.NAME_SURNAME, canonicalSurnames.surname, method));
         }
+        if (canonicalSurnames.surnamePaternal) {
+            graph.addClaim(claim(nodeUid, PersonPredicates.EXT_SURNAME_PATERNAL, canonicalSurnames.surnamePaternal, method));
+        }
+        if (canonicalSurnames.surnameMaternal) {
+            graph.addClaim(claim(nodeUid, PersonPredicates.EXT_SURNAME_MATERNAL, canonicalSurnames.surnameMaternal, method));
+        }
+        if (canonicalSurnames.surnameOrder) {
+            graph.addClaim(claim(nodeUid, PersonPredicates.EXT_SURNAME_ORDER, canonicalSurnames.surnameOrder, method));
+        }
+        graph.addClaim(claim(nodeUid, PersonPredicates.EXT_NAMES_FULL, JSON.stringify(person.names || []), method));
+        graph.addClaim(claim(nodeUid, PersonPredicates.EXT_NOTES_REFS, JSON.stringify(person.noteRefs || []), method));
+        graph.addClaim(claim(nodeUid, PersonPredicates.EXT_NOTES_RAWTAGS, JSON.stringify(person.rawTags?.NOTE || []), method));
+        graph.addClaim(claim(nodeUid, PersonPredicates.EXT_EVENTS_FULL, JSON.stringify(person.events || []), method));
+
+        // Sex
 
         // Sex
         graph.addClaim(claim(nodeUid, PersonPredicates.SEX, person.sex ?? "U", method));
 
         // Events → Claims
-        importPersonEvents(graph, nodeUid, person, method, xrefMap, importId);
+        importPersonEvents(graph, nodeUid, person, method, xrefMap, importId, warnings);
 
-        // Raw unknown tags → Quarantine
+        // Raw unknown tags → Quarantine or Conflict recovery
         if (person.rawTags) {
             for (const [tag, values] of Object.entries(person.rawTags)) {
+                // Try to decode as conflict first
+                if (tag === "NOTE" || tag === "_GSK_ALT" || tag === "_GSK_CONFLICT") {
+                    let handledCount = 0;
+                    for (const v of values) {
+                        if (decodeConflictMarker(graph, nodeUid, v)) handledCount++;
+                    }
+                    if (handledCount > 0 && tag !== "NOTE") continue; // notes might have other info
+                }
+
                 const gedPath = `INDI.${tag}`;
                 if (!gedcomTagToPredicate(gedPath)) {
                     graph.quarantine({
                         importId,
-                        rawTag: tag,
-                        rawValue: values.join("; "),
+                        ast: buildQuarantineAst(tag, values),
                         reason: "unknown_individual_tag",
                         context: xref,
+                        originalGedcomVersion: sourceVersion,
                     });
                 }
             }
@@ -310,37 +577,109 @@ export function documentToGSchema(
             const famcLink = doc.persons[childId]?.famcLinks?.find(
                 fl => fl.familyId === xref
             );
-            const natCode = pediToNature(famcLink?.pedi);
+            const natCode = pediToNature(famcLink?.pedi, gedcomDefaultPolicy);
+            const certainty = quayToCertainty(famcLink?.quality, gedcomDefaultPolicy);
+            if (natCode.defaultApplied) {
+                warnings.push({
+                    code: ERROR_CODES.GED_VERSION_UNKNOWN, // Fallback for lack of a specific PEDI_MISSING code
+                    message: `GEDCOM default applied: PEDI missing -> nature=${natCode.value} (policy=${gedcomDefaultPolicy}, child=${childId}, family=${xref})`
+                });
+            }
+            if (certainty.defaultApplied) {
+                warnings.push({
+                    code: ERROR_CODES.GED_VERSION_UNKNOWN, // Fallback
+                    message: `GEDCOM default applied: QUAY missing -> certainty=${certainty.value} (policy=${gedcomDefaultPolicy}, child=${childId}, family=${xref})`
+                });
+            }
 
             // Create edges from each parent to child
             if (family.husbandId && xrefMap[family.husbandId]) {
                 const parentUid = xrefMap[family.husbandId];
-                graph.addEdge(buildParentChildEdge(parentUid, childUid, "father", natCode));
+                graph.addEdge(buildParentChildEdge(
+                    parentUid,
+                    childUid,
+                    "father",
+                    natCode.value,
+                    certainty.value,
+                    unionUid,
+                    {
+                        defaultPolicy: gedcomDefaultPolicy,
+                        pediDefaultApplied: natCode.defaultApplied,
+                        quayDefaultApplied: certainty.defaultApplied,
+                        pediInput: natCode.input,
+                        quayInput: certainty.input,
+                    }
+                ));
             }
             if (family.wifeId && xrefMap[family.wifeId]) {
                 const parentUid = xrefMap[family.wifeId];
-                graph.addEdge(buildParentChildEdge(parentUid, childUid, "mother", natCode));
+                graph.addEdge(buildParentChildEdge(
+                    parentUid,
+                    childUid,
+                    "mother",
+                    natCode.value,
+                    certainty.value,
+                    unionUid,
+                    {
+                        defaultPolicy: gedcomDefaultPolicy,
+                        pediDefaultApplied: natCode.defaultApplied,
+                        quayDefaultApplied: certainty.defaultApplied,
+                        pediInput: natCode.input,
+                        quayInput: certainty.input,
+                    }
+                ));
             }
         }
 
         // Family events → Union claims
-        importFamilyEvents(graph, unionUid, family, method, importId);
+        importFamilyEvents(graph, unionUid, family, method, xrefMap, importId, warnings);
+        graph.addClaim(claim(unionUid, UnionPredicates.EXT_NOTES_REFS, JSON.stringify(family.noteRefs || []), method));
+        graph.addClaim(claim(unionUid, UnionPredicates.EXT_NOTES_RAWTAGS, JSON.stringify(family.rawTags?.NOTE || []), method));
+        graph.addClaim(claim(unionUid, UnionPredicates.EXT_EVENTS_FULL, JSON.stringify(family.events || []), method));
+        if (family.rawTags) {
+            for (const [tag, values] of Object.entries(family.rawTags)) {
+                // Try to decode as conflict first
+                if (tag === "NOTE" || tag === "_GSK_ALT" || tag === "_GSK_CONFLICT") {
+                    let handledCount = 0;
+                    for (const v of values) {
+                        if (decodeConflictMarker(graph, unionUid, v)) handledCount++;
+                    }
+                    if (handledCount > 0 && tag !== "NOTE") continue;
+                }
+
+                const gedPath = `FAM.${tag}`;
+                if (!gedcomTagToPredicate(gedPath)) {
+                    graph.quarantine({
+                        importId,
+                        ast: buildQuarantineAst(tag, values),
+                        reason: "unknown_family_tag",
+                        context: xref,
+                        originalGedcomVersion: sourceVersion,
+                    });
+                }
+            }
+        }
     }
 
     // ── 6. Initial Import operation ──────────
     const initOp = {
-        opId: uid(), type: "INITIAL_IMPORT" as const,
+        opId: uid(), opSeq: (graph as unknown as { _nextOpSeq: number })._nextOpSeq ?? 0, type: "INITIAL_IMPORT" as const,
         timestamp: nowSec(), actorId: "system_importer",
         sourceFormat: (sourceVersion === "5.5.1" ? "GEDCOM_551" : "GEDCOM_703") as
             "GEDCOM_551" | "GEDCOM_703" | "GSZ_03x" | "GSK_01x",
         sourceFileName,
         nodeCount: graph.nodeCount,
         edgeCount: graph.edgeCount,
-        claimCount: 0, // filled in below
+        claimCount: Object.values(graph.toData().claims).reduce(
+            (sum, byPredicate) => sum + Object.values(byPredicate).reduce((inner, claims) => inner + claims.length, 0),
+            0
+        ),
     };
-    (graph as unknown as { _journal: unknown[] })._journal.push(initOp);
+    const internals = graph as unknown as { _journal: unknown[]; _nextOpSeq: number };
+    internals._journal.push(initOp);
+    internals._nextOpSeq = initOp.opSeq + 1;
 
-    return { graph, xrefMap, quarantineCount: graph.quarantineCount };
+    return { graph, xrefMap, quarantineCount: graph.quarantineCount, warnings };
 }
 
 // ─────────────────────────────────────────────
@@ -352,11 +691,13 @@ function importPersonEvents(
     nodeUid: string,
     person: Person,
     method: string,
-    _xrefMap: Record<string, string>,
-    _importId: string
+    xrefMap: Record<string, string>,
+    _importId: string,
+    warnings: ImportWarning[]
 ): void {
     for (const event of (person.events ?? [])) {
         const { type } = event;
+        const citations = sourceRefsToCitations(event.sourceRefs, xrefMap);
 
         // Map known event types to predicates
         const datePred = getPersonEventDatePred(type);
@@ -364,11 +705,31 @@ function importPersonEvents(
 
         if (datePred && event.date) {
             const parsed = parseGedDate(event.date);
-            if (parsed) graph.addClaim(claim(nodeUid, datePred, parsed, method));
+            if (parsed) {
+                const c = claim(nodeUid, datePred, parsed, method);
+                if (citations.length > 0) c.citations = citations;
+                graph.addClaim(c);
+                if (parsed.isInformal) {
+                    warnings.push({
+                        code: ERROR_CODES.GED_DATE_INFORMAL,
+                        message: `Fecha informal coerciva detectada: "${event.date}"`,
+                    });
+                }
+            }
         }
         if (placePred && event.place) {
-            const geo: GeoRef = { placeRaw: event.place };
-            graph.addClaim(claim(nodeUid, placePred, geo, method));
+            const geo = parsePlaceParts(event.place);
+            if (geo) {
+                const c = claim(nodeUid, placePred, geo, method);
+                if (citations.length > 0) c.citations = citations;
+                graph.addClaim(c);
+                if (!geo.parts || geo.parts.length < 2) {
+                    warnings.push({
+                        code: ERROR_CODES.GED_PLACE_FLAT,
+                        message: `Lugar sin jerarquía clara detectado: "${event.place}"`,
+                    });
+                }
+            }
         }
     }
 
@@ -378,16 +739,16 @@ function importPersonEvents(
         if (parsed) graph.addClaim(claim(nodeUid, PersonPredicates.EVENT_BIRTH_DATE, parsed, method));
     }
     if (person.birthPlace && !person.events?.find(e => e.type === "BIRT" && e.place === person.birthPlace)) {
-        const geo: GeoRef = { placeRaw: person.birthPlace };
-        graph.addClaim(claim(nodeUid, PersonPredicates.EVENT_BIRTH_PLACE, geo, method));
+        const geo = parsePlaceParts(person.birthPlace);
+        if (geo) graph.addClaim(claim(nodeUid, PersonPredicates.EVENT_BIRTH_PLACE, geo, method));
     }
     if (person.deathDate) {
         const parsed = parseGedDate(person.deathDate);
         if (parsed) graph.addClaim(claim(nodeUid, PersonPredicates.EVENT_DEATH_DATE, parsed, method));
     }
     if (person.deathPlace) {
-        const geo: GeoRef = { placeRaw: person.deathPlace };
-        graph.addClaim(claim(nodeUid, PersonPredicates.EVENT_DEATH_PLACE, geo, method));
+        const geo = parsePlaceParts(person.deathPlace);
+        if (geo) graph.addClaim(claim(nodeUid, PersonPredicates.EVENT_DEATH_PLACE, geo, method));
     }
     if (person.residence) {
         graph.addClaim(claim(nodeUid, PersonPredicates.ATTR_RESIDENCE_PLACE, person.residence, method));
@@ -429,24 +790,69 @@ function importFamilyEvents(
     unionUid: string,
     family: Family,
     method: string,
-    _importId: string
+    xrefMap: Record<string, string>,
+    _importId: string,
+    warnings: ImportWarning[]
 ): void {
     for (const event of (family.events ?? [])) {
+        const citations = sourceRefsToCitations(event.sourceRefs, xrefMap);
         if (event.type === "MARR") {
             if (event.date) {
                 const parsed = parseGedDate(event.date);
-                if (parsed) graph.addClaim(claim(unionUid, UnionPredicates.EVENT_MARRIAGE_DATE, parsed, method));
+                if (parsed) {
+                    const c = claim(unionUid, UnionPredicates.EVENT_MARRIAGE_DATE, parsed, method);
+                    if (citations.length > 0) c.citations = citations;
+                    graph.addClaim(c);
+                    if (parsed.isInformal) {
+                        warnings.push({
+                            code: ERROR_CODES.GED_DATE_INFORMAL,
+                            message: `Fecha de matrimonio informal: "${event.date}"`,
+                        });
+                    }
+                }
             }
             if (event.place) {
-                graph.addClaim(claim(unionUid, UnionPredicates.EVENT_MARRIAGE_PLACE, event.place, method));
+                const geo = parsePlaceParts(event.place);
+                if (geo) {
+                    const c = claim(unionUid, UnionPredicates.EVENT_MARRIAGE_PLACE, geo, method);
+                    if (citations.length > 0) c.citations = citations;
+                    graph.addClaim(c);
+                    if (!geo.parts || geo.parts.length < 2) {
+                        warnings.push({
+                            code: ERROR_CODES.GED_PLACE_FLAT,
+                            message: `Lugar de matrimonio sin jerarquía clara: "${event.place}"`,
+                        });
+                    }
+                }
             }
         } else if (event.type === "DIV") {
             if (event.date) {
                 const parsed = parseGedDate(event.date);
-                if (parsed) graph.addClaim(claim(unionUid, UnionPredicates.EVENT_DIVORCE_DATE, parsed, method));
+                if (parsed) {
+                    const c = claim(unionUid, UnionPredicates.EVENT_DIVORCE_DATE, parsed, method);
+                    if (citations.length > 0) c.citations = citations;
+                    graph.addClaim(c);
+                    if (parsed.isInformal) {
+                        warnings.push({
+                            code: ERROR_CODES.GED_DATE_INFORMAL,
+                            message: `Fecha de divorcio informal: "${event.date}"`,
+                        });
+                    }
+                }
             }
             if (event.place) {
-                graph.addClaim(claim(unionUid, UnionPredicates.EVENT_DIVORCE_PLACE, event.place, method));
+                const geo = parsePlaceParts(event.place);
+                if (geo) {
+                    const c = claim(unionUid, UnionPredicates.EVENT_DIVORCE_PLACE, geo, method);
+                    if (citations.length > 0) c.citations = citations;
+                    graph.addClaim(c);
+                    if (!geo.parts || geo.parts.length < 2) {
+                        warnings.push({
+                            code: ERROR_CODES.GED_PLACE_FLAT,
+                            message: `Lugar de divorcio sin jerarquía clara: "${event.place}"`,
+                        });
+                    }
+                }
             }
         }
     }
@@ -456,18 +862,14 @@ function importFamilyEvents(
 // Helper: Pedigree code conversion
 // ─────────────────────────────────────────────
 
-function pediToNature(pedi?: string): ParentChildEdge["nature"] {
-    const map: Record<string, ParentChildEdge["nature"]> = {
-        BIRTH: "BIO", ADOPTED: "ADO", FOSTER: "FOS", SEALING: "SEAL", UNKNOWN: "UNK",
-    };
-    return pedi ? (map[pedi.toUpperCase()] ?? "BIO") : "BIO";
-}
-
 function buildParentChildEdge(
     parentUid: string,
     childUid: string,
     role: "father" | "mother",
-    nature: ParentChildEdge["nature"]
+    nature: ParentChildEdge["nature"],
+    certainty: ParentChildEdge["certainty"],
+    unionUid: string,
+    gedcomAssumptions?: ParentChildEdge["gedcomAssumptions"]
 ): Omit<ParentChildEdge, "createdAt"> {
     return {
         uid: uid(),
@@ -475,8 +877,10 @@ function buildParentChildEdge(
         fromUid: parentUid,
         toUid: childUid,
         parentRole: role,
+        unionUid,
         nature,
-        certainty: "high",
+        certainty,
+        gedcomAssumptions,
     };
 }
 
@@ -492,7 +896,17 @@ function buildParentChildEdge(
  * - The DocSlice to provide the UI with its expected data format.
  * - expand.ts, DTreeView, PersonDetailPanel, etc. (no changes needed there).
  */
-export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
+export function gschemaToDocument(
+    graph: GSchemaGraph,
+    targetVersion: Extract<GedExportVersion, "5.5.1"> | "7.0.x" = "7.0.x"
+): GeneaDocument & { xrefToUid: Record<string, string>; uidToXref: Record<string, string> } {
+    const exportData = graph.toData();
+    const repair = ensureParentChildUnionLinks(exportData);
+    if (repair.repairedEdges > 0) {
+        // Keep export deterministic even for legacy in-memory graphs.
+        graph = GSchemaGraph.fromData(exportData, graph.getJournal());
+    }
+
     const persons: Record<string, Person> = {};
     const families: Record<string, Family> = {};
     const sources: Record<string, SourceRecord> = {};
@@ -532,8 +946,29 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
     }
 
     function getPlaceString(nodeUid: string, predicate: string): string | undefined {
-        const v = getValue<GeoRef>(nodeUid, predicate);
-        return typeof v === "string" ? v : v?.placeRaw;
+        const v = getValue<GeoRef | string>(nodeUid, predicate);
+        return extractPlaceRaw(v);
+    }
+
+    function sourceRefsFromClaim(claim: GClaim | null | undefined): SourceRef[] {
+        if (!claim?.citations || claim.citations.length === 0) return [];
+        const refs: SourceRef[] = [];
+        const seen = new Set<string>();
+        for (const citation of claim.citations) {
+            const sourceNode = graph.node(citation.sourceUid);
+            if (!sourceNode || sourceNode.type !== "Source") continue;
+            const id = xrefOf(citation.sourceUid, "S");
+            const key = `${id}:${citation.page ?? ""}:${citation.transcription ?? ""}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            refs.push({
+                id,
+                page: citation.page,
+                text: citation.transcription,
+                quality: confidenceToQuay(citation.confidence),
+            });
+        }
+        return refs;
     }
 
     // ── Sources ──────────────────────────────
@@ -568,17 +1003,54 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
         const p = node as PersonNode;
         const xref = xrefOf(p.uid, "I");
 
-        const name = getStringValue(p.uid, PersonPredicates.NAME_FULL) ?? "";
-        const surname = getStringValue(p.uid, PersonPredicates.NAME_SURNAME);
+        const given = getStringValue(p.uid, PersonPredicates.NAME_GIVEN)?.trim();
+        const surnameFromClaim = getStringValue(p.uid, PersonPredicates.NAME_SURNAME)?.trim();
+        const full = getStringValue(p.uid, PersonPredicates.NAME_FULL)?.trim();
+        const extPaternal = getStringValue(p.uid, PersonPredicates.EXT_SURNAME_PATERNAL)?.trim();
+        const extMaternal = getStringValue(p.uid, PersonPredicates.EXT_SURNAME_MATERNAL)?.trim();
+        const extOrder = getStringValue(p.uid, PersonPredicates.EXT_SURNAME_ORDER)?.trim() as Person["surnameOrder"] | undefined;
+        const parsedNames = safeJsonParse<Person["names"]>(getStringValue(p.uid, PersonPredicates.EXT_NAMES_FULL));
+        const eventProjection = safeJsonParse<GeneaEvent[]>(getStringValue(p.uid, PersonPredicates.EXT_EVENTS_FULL));
+        const noteRefsProjection = safeJsonParse<string[]>(getStringValue(p.uid, PersonPredicates.EXT_NOTES_REFS));
+        const inlineNotesProjection = safeJsonParse<string[]>(getStringValue(p.uid, PersonPredicates.EXT_NOTES_RAWTAGS));
+
+        const inferred = inferCanonicalSurnameFields({
+            rawSurname: surnameFromClaim,
+            preferredOrder: "paternal_first"
+        });
+        const canonical = normalizePersonSurnames({
+            surname: surnameFromClaim,
+            surnamePaternal: extPaternal || inferred.surnamePaternal,
+            surnameMaternal: extMaternal || inferred.surnameMaternal,
+            surnameOrder: extOrder || inferred.surnameOrder
+        });
+        const synthesized = given ? [given, canonical.surname].filter(Boolean).join(" ").trim() : undefined;
+        const fullDisplay = normalizeDisplayName(full);
+
+        // UI expects `person.name` to be ONLY the given name(s).
+        const name = normalizeDisplayName(given) || fullDisplay || "(Sin nombre)";
         const lifeStatus: Person["lifeStatus"] = p.isLiving ? "alive" : "deceased";
 
         // Build events array from claims
-        const events = buildPersonEventsFromClaims(p.uid, graph);
+        const events = eventProjection || buildPersonEventsFromClaims(p.uid, graph, sourceRefsFromClaim);
+        const names = (parsedNames && parsedNames.length > 0)
+            ? parsedNames
+            : [{
+                value: synthesized || fullDisplay || name,
+                given: given || undefined,
+                surname: canonical.surname || undefined,
+                type: "primary" as const,
+                primary: true
+            }];
 
         persons[xref] = {
             id: xref,
             name,
-            surname,
+            surname: canonical.surname,
+            surnamePaternal: canonical.surnamePaternal,
+            surnameMaternal: canonical.surnameMaternal,
+            surnameOrder: canonical.surnameOrder,
+            names,
             sex: (p.sex as Person["sex"]) ?? "U",
             lifeStatus,
             isPlaceholder: p.isPlaceholder,
@@ -592,7 +1064,28 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
             fams: [],   // filled when processing unions
             mediaRefs: [],
             sourceRefs: [],
+            noteRefs: noteRefsProjection || [],
+            rawTags: inlineNotesProjection && inlineNotesProjection.length > 0 ? { NOTE: inlineNotesProjection } : undefined,
         };
+
+        const conflictMarkers = collectNonPreferredClaimMarkers(graph, p.uid);
+        if (conflictMarkers.length > 0) {
+            const rawTags = persons[xref].rawTags ?? {};
+            if (targetVersion === "5.5.1") {
+                const notes = rawTags.NOTE ?? [];
+                for (const marker of conflictMarkers) {
+                    notes.push(`_GSK_CONFLICT: ${marker}`);
+                }
+                rawTags.NOTE = notes;
+            } else {
+                const alts = rawTags._GSK_ALT ?? [];
+                for (const marker of conflictMarkers) {
+                    alts.push(marker);
+                }
+                rawTags._GSK_ALT = alts;
+            }
+            persons[xref].rawTags = rawTags;
+        }
     }
 
     // ── Unions → Families ────────────────────
@@ -600,8 +1093,13 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
         const u = node as UnionNode;
         const xref = xrefOf(u.uid, "F");
         const members = graph.getMembers(u.uid);
-        const husband = members.find(m => m.edge.role === "HUSB");
-        const wife = members.find(m => m.edge.role === "WIFE");
+        const husband = members.find(m => m.edge.role === "HUSB")
+            || members.find(m => m.edge.role === "PART" && (m.person as PersonNode).sex === "M")
+            || (members.some(m => m.edge.role === "WIFE") ? undefined : members.find(m => m.edge.role === "PART"));
+
+        const wife = members.find(m => m.edge.role === "WIFE")
+            || members.find(m => m.edge.role === "PART" && (m.person as PersonNode).sex === "F" && m !== husband)
+            || (husband && members.length > 1 ? members.find(m => m !== husband) : undefined);
 
         const husbandXref = husband ? xrefOf(husband.person.uid, "I") : undefined;
         const wifeXref = wife ? xrefOf(wife.person.uid, "I") : undefined;
@@ -609,9 +1107,13 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
         // Collect children via ParentChild edges into the union
         // Children of this union = persons with ParentChild edges from both parents (or any parent) pointing to the same set
         const childrenXrefs = collectChildrenForUnion(u.uid, graph, xrefOf);
+        const familyChildLinks = collectFamcLinksForUnion(u.uid, graph, xrefOf);
 
         // Build family marriage/divorce events from claims
-        const events = buildUnionEventsFromClaims(u.uid, graph);
+        const projectedEvents = safeJsonParse<GeneaEvent[]>(getStringValue(u.uid, UnionPredicates.EXT_EVENTS_FULL));
+        const projectedNoteRefs = safeJsonParse<string[]>(getStringValue(u.uid, UnionPredicates.EXT_NOTES_REFS));
+        const projectedInlineNotes = safeJsonParse<string[]>(getStringValue(u.uid, UnionPredicates.EXT_NOTES_RAWTAGS));
+        const events = projectedEvents || buildUnionEventsFromClaims(u.uid, graph, sourceRefsFromClaim);
 
         families[xref] = {
             id: xref,
@@ -619,6 +1121,8 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
             wifeId: wifeXref,
             childrenIds: childrenXrefs,
             events,
+            noteRefs: projectedNoteRefs || [],
+            rawTags: projectedInlineNotes && projectedInlineNotes.length > 0 ? { NOTE: projectedInlineNotes } : undefined
         };
 
         // Back-link: update fams on person records
@@ -633,6 +1137,61 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
                 persons[childXref].famc.push(xref);
             }
         }
+        for (const link of familyChildLinks) {
+            const person = persons[link.personId];
+            if (!person) continue;
+            if (!person.famc.includes(link.familyId)) {
+                person.famc.push(link.familyId);
+            }
+            if (!person.famcLinks) person.famcLinks = [];
+            const existing = person.famcLinks.find((entry) => entry.familyId === link.familyId);
+            if (existing) {
+                existing.pedi = link.pedi;
+                existing.quality = link.quality;
+                existing.reference = link.reference;
+            } else {
+                person.famcLinks.push({
+                    familyId: link.familyId,
+                    pedi: link.pedi,
+                    quality: link.quality,
+                    reference: link.reference,
+                });
+            }
+        }
+    }
+
+    // Legacy fallback: refine surname split using parent evidence when explicit canonical fields are missing.
+    for (const person of Object.values(persons)) {
+        if (person.surnamePaternal || person.surnameMaternal) continue;
+        const firstFamc = person.famc[0];
+        const family = firstFamc ? families[firstFamc] : undefined;
+        const fatherSurname = family?.husbandId ? persons[family.husbandId]?.surname : undefined;
+        const motherSurname = family?.wifeId ? persons[family.wifeId]?.surname : undefined;
+        const inferred = inferCanonicalSurnameFields({
+            rawSurname: person.surname,
+            fatherSurname,
+            motherSurname,
+            preferredOrder: "paternal_first"
+        });
+        person.surnamePaternal = inferred.surnamePaternal;
+        person.surnameMaternal = inferred.surnameMaternal;
+        person.surnameOrder = inferred.surnameOrder || person.surnameOrder;
+        person.surname = inferred.surname || person.surname;
+        if (person.names && person.names.length > 0) {
+            const primary = person.names.find((entry) => entry.primary) || person.names[0];
+            if (primary) {
+                primary.given = primary.given || person.name;
+                primary.surname = primary.surname || person.surname;
+                primary.value = primary.value || (person.surname ? `${person.name} /${person.surname}/` : person.name);
+            }
+        }
+    }
+
+    const finalXrefToUid: Record<string, string> = {};
+    const finalUidToXref: Record<string, string> = {};
+    for (const [uid, xref] of uidToXref.entries()) {
+        finalXrefToUid[xref] = uid;
+        finalUidToXref[uid] = xref;
     }
 
     return {
@@ -642,17 +1201,23 @@ export function gschemaToDocument(graph: GSchemaGraph): GeneaDocument {
         notes: Object.keys(notes).length > 0 ? notes : undefined,
         media,
         metadata: {
-            sourceFormat: "GSZ",
-            gedVersion: "0.4.0-gschema",
+            sourceFormat: "GSK",
+            gedVersion: targetVersion,
         },
-    };
+        xrefToUid: finalXrefToUid,
+        uidToXref: finalUidToXref,
+    } as GeneaDocument & { xrefToUid: Record<string, string>; uidToXref: Record<string, string> };
 }
 
 // ─────────────────────────────────────────────
 // Helper: Build Person events from claims
 // ─────────────────────────────────────────────
 
-function buildPersonEventsFromClaims(nodeUid: string, graph: GSchemaGraph): GeneaEvent[] {
+function buildPersonEventsFromClaims(
+    nodeUid: string,
+    graph: GSchemaGraph,
+    sourceRefsFromClaim: (claim: GClaim | null | undefined) => SourceRef[]
+): GeneaEvent[] {
     const events: GeneaEvent[] = [];
 
     const eventMap: Array<{ type: GeneaEvent["type"]; datePred: string; placePred: string }> = [
@@ -668,14 +1233,16 @@ function buildPersonEventsFromClaims(nodeUid: string, graph: GSchemaGraph): Gene
         const dateClaim = graph.getPreferred(nodeUid, datePred);
         const placeClaim = graph.getPreferred(nodeUid, placePred);
         if (dateClaim || placeClaim) {
+            const mergedRefs = [...sourceRefsFromClaim(dateClaim), ...sourceRefsFromClaim(placeClaim)];
+            const dateValue = (dateClaim?.value as ParsedDate | null) ?? null;
             events.push({
                 id: uid(),
                 type,
-                date: (dateClaim?.value as ParsedDate | null)?.raw,
-                place: (placeClaim?.value as GeoRef | null)?.placeRaw,
-                sourceRefs: [],
+                date: dateValue?.raw,
+                place: extractPlaceRaw(placeClaim?.value),
+                sourceRefs: mergedRefs,
                 mediaRefs: [],
-                notesInline: [],
+                notesInline: buildInformalMirrorNotes(dateValue),
                 noteRefs: [],
             });
         }
@@ -688,28 +1255,42 @@ function buildPersonEventsFromClaims(nodeUid: string, graph: GSchemaGraph): Gene
 // Helper: Build Union events from claims
 // ─────────────────────────────────────────────
 
-function buildUnionEventsFromClaims(nodeUid: string, graph: GSchemaGraph): GeneaEvent[] {
+function buildUnionEventsFromClaims(
+    nodeUid: string,
+    graph: GSchemaGraph,
+    sourceRefsFromClaim: (claim: GClaim | null | undefined) => SourceRef[]
+): GeneaEvent[] {
     const events: GeneaEvent[] = [];
 
     const marriageDateClaim = graph.getPreferred(nodeUid, UnionPredicates.EVENT_MARRIAGE_DATE);
     const marriagePlaceClaim = graph.getPreferred(nodeUid, UnionPredicates.EVENT_MARRIAGE_PLACE);
     if (marriageDateClaim || marriagePlaceClaim) {
+        const mergedRefs = [...sourceRefsFromClaim(marriageDateClaim), ...sourceRefsFromClaim(marriagePlaceClaim)];
+        const marriageDateValue = (marriageDateClaim?.value as ParsedDate | null) ?? null;
         events.push({
             id: uid(), type: "MARR",
-            date: (marriageDateClaim?.value as ParsedDate | null)?.raw,
-            place: (marriagePlaceClaim?.value as string | null) ?? undefined,
-            sourceRefs: [], mediaRefs: [], notesInline: [], noteRefs: [],
+            date: marriageDateValue?.raw,
+            place: extractPlaceRaw(marriagePlaceClaim?.value),
+            sourceRefs: mergedRefs,
+            mediaRefs: [],
+            notesInline: buildInformalMirrorNotes(marriageDateValue),
+            noteRefs: [],
         });
     }
 
     const divorceDateClaim = graph.getPreferred(nodeUid, UnionPredicates.EVENT_DIVORCE_DATE);
     const divorcePlaceClaim = graph.getPreferred(nodeUid, UnionPredicates.EVENT_DIVORCE_PLACE);
     if (divorceDateClaim || divorcePlaceClaim) {
+        const mergedRefs = [...sourceRefsFromClaim(divorceDateClaim), ...sourceRefsFromClaim(divorcePlaceClaim)];
+        const divorceDateValue = (divorceDateClaim?.value as ParsedDate | null) ?? null;
         events.push({
             id: uid(), type: "DIV",
-            date: (divorceDateClaim?.value as ParsedDate | null)?.raw,
-            place: (divorcePlaceClaim?.value as string | null) ?? undefined,
-            sourceRefs: [], mediaRefs: [], notesInline: [], noteRefs: [],
+            date: divorceDateValue?.raw,
+            place: extractPlaceRaw(divorcePlaceClaim?.value),
+            sourceRefs: mergedRefs,
+            mediaRefs: [],
+            notesInline: buildInformalMirrorNotes(divorceDateValue),
+            noteRefs: [],
         });
     }
 
@@ -725,27 +1306,108 @@ function collectChildrenForUnion(
     graph: GSchemaGraph,
     xrefOf: (uid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
 ): string[] {
+    return collectChildrenForUnionStrict(unionUid, graph, xrefOf);
+}
+
+function collectFamcLinksForUnion(
+    unionUid: string,
+    graph: GSchemaGraph,
+    xrefOf: (uid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
+): Array<{ personId: string; familyId: string; pedi: "BIRTH" | "ADOPTED" | "FOSTER" | "SEALING" | "UNKNOWN"; quality: "0" | "1" | "2" | "3"; reference?: string }> {
+    const familyId = xrefOf(unionUid, "F");
+    const byChild = new Map<string, ParentChildEdge[]>();
+    const parentChildEdges = graph.allEdges().filter((edge): edge is ParentChildEdge => edge.type === "ParentChild");
+
+    for (const edge of parentChildEdges) {
+        if (edge.unionUid !== unionUid) continue;
+        if (!byChild.has(edge.toUid)) byChild.set(edge.toUid, []);
+        byChild.get(edge.toUid)!.push(edge);
+    }
+
+    const links: Array<{ personId: string; familyId: string; pedi: "BIRTH" | "ADOPTED" | "FOSTER" | "SEALING" | "UNKNOWN"; quality: "0" | "1" | "2" | "3"; reference?: string }> = [];
+    for (const [childUid, edges] of byChild.entries()) {
+        const sorted = [...edges].sort((a, b) => {
+            const roleRank = (role: ParentChildEdge["parentRole"]) =>
+                role === "father" ? 0 : role === "mother" ? 1 : 2;
+            const roleDiff = roleRank(a.parentRole) - roleRank(b.parentRole);
+            if (roleDiff !== 0) return roleDiff;
+            return a.uid.localeCompare(b.uid);
+        });
+        const selected = sorted[0];
+        links.push({
+            personId: xrefOf(childUid, "I"),
+            familyId,
+            pedi: natureToPedi(selected.nature),
+            quality: certaintyToQuay(selected.certainty),
+            reference: selected.nature === "STE" ? "gsk:nature:STE" : undefined,
+        });
+    }
+    return links;
+}
+
+function collectChildrenForUnionStrict(
+    unionUid: string,
+    graph: GSchemaGraph,
+    xrefOf: (uid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
+): string[] {
     const members = graph.getMembers(unionUid);
     if (members.length === 0) return [];
 
-    // Collect all children of each parent
-    const parentUids = members.map(m => m.person.uid);
-    if (parentUids.length === 0) return [];
+    const parentUidSet = new Set(members.map((m) => m.person.uid));
+    const husbandUid = members.find((m) => m.edge.role === "HUSB")?.person.uid;
+    const wifeUid = members.find((m) => m.edge.role === "WIFE")?.person.uid;
+    const parentChildEdges = graph.allEdges().filter((edge): edge is ParentChildEdge => edge.type === "ParentChild");
 
-    // Children = persons that have a ParentChild edge from ANY member of this union
-    const childUidSets = parentUids.map(parentUid =>
-        new Set(graph.getChildren(parentUid).map(c => c.child.uid))
-    );
-
-    // Use union of all children sets (any parent in this union → child is associated)
-    const allChildUids = new Set<string>();
-    for (const childSet of childUidSets) {
-        for (const childUid of childSet) allChildUids.add(childUid);
+    const explicitChildren = new Set<string>();
+    for (const edge of parentChildEdges) {
+        if (edge.unionUid !== unionUid) continue;
+        if (graph.node(edge.toUid)?.type !== "Person") continue;
+        explicitChildren.add(edge.toUid);
+    }
+    if (explicitChildren.size > 0) {
+        return [...explicitChildren].map((uid) => xrefOf(uid, "I"));
     }
 
-    return [...allChildUids]
-        .filter(uid => graph.node(uid)?.type === "Person")
-        .map(uid => xrefOf(uid, "I"));
+    const candidateChildren = new Set<string>();
+    for (const edge of parentChildEdges) {
+        if (!parentUidSet.has(edge.fromUid)) continue;
+        if (graph.node(edge.toUid)?.type !== "Person") continue;
+        candidateChildren.add(edge.toUid);
+    }
+
+    const accepted = new Set<string>();
+    for (const childUid of candidateChildren) {
+        const edgesToChild = parentChildEdges.filter((edge) => edge.toUid === childUid);
+        const memberEdgesToChild = edgesToChild.filter((edge) => parentUidSet.has(edge.fromUid));
+        if (memberEdgesToChild.length === 0) continue;
+
+        const externalFather = edgesToChild.some(
+            (edge) => edge.parentRole === "father" && !parentUidSet.has(edge.fromUid)
+        );
+        if (externalFather) continue;
+
+        const externalMother = edgesToChild.some(
+            (edge) => edge.parentRole === "mother" && !parentUidSet.has(edge.fromUid)
+        );
+        if (externalMother) continue;
+
+        if (husbandUid) {
+            const conflictingFather = edgesToChild.some(
+                (edge) => edge.parentRole === "father" && edge.fromUid !== husbandUid
+            );
+            if (conflictingFather) continue;
+        }
+        if (wifeUid) {
+            const conflictingMother = edgesToChild.some(
+                (edge) => edge.parentRole === "mother" && edge.fromUid !== wifeUid
+            );
+            if (conflictingMother) continue;
+        }
+
+        accepted.add(childUid);
+    }
+
+    return [...accepted].map((uid) => xrefOf(uid, "I"));
 }
 
 // ─────────────────────────────────────────────

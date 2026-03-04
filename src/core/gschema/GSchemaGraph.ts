@@ -1,5 +1,5 @@
 /**
- * GSchema 0.1.x — GSchemaGraph Class
+ * GSchema 0.3.x — GSchemaGraph Class
  *
  * The in-memory graph container. All mutations are:
  * 1. Applied to the in-memory indexes immediately (for O(1) reads).
@@ -29,6 +29,7 @@ import {
     type MemberEdge,
     type GskPackageManifest,
 } from "./types";
+import { normalizeClaims } from "./ClaimNormalization";
 import { validateGSchemaGraph, type ValidationResult } from "./validation";
 
 // ─────────────────────────────────────────────
@@ -94,6 +95,7 @@ export class GSchemaGraph {
     private _claims: Map<string, Map<string, GClaim[]>> = new Map();
     private _quarantine: QuarantineOperation[] = [];
     private _journal: GSchemaOperation[] = [];
+    private _nextOpSeq = 0;
     private _adjacency: AdjacencyIndex = createAdjacencyIndex();
     private _graphId: string;
     private _schemaVersion: string;
@@ -102,7 +104,7 @@ export class GSchemaGraph {
 
     private constructor() {
         this._graphId = uuidv4();
-        this._schemaVersion = "0.1.0";
+        this._schemaVersion = "0.5.0";
         this._createdAt = nowIso();
         this._updatedAt = nowIso();
     }
@@ -117,7 +119,7 @@ export class GSchemaGraph {
      * Reconstruct a GSchemaGraph from its serialized data (e.g., from a .gsk file).
      * Replays operations to rebuild indexes.
      */
-    static fromData(data: GSchemaGraphData): GSchemaGraph {
+    static fromData(data: GSchemaGraphData, journalOps: readonly GSchemaOperation[] = []): GSchemaGraph {
         const g = new GSchemaGraph();
         g._graphId = data.graphId;
         g._schemaVersion = data.schemaVersion;
@@ -139,13 +141,50 @@ export class GSchemaGraph {
         for (const [nodeUid, byPred] of Object.entries(data.claims)) {
             const nodeMap = new Map<string, GClaim[]>();
             for (const [pred, claims] of Object.entries(byPred)) {
-                nodeMap.set(pred, [...claims]);
+                const normalizedClaims = claims.map((claim) => {
+                    const legacy = claim as GClaim & { status?: "raw" | "reviewed" | "verified" | "disputed" | "retracted" };
+                    if (!legacy.quality) {
+                        legacy.quality = legacy.status && legacy.status !== "retracted" ? legacy.status : "raw";
+                    }
+                    if (!legacy.lifecycle) {
+                        legacy.lifecycle = legacy.status === "retracted" ? "retracted" : "active";
+                    }
+                    if (legacy.lifecycle === "retracted") {
+                        legacy.isPreferred = false;
+                    }
+                    return legacy;
+                });
+                normalizeClaims(normalizedClaims);
+                nodeMap.set(pred, normalizedClaims);
             }
             g._claims.set(nodeUid, nodeMap);
         }
 
-        g._quarantine = [...data.quarantine];
+        g._quarantine = data.quarantine.map((entry) => {
+            const legacy = entry as QuarantineOperation & { rawTag?: string; rawValue?: string };
+            if (legacy.ast) return legacy;
+            const tag = legacy.rawTag ?? "_UNKNOWN";
+            return {
+                ...legacy,
+                ast: {
+                    level: 1,
+                    tag,
+                    value: legacy.rawValue,
+                    children: [],
+                    sourceLines: legacy.rawValue ? [`1 ${tag} ${legacy.rawValue}`] : [`1 ${tag}`],
+                }
+            };
+        });
+        g._journal = [...journalOps];
+        const maxOpSeq = g._journal.reduce((max, op) => Math.max(max, op.opSeq), -1);
+        g._nextOpSeq = maxOpSeq + 1;
         return g;
+    }
+
+    private _recordOperation<T extends GSchemaOperation>(opWithoutSeq: Omit<T, "opSeq">): T {
+        const op = { ...opWithoutSeq, opSeq: this._nextOpSeq++ } as T;
+        this._journal.push(op);
+        return op;
     }
 
     // ── Read Accessors ────────────────────────
@@ -195,7 +234,7 @@ export class GSchemaGraph {
     /** Returns the preferred claim for a node and predicate, or null. */
     getPreferred(nodeUid: string, predicate: string): GClaim | null {
         return this.getClaims(nodeUid, predicate).find(
-            c => c.isPreferred && c.status !== "retracted"
+            c => c.isPreferred && c.lifecycle !== "retracted"
         ) ?? null;
     }
 
@@ -260,10 +299,9 @@ export class GSchemaGraph {
         this._nodes.set(node.uid, node);
         this._updatedAt = nowIso();
 
-        const op: AddNodeOperation = {
+        this._recordOperation<AddNodeOperation>({
             opId: uuidv4(), type: "ADD_NODE", timestamp: nowSec(), actorId, node
-        };
-        this._journal.push(op);
+        });
         return node;
     }
 
@@ -283,10 +321,9 @@ export class GSchemaGraph {
         indexEdge(this._adjacency, edge);
         this._updatedAt = nowIso();
 
-        const op: AddEdgeOperation = {
+        this._recordOperation<AddEdgeOperation>({
             opId: uuidv4(), type: "ADD_EDGE", timestamp: nowSec(), actorId, edge
-        };
-        this._journal.push(op);
+        });
         return edge;
     }
 
@@ -300,6 +337,13 @@ export class GSchemaGraph {
      * it also clears the preferred flag from other claims for the same predicate.
      */
     addClaim(claim: GClaim, actorId = "system"): GClaim {
+        claim.quality = claim.quality ?? "raw";
+        claim.lifecycle = claim.lifecycle ?? "active";
+        claim.evidenceGate = claim.evidenceGate ?? "unassessed";
+        if (claim.lifecycle === "retracted") {
+            claim.isPreferred = false;
+        }
+
         if (!this._claims.has(claim.nodeUid)) {
             this._claims.set(claim.nodeUid, new Map());
         }
@@ -315,12 +359,12 @@ export class GSchemaGraph {
         }
 
         existing.push(claim);
+        normalizeClaims(existing);
         this._updatedAt = nowIso();
 
-        const op: AddClaimOperation = {
+        this._recordOperation<AddClaimOperation>({
             opId: uuidv4(), type: "ADD_CLAIM", timestamp: nowSec(), actorId, claim
-        };
-        this._journal.push(op);
+        });
         return claim;
     }
 
@@ -335,13 +379,13 @@ export class GSchemaGraph {
             if (c.uid === claimUid) found = true;
         }
         if (!found) return false;
+        normalizeClaims(claims);
 
         this._updatedAt = nowIso();
-        const op: SetPrefClaimOperation = {
+        this._recordOperation<SetPrefClaimOperation>({
             opId: uuidv4(), type: "SET_PREF_CLAIM", timestamp: nowSec(), actorId,
             nodeUid, predicate, claimUid
-        };
-        this._journal.push(op);
+        });
         return true;
     }
 
@@ -351,14 +395,14 @@ export class GSchemaGraph {
             for (const claims of nodeMap.values()) {
                 const claim = claims.find(c => c.uid === claimUid);
                 if (claim) {
-                    claim.status = "retracted";
+                    claim.lifecycle = "retracted";
                     claim.isPreferred = false;
+                    normalizeClaims(claims);
                     this._updatedAt = nowIso();
-                    const op: RetractClaimOperation = {
+                    this._recordOperation<RetractClaimOperation>({
                         opId: uuidv4(), type: "RETRACT_CLAIM", timestamp: nowSec(), actorId,
                         claimUid, reason
-                    };
-                    this._journal.push(op);
+                    });
                     return true;
                 }
             }
@@ -373,11 +417,10 @@ export class GSchemaGraph {
         (node as { deleted?: boolean }).deleted = true;
         this._updatedAt = nowIso();
 
-        const op: SoftDeleteNodeOperation = {
+        this._recordOperation<SoftDeleteNodeOperation>({
             opId: uuidv4(), type: "SOFT_DELETE_NODE", timestamp: nowSec(), actorId,
             nodeUid, reason
-        };
-        this._journal.push(op);
+        });
         return true;
     }
 
@@ -389,24 +432,20 @@ export class GSchemaGraph {
         deIndexEdge(this._adjacency, edge);
         this._updatedAt = nowIso();
 
-        const op: SoftDeleteEdgeOperation = {
+        this._recordOperation<SoftDeleteEdgeOperation>({
             opId: uuidv4(), type: "SOFT_DELETE_EDGE", timestamp: nowSec(), actorId,
             edgeUid, reason
-        };
-        this._journal.push(op);
+        });
         return true;
     }
 
-    /** Records a quarantine entry for an unrecognized tag or malformed data. */
-    quarantine(entry: Omit<QuarantineOperation, "opId" | "type" | "timestamp" | "actorId">, actorId = "system"): void {
-        const op: QuarantineOperation = {
+    quarantine(entry: Omit<QuarantineOperation, "opId" | "type" | "timestamp" | "actorId" | "opSeq">, actorId = "system"): void {
+        const op = this._recordOperation<QuarantineOperation>({
             opId: uuidv4(), type: "QUARANTINE", timestamp: nowSec(), actorId,
             ...entry
-        };
+        });
         this._quarantine.push(op);
-        this._journal.push(op);
     }
-
     // ── Journal & Serialization ───────────────
 
     getJournal(): readonly GSchemaOperation[] {
@@ -428,6 +467,7 @@ export class GSchemaGraph {
         for (const [nodeUid, nodeMap] of this._claims.entries()) {
             claims[nodeUid] = {};
             for (const [pred, arr] of nodeMap.entries()) {
+                normalizeClaims(arr);
                 claims[nodeUid][pred] = [...arr];
             }
         }
@@ -465,6 +505,8 @@ export class GSchemaGraph {
             graphId: this._graphId,
             createdAt: this._createdAt,
             updatedAt: this._updatedAt,
+            graphDerivedFromOpSeq: this._nextOpSeq === 0 ? -1 : this._nextOpSeq - 1,
+            journalHeadOpSeq: this._nextOpSeq === 0 ? -1 : this._nextOpSeq - 1,
             stats: {
                 personCount,
                 unionCount,
@@ -473,6 +515,11 @@ export class GSchemaGraph {
                 mediaCount,
             },
             mediaFiles,
+            security: {
+                mode: "none",
+                signature: { mode: "none" },
+                encryption: { mode: "none" },
+            },
         };
     }
 
@@ -487,4 +534,38 @@ export class GSchemaGraph {
     get nodeCount(): number { return this.allNodes().length; }
     get edgeCount(): number { return this.allEdges().length; }
     get quarantineCount(): number { return this._quarantine.length; }
+
+    /** 
+     * Deep equality check for tests. Returns true if both graphs have identical data.
+     * Does NOT compare metadata like timestamps, journal operations, or graphId.
+     * Only compares nodes, edges, claims, and quarantine entries.
+     * @internal
+     */
+    _equals(other: GSchemaGraph): boolean {
+        const d1 = this.toData();
+        const d2 = other.toData();
+
+        // Helper to stringify and compare objects deterministically
+        const normalize = (obj: any) => JSON.stringify(obj, Object.keys(obj).sort());
+
+        if (Object.keys(d1.nodes).length !== Object.keys(d2.nodes).length) return false;
+        for (const [uid, node] of Object.entries(d1.nodes)) {
+            if (normalize(node) !== normalize(d2.nodes[uid])) return false;
+        }
+
+        if (Object.keys(d1.edges).length !== Object.keys(d2.edges).length) return false;
+        for (const [uid, edge] of Object.entries(d1.edges)) {
+            if (normalize(edge) !== normalize(d2.edges[uid])) return false;
+        }
+
+        const claims1 = normalize(d1.claims);
+        const claims2 = normalize(d2.claims);
+        if (claims1 !== claims2) return false;
+
+        const quarantine1 = normalize(d1.quarantine);
+        const quarantine2 = normalize(d2.quarantine);
+        if (quarantine1 !== quarantine2) return false;
+
+        return true;
+    }
 }

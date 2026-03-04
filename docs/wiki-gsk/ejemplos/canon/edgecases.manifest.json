@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "0.4.0",
+  "graphId": "graph-edgecases-0001",
+  "createdAt": "2026-03-03T12:00:00.000Z",
+  "updatedAt": "2026-03-03T12:01:00.000Z",
+  "graphDerivedFromOpSeq": 4,
+  "journalHeadOpSeq": 4,
+  "stats": {
+    "personCount": 1,
+    "unionCount": 0,
+    "edgeCount": 0,
+    "claimCount": 2,
+    "mediaCount": 0
+  },
+  "mediaFiles": [],
+  "security": {
+    "mode": "none",
+    "signature": {
+      "mode": "none"
+    },
+    "encryption": {
+      "mode": "none"
+    }
+  },
+  "graphHash": "sha256:57d88d6f0d680140652aa3027d1b523c32f70ca31bd9d7ad767976bca2a3be02",
+  "journalHash": "sha256:746d9aae187202449e6cc20709867479160c9835dc8226bb0bf239ba57ced1bd",
+  "encryption": "none",
+  "signature": "none",
+  "mediaEntries": [],
+  "integrity": {
+    "algorithm": "sha256",
+    "packageHash": "sha256:4c2421c28f1748b46395931d5adb462edefcb82972f48fa942a496c9cd393da2",
+    "entries": [
+      {
+        "path": "graph.json",
+        "sha256": "sha256:57d88d6f0d680140652aa3027d1b523c32f70ca31bd9d7ad767976bca2a3be02",
+        "bytes": 1512,
+        "role": "graph",
+        "canonicalized": true
+      },
+      {
+        "path": "journal.jsonl",
+        "sha256": "sha256:746d9aae187202449e6cc20709867479160c9835dc8226bb0bf239ba57ced1bd",
+        "bytes": 1802,
+        "role": "journal",
+        "canonicalized": true
+      },
+      {
+        "path": "manifest.json",
+        "sha256": "sha256:a48ac9fc937a5731607bbcb5afd620bc6e9f0554d210ce702bc1eacb6d96c41c",
+        "bytes": 1139,
+        "role": "manifest",
+        "canonicalized": true
+      },
+      {
+        "path": "quarantine.json",
+        "sha256": "sha256:11ef3d6bbee2b6e2725980ae3306d8f23f4240246392faed3bdb418c10b9ef1d",
+        "bytes": 444,
+        "role": "quarantine",
+        "canonicalized": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "0.4.0",
+  "graphId": "graph-tipico-0001",
+  "createdAt": "2026-03-03T11:00:00.000Z",
+  "updatedAt": "2026-03-03T11:00:40.000Z",
+  "nodes": {
+    "p-juan": {
+      "uid": "p-juan",
+      "type": "Person",
+      "xref": "@I1@",
+      "sex": "M",
+      "isLiving": false,
+      "createdAt": "2026-03-03T11:00:00.000Z"
+    },
+    "p-maria": {
+      "uid": "p-maria",
+      "type": "Person",
+      "xref": "@I2@",
+      "sex": "F",
+      "isLiving": false,
+      "createdAt": "2026-03-03T11:00:02.000Z"
+    },
+    "p-pedro": {
+      "uid": "p-pedro",
+      "type": "Person",
+      "xref": "@I3@",
+      "sex": "M",
+      "isLiving": true,
+      "createdAt": "2026-03-03T11:00:04.000Z"
+    },
+    "u-1": {
+      "uid": "u-1",
+      "type": "Union",
+      "unionType": "MARR",
+      "createdAt": "2026-03-03T11:00:06.000Z"
+    }
+  },
+  "edges": {
+    "e-member-juan": {
+      "uid": "e-member-juan",
+      "type": "Member",
+      "fromUid": "p-juan",
+      "toUid": "u-1",
+      "role": "HUSB",
+      "createdAt": "2026-03-03T11:00:10.000Z"
+    },
+    "e-member-maria": {
+      "uid": "e-member-maria",
+      "type": "Member",
+      "fromUid": "p-maria",
+      "toUid": "u-1",
+      "role": "WIFE",
+      "createdAt": "2026-03-03T11:00:11.000Z"
+    },
+    "e-pc-juan-pedro": {
+      "uid": "e-pc-juan-pedro",
+      "type": "ParentChild",
+      "fromUid": "p-juan",
+      "toUid": "p-pedro",
+      "parentRole": "father",
+      "unionUid": "u-1",
+      "nature": "BIO",
+      "certainty": "high",
+      "createdAt": "2026-03-03T11:00:12.000Z"
+    },
+    "e-pc-maria-pedro": {
+      "uid": "e-pc-maria-pedro",
+      "type": "ParentChild",
+      "fromUid": "p-maria",
+      "toUid": "p-pedro",
+      "parentRole": "mother",
+      "unionUid": "u-1",
+      "nature": "BIO",
+      "certainty": "high",
+      "createdAt": "2026-03-03T11:00:13.000Z"
+    }
+  },
+  "claims": {
+    "p-juan": {
+      "person.name.full": [
+        {
+          "uid": "c-tipico-juan-name",
+          "nodeUid": "p-juan",
+          "predicate": "person.name.full",
+          "value": "Juan Perez",
+          "provenance": {
+            "actorId": "importer:fixture",
+            "timestamp": 1772535601,
+            "method": "fixture:tipico"
+          },
+          "quality": "reviewed",
+          "lifecycle": "active",
+          "evidenceGate": "unassessed",
+          "isPreferred": true,
+          "createdAt": "2026-03-03T11:00:20.000Z"
+        }
+      ]
+    },
+    "p-maria": {
+      "person.name.full": [
+        {
+          "uid": "c-tipico-maria-name",
+          "nodeUid": "p-maria",
+          "predicate": "person.name.full",
+          "value": "Maria Lopez",
+          "provenance": {
+            "actorId": "importer:fixture",
+            "timestamp": 1772535602,
+            "method": "fixture:tipico"
+          },
+          "quality": "reviewed",
+          "lifecycle": "active",
+          "evidenceGate": "unassessed",
+          "isPreferred": true,
+          "createdAt": "2026-03-03T11:00:21.000Z"
+        }
+      ]
+    },
+    "p-pedro": {
+      "person.name.full": [
+        {
+          "uid": "c-tipico-pedro-name",
+          "nodeUid": "p-pedro",
+          "predicate": "person.name.full",
+          "value": "Pedro Perez Lopez",
+          "provenance": {
+            "actorId": "importer:fixture",
+            "timestamp": 1772535603,
+            "method": "fixture:tipico"
+          },
+          "quality": "raw",
+          "lifecycle": "active",
+          "evidenceGate": "unassessed",
+          "isPreferred": true,
+          "createdAt": "2026-03-03T11:00:22.000Z"
+        }
+      ]
+    }
+  },
+  "quarantine": []
+}

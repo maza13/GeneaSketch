@@ -61,7 +61,7 @@ export function toViewModel(graph: GeneGraph): GeneaDocument {
         families,
         media: {},
         metadata: {
-            sourceFormat: "GSZ",
+            sourceFormat: "GSK",
             gedVersion: "7.0.x",
             importProvenance: []
         }

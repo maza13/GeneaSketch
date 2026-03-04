@@ -6,7 +6,7 @@ import type {
   AiResolvedAction,
   AiResolutionV2
 } from "@/types/ai";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 
 type MentionRef = {
   tempId: string;
@@ -93,7 +93,7 @@ function buildCreatePersonAction(ref: MentionRef): AiResolvedAction {
 }
 
 function bestPersonIdForMention(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   context: AiInputContext,
   mention: MentionRef,
   hints?: { eventYear?: number; relationToAnchor?: "parent" | "child" | "spouse" | "sibling" }
@@ -296,7 +296,7 @@ export function heuristicExtractionFromText(text: string, context: AiInputContex
 }
 
 export function resolveExtractionToResolution(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   extraction: AiExtractionV4,
   context: AiInputContext,
   extractionConsistencyIssues: string[]
@@ -387,4 +387,5 @@ export function resolveExtractionToResolution(
     userMessage: extraction.userMessage || "Extraccion procesada por motor determinista local."
   };
 }
+
 

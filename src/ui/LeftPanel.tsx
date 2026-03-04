@@ -1,8 +1,8 @@
-import type { GeneaDocument, ViewConfig, VisualConfig } from "@/types/domain";
+import type { GraphDocument, ViewConfig, VisualConfig } from "@/types/domain";
 import { LayerPanel } from "./LayerPanel";
 
 type Props = {
-  document: GeneaDocument | null;
+  document: GraphDocument | null;
   viewConfig: ViewConfig | null;
   visualConfig: VisualConfig;
   sections?: ViewConfig["leftSections"];
@@ -180,3 +180,4 @@ export function LeftPanel({
     </aside>
   );
 }
+

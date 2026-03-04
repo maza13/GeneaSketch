@@ -593,7 +593,7 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
               <ContextAnchorHelp
                 targetId="general:estimator-version"
                 title="Lógica de Estimación Cronológica"
-                description="V2 utiliza un motor biomecánico que calcula intervalos de tiempo basados en la fertilidad y esperanza de vida histórica. Legacy usa una regla matemática fija de +/- 25 años por generación."
+                description="V2 utiliza un motor biomecánico que calcula intervalos de tiempo basados en la fertilidad y esperanza de vida histórica."
                 activeHelpTarget={activeHelpTarget}
                 onSetActiveHelp={setActiveHelpTarget}
                 className="gs-section-card-subtitle"
@@ -602,10 +602,9 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
               </ContextAnchorHelp>
               <select
                 value={draft.birthEstimatorVersion || "v2"}
-                onChange={(e) => setDraft(prev => ({ ...prev, birthEstimatorVersion: e.target.value as any }))}
+                onChange={() => setDraft(prev => ({ ...prev, birthEstimatorVersion: "v2" }))}
               >
                 <option value="v2">V2 (Fisiología Humana - Precisión Alta)</option>
-                <option value="legacy">Legacy (Regla Estadística Simple)</option>
               </select>
             </label>
           </SectionCard>

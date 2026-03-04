@@ -6,6 +6,7 @@ export type ShortcutActions = {
   goBack: () => void;
   goForward: () => void;
   fitToScreen: () => void;
+  centerFocus: () => void;
   openAiSettings: () => void;
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
@@ -85,6 +86,11 @@ export function createGlobalShortcutHandler(
     if (key === "f") {
       event.preventDefault();
       actionsRef.current.fitToScreen();
+      return;
+    }
+    if (key === " " || key === "spacebar") {
+      event.preventDefault();
+      actionsRef.current.centerFocus();
       return;
     }
     if (key === "[") {

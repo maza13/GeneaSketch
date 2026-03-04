@@ -77,8 +77,14 @@ export function expandGraph(document: GeneaDocument, config: ViewConfig): Expand
     finalVisiblePersons = new Set([...focusRoots, ...parents, ...spouses, ...children]);
   } else if (config.preset === "extended_family") {
     // 2 generations up + 2 generations down + Spouses of those in direct line
-    const ancestors2 = collectAncestorsForMultiple(indexes, focusRoots, 2);
-    const descendants2 = collectDescendantsForMultiple(indexes, focusRoots, 2);
+    const explicitZeroCollapse =
+      config.showSpouses === false &&
+      config.depth.ancestors === 0 &&
+      config.depth.descendants === 0;
+    const upDepth = explicitZeroCollapse ? 0 : 2;
+    const downDepth = explicitZeroCollapse ? 0 : 2;
+    const ancestors2 = collectAncestorsForMultiple(indexes, focusRoots, upDepth);
+    const descendants2 = collectDescendantsForMultiple(indexes, focusRoots, downDepth);
     const directLine = new Set(focusRoots);
     ancestors2.forEach(ids => ids.forEach(id => directLine.add(id)));
     descendants2.forEach(ids => ids.forEach(id => directLine.add(id)));
@@ -138,11 +144,6 @@ export function expandGraph(document: GeneaDocument, config: ViewConfig): Expand
       for (const personId of baseVisiblePersons) {
         const spouses = indexes.spousesByPerson[personId] ?? [];
         for (const spouseId of spouses) finalVisiblePersons.add(spouseId);
-      }
-    } else {
-      for (const root of focusRoots) {
-        const focusSpouses = indexes.spousesByPerson[root] ?? [];
-        for (const spouseId of focusSpouses) finalVisiblePersons.add(spouseId);
       }
     }
   }

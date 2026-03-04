@@ -1,4 +1,4 @@
-import type { GeneaDocument } from "@/types/domain";
+﻿import type { GraphDocument } from "@/types/domain";
 import type { DiagnosticFixOption, DiagnosticIssue } from "./types";
 
 function makeOption(issue: DiagnosticIssue, partial: Omit<DiagnosticFixOption, "id">): DiagnosticFixOption {
@@ -12,7 +12,7 @@ function isPersonId(id?: string): id is string {
   return Boolean(id && id.startsWith("@I"));
 }
 
-export function planDiagnosticFixOptions(issue: DiagnosticIssue, doc: GeneaDocument): DiagnosticFixOption[] {
+export function planDiagnosticFixOptions(issue: DiagnosticIssue, doc: GraphDocument): DiagnosticFixOption[] {
   const options: DiagnosticFixOption[] = [];
 
   switch (issue.code) {
@@ -347,3 +347,4 @@ export function planDiagnosticFixOptions(issue: DiagnosticIssue, doc: GeneaDocum
 
   return options;
 }
+

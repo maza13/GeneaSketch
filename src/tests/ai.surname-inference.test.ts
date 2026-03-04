@@ -13,7 +13,7 @@ function baseDoc(): GeneaDocument {
       "@F1@": { id: "@F1@", husbandId: "@I1@", wifeId: "@I2@", childrenIds: [], events: [] }
     },
     media: {},
-    metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+    metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
   };
 }
 
@@ -70,4 +70,5 @@ describe("ai surname inference", () => {
     expect(result.nextDoc.families["@F1@"].childrenIds.includes(createdId!)).toBe(true);
   });
 });
+
 

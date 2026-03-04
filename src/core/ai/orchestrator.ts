@@ -28,10 +28,10 @@ import type {
   AiStage,
   AiResolvedAction
 } from "@/types/ai";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 
 type RunParams = {
-  document: GeneaDocument;
+  document: GraphDocument;
   settings: AiSettings;
   context: AiInputContext;
   text: string;
@@ -726,3 +726,4 @@ export async function runAiGlobalFocusDetection(params: Omit<RunParams, "context
     ]
   };
 }
+

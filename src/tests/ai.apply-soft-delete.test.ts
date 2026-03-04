@@ -12,7 +12,7 @@ function buildDoc(): GeneaDocument {
       },
       families: {},
       media: {},
-      metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+      metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
     },
     "@I1@",
     { name: "A Mendoza", isPlaceholder: false }
@@ -62,5 +62,6 @@ describe("ai apply soft delete", () => {
     expect(result.nextDoc.metadata.aiAuditTrail?.[0].informantName).toBe("A Mendoza");
   });
 });
+
 
 

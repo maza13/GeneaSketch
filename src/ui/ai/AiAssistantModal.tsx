@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { applyApprovedAiReview } from "@/core/ai/apply";
 import { AiPipelineStageError, runAiGlobalFocusDetection, runAiPipeline } from "@/core/ai/orchestrator";
 import { rankFocusCandidatesByName } from "@/core/ai/matching";
@@ -6,23 +6,23 @@ import { updateAiReviewItemCandidate, updateAiReviewItemSelection, updateAiRevie
 import { aiAppendDiagnosticLog, aiReadDiagnosticLog } from "@/services/aiRuntime";
 import { downloadBlob } from "@/utils/download";
 import type { AiDiagnosticEntry, AiGlobalFocusDetection, AiInputContext, AiReviewDraft, AiReviewItemStatus, AiSettings } from "@/types/ai";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 
 
 type Props = {
   open: boolean;
   context: AiInputContext | null;
-  document: GeneaDocument | null;
+  document: GraphDocument | null;
   settings: AiSettings;
   onClose: () => void;
   onStatus: (message: string) => void;
-  onApplyBatch: (nextDoc: GeneaDocument, summary: string) => void;
+  onApplyBatch: (nextDoc: GraphDocument, summary: string) => void;
   onOpenSettings: () => void;
 };
 
 type ReviewStep = 1 | 2 | 3 | 4 | 5;
 
-function contextLabel(context: AiInputContext | null, document?: GeneaDocument | null): string {
+function contextLabel(context: AiInputContext | null, document?: GraphDocument | null): string {
   if (!context) return "Sin contexto";
   const kind = context.kind === "local" ? "Enfoque Local" : "Contexto Global";
   if (context.kind === "local" && document) {
@@ -620,6 +620,7 @@ export function AiAssistantModal({ open, context, document, settings, onClose, o
     </div>
   );
 }
+
 
 
 

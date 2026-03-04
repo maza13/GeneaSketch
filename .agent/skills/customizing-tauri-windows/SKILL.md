@@ -1,4 +1,4 @@
----
+﻿---
 name: customizing-tauri-windows
 description: Guides users through Tauri window customization including custom titlebar implementation, transparent windows, window decorations, drag regions, window menus, submenus, and menu keyboard shortcuts for desktop applications.
 ---
@@ -399,3 +399,27 @@ function App() {
 
 export default App;
 ```
+
+## GeneaSketch project override
+When working inside GeneaSketch, this skill must defer to `geneasketch-ux-governor` and the UX wiki standard:
+- Read `docs/wiki-uxdesign/12_instrucciones_agentes_ia.md` first.
+- Follow `docs/wiki-uxdesign/01_*.md` to `12_*.md` for patterns and anti-patterns.
+- Use `src/styles/tokens.css` as canonical token source (no hardcoded styling values when tokenized).
+- Keep Material Symbols as canonical icon system for UI.
+If this guidance conflicts with generic examples in this skill, GeneaSketch rules take precedence.
+
+## GeneaSketch Delegation Contract
+This skill is specialized and remains active in GeneaSketch, but is subordinate to geneasketch-ux-governor and docs/wiki-uxdesign/*.
+
+### What this skill may decide
+- Tauri window APIs, drag regions, menu wiring, runtime window behavior.
+
+### What this skill must not decide
+- Product token palette, iconography policy, typography hierarchy, and canonical component style rules.
+
+### Conflict policy: UX guardian/wiki wins
+If guidance in $skillName conflicts with docs/wiki-uxdesign/12_instrucciones_agentes_ia.md or chapter rules:
+1. Follow wiki UX.
+2. Keep only the specialized technical guidance that remains compatible.
+3. Escalate the conflict in output notes with affected UX-RULE-* references.
+

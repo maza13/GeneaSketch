@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import type { GeneaDocument, PendingRelationType } from "@/types/domain";
+import type { GraphDocument, PendingRelationType } from "@/types/domain";
 import { StandardModal } from "@/ui/common/StandardModal";
 
 type Props = {
-    document: GeneaDocument;
+    document: GraphDocument;
     anchorId: string;
     relationType: PendingRelationType | "kinship";
     onLink: (existingPersonId: string) => void;
@@ -115,3 +115,4 @@ export function PersonPickerModal({ document, anchorId, relationType, onLink, on
         </StandardModal>
     );
 }
+

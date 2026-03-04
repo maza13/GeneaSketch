@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import type { GeneaDocument, Person } from "@/types/domain";
+import type { GraphDocument, Person } from "@/types/domain";
 import { normalizeGedcomTimelineDate, NormalizedTimelineDate } from "@/core/timeline/dateNormalization";
 import { getPersonLabel } from "@/ui/person/personDetailUtils";
 import { findKinship } from "@/core/graph/kinship";
 
 interface PersonalTimelineProps {
-  document: GeneaDocument;
+  document: GraphDocument;
   personId: string;
   onSelectPerson: (personId: string) => void;
 }
@@ -15,6 +15,7 @@ interface TimelineEvent {
   date: string;
   focusAge?: string;
   sortTimestamp: number;
+  undated: boolean;
   type: string;
   title: string;
   subtitle?: string;
@@ -35,6 +36,13 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
 
     const events: TimelineEvent[] = [];
     const processedPersonIds = new Set<string>();
+    let undatedOrder = 0;
+
+    const resolveSortTimestamp = (date: NormalizedTimelineDate): number => {
+      if (!date.undated && typeof date.sortTimestamp === "number") return date.sortTimestamp;
+      undatedOrder += 1;
+      return Number.MAX_SAFE_INTEGER - 1000 + undatedOrder;
+    };
 
     const pBirth = person.events?.find((e: any) => e.type === "BIRT");
     const pBirthDate = normalizeGedcomTimelineDate(pBirth?.date || person.birthDate);
@@ -141,7 +149,7 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
       const birth = p.events?.find((e: any) => e.type === "BIRT");
       const birthRaw = birth?.date || p.birthDate;
       const bDate = normalizeGedcomTimelineDate(birthRaw);
-      if (!bDate.undated && (isSelf || isDuringLifetime(bDate))) {
+      if (bDate.undated || isSelf || isDuringLifetime(bDate)) {
         const focusAge = calculateAgeDisplay(pBirthDate.displayDate === "Sin fecha" ? undefined : pBirthDate.displayDate, bDate.displayDate);
 
         let title = "";
@@ -168,7 +176,8 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
           id: `${p.id}-birt`,
           date: bDate.displayDate,
           focusAge,
-          sortTimestamp: bDate.sortTimestamp!,
+          sortTimestamp: resolveSortTimestamp(bDate),
+          undated: bDate.undated,
           type: "BIRT",
           title,
           subtitle: birth?.place || p.birthPlace,
@@ -181,7 +190,7 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
       const death = p.events?.find((e: any) => e.type === "DEAT");
       const deathRaw = death?.date || p.deathDate;
       const dDate = normalizeGedcomTimelineDate(deathRaw);
-      if (!dDate.undated && (isSelf || isDuringLifetime(dDate))) {
+      if (dDate.undated || isSelf || isDuringLifetime(dDate)) {
         const focusAge = calculateAgeDisplay(pBirthDate.displayDate === "Sin fecha" ? undefined : pBirthDate.displayDate, dDate.displayDate);
         const deathAge = calculateAgeDisplay(birthRaw, dDate.displayDate);
         const deathAgeTxt = deathAge ? ` a los ${deathAge}` : " (sin fecha de nac.)";
@@ -192,7 +201,8 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
           id: `${p.id}-deat`,
           date: dDate.displayDate,
           focusAge,
-          sortTimestamp: dDate.sortTimestamp!,
+          sortTimestamp: resolveSortTimestamp(dDate),
+          undated: dDate.undated,
           type: "DEAT",
           title,
           subtitle: death?.place || p.deathPlace,
@@ -206,7 +216,6 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
         p.events?.forEach((ev: any, idx: number) => {
           if (ev.type === "BIRT" || ev.type === "DEAT") return;
           const normalized = normalizeGedcomTimelineDate(ev.date);
-          if (normalized.undated) return;
 
           const focusAge = calculateAgeDisplay(pBirthDate.displayDate === "Sin fecha" ? undefined : pBirthDate.displayDate, normalized.displayDate);
 
@@ -218,7 +227,8 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
             id: `ind-${idx}`,
             date: normalized.displayDate,
             focusAge,
-            sortTimestamp: normalized.sortTimestamp!,
+            sortTimestamp: resolveSortTimestamp(normalized),
+            undated: normalized.undated,
             type: ev.type,
             title,
             subtitle: ev.place,
@@ -274,7 +284,6 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
       // Marriage/Divorce
       family.events.forEach((ev, idx) => {
         const normalized = normalizeGedcomTimelineDate(ev.date);
-        if (normalized.undated) return;
         const spouseId = family.husbandId === personId ? family.wifeId : family.husbandId;
         const spouse = spouseId ? document.persons[spouseId] : null;
 
@@ -286,7 +295,8 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
           id: `fam-ev-${famId}-${idx}`,
           date: normalized.displayDate,
           focusAge,
-          sortTimestamp: normalized.sortTimestamp!,
+          sortTimestamp: resolveSortTimestamp(normalized),
+          undated: normalized.undated,
           type: ev.type,
           title: `${action}${spouseTxt}`,
           subtitle: ev.place,
@@ -310,7 +320,10 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
       });
     });
 
-    return events.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
+    return events.sort((a, b) => {
+      if (a.undated !== b.undated) return a.undated ? 1 : -1;
+      return a.sortTimestamp - b.sortTimestamp;
+    });
   }, [document, person, personId, viewMode]);
 
   if (!person) return null;
@@ -334,11 +347,45 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
       </div>
 
       {timelineEvents.length === 0 ? (
-        <div className="detail-placeholder">No hay eventos con fecha para graficar.</div>
+        <div className="detail-placeholder">No hay eventos para graficar.</div>
       ) : (
         <div className="timeline-container">
-          {timelineEvents.map((event) => (
+          {timelineEvents.filter((event) => !event.undated).map((event) => (
             <div key={event.id} className="timeline-item">
+              <div className="timeline-marker">
+                <span className="timeline-icon">{event.icon}</span>
+                <div className="timeline-line"></div>
+              </div>
+              <div className="timeline-content-card">
+                <div className="timeline-header">
+                  <div className="timeline-date-row">
+                    <span className="timeline-date">{event.date}</span>
+                    {event.focusAge && <span className="timeline-focus-age">({event.focusAge})</span>}
+                  </div>
+                  <h4 className="timeline-title">{event.title}</h4>
+                </div>
+                {event.subtitle && (
+                  <div className="timeline-subtitle">
+                    {event.personId ? (
+                      <button
+                        className="timeline-link-btn"
+                        onClick={() => onSelectPerson(event.personId!)}
+                      >
+                        {event.subtitle}
+                      </button>
+                    ) : (
+                      <span>{event.subtitle}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {timelineEvents.some((event) => event.undated) ? (
+            <div className="timeline-undated-heading">Undated</div>
+          ) : null}
+          {timelineEvents.filter((event) => event.undated).map((event) => (
+            <div key={event.id} className="timeline-item timeline-item--undated">
               <div className="timeline-marker">
                 <span className="timeline-icon">{event.icon}</span>
                 <div className="timeline-line"></div>
@@ -378,6 +425,7 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
         .timeline-view-selector button.active { color: var(--gs-accent); font-weight: 700; }
         .timeline-view-selector button:hover:not(.active) { color: var(--ink-1); }
         .timeline-view-selector .separator { color: var(--line); font-size: 10px; user-select: none; }
+        .timeline-undated-heading { margin: 2px 0 12px 48px; font-size: 11px; font-weight: 700; letter-spacing: 0.4px; color: var(--ink-muted); text-transform: uppercase; }
         .timeline-container { display: flex; flex-direction: column; gap: 0; }
         .timeline-item { display: flex; gap: 16px; }
         .timeline-marker { display: flex; flex-direction: column; align-items: center; width: 32px; }
@@ -397,3 +445,4 @@ export function PersonalTimeline({ document, personId, onSelectPerson }: Persona
     </div>
   );
 }
+

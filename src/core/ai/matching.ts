@@ -1,4 +1,4 @@
-import type { GeneaDocument, Person } from "@/types/domain";
+﻿import type { GraphDocument, Person } from "@/types/domain";
 
 export type PersonCandidate = {
   id: string;
@@ -74,16 +74,16 @@ function containsBonus(query: string, candidate: string): number {
   return 0;
 }
 
-export function rankPersonCandidates(doc: GeneaDocument, query: string, limit = 5): PersonCandidate[] {
+export function rankPersonCandidates(doc: GraphDocument, query: string, limit = 5): PersonCandidate[] {
   return rankPersonCandidatesWithContext(doc, query, undefined, limit);
 }
 
-export function rankFocusCandidatesByName(query: string, doc: GeneaDocument, limit = 8): PersonCandidate[] {
+export function rankFocusCandidatesByName(query: string, doc: GraphDocument, limit = 8): PersonCandidate[] {
   return rankPersonCandidatesWithContext(doc, query, undefined, limit);
 }
 
 export function rankPersonCandidatesWithContext(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   query: string,
   hints?: {
     surname?: string;
@@ -159,7 +159,7 @@ export function rankPersonCandidatesWithContext(
 }
 
 export function resolvePersonId(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   preferredId: string | undefined,
   query: string | undefined
 ): { id: string | null; candidates: PersonCandidate[] } {
@@ -168,7 +168,7 @@ export function resolvePersonId(
 }
 
 export function resolvePersonMatch(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   preferredId: string | undefined,
   query: string | undefined,
   hints?: {
@@ -198,3 +198,4 @@ export function resolvePersonMatch(
   }
   return { id: null, level: "no_match", candidates };
 }
+

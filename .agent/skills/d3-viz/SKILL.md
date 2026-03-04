@@ -1,4 +1,4 @@
----
+﻿---
 name: d3-viz
 description: Creating interactive data visualisations using d3.js. This skill should be used when creating custom charts, graphs, network diagrams, geographic visualisations, or any complex SVG-based data visualisation that requires fine-grained control over visual elements, transitions, or interactions. Use this for bespoke visualisations beyond standard charting libraries, whether in React, Vue, Svelte, vanilla JavaScript, or any other environment.
 ---
@@ -818,3 +818,27 @@ Contains boilerplate templates:
 These templates work with vanilla JavaScript, React, Vue, Svelte, or any other JavaScript environment. Adapt them as needed for your specific framework.
 
 To use these resources, read the relevant files when detailed guidance is needed for specific visualisation types or patterns.
+
+## GeneaSketch project override
+When working inside GeneaSketch, this skill must defer to `geneasketch-ux-governor` and the UX wiki standard:
+- Read `docs/wiki-uxdesign/12_instrucciones_agentes_ia.md` first.
+- Follow `docs/wiki-uxdesign/01_*.md` to `12_*.md` for patterns and anti-patterns.
+- Use `src/styles/tokens.css` as canonical token source (no hardcoded styling values when tokenized).
+- Keep Material Symbols as canonical icon system for UI.
+If this guidance conflicts with generic examples in this skill, GeneaSketch rules take precedence.
+
+## GeneaSketch Delegation Contract
+This skill is specialized and remains active in GeneaSketch, but is subordinate to geneasketch-ux-governor and docs/wiki-uxdesign/*.
+
+### What this skill may decide
+- D3 layout algorithms, scales, joins, interaction mechanics, data-driven rendering.
+
+### What this skill must not decide
+- Non-canonical color/font/icon systems or visual language that bypasses wiki UX tokens/policies.
+
+### Conflict policy: UX guardian/wiki wins
+If guidance in $skillName conflicts with docs/wiki-uxdesign/12_instrucciones_agentes_ia.md or chapter rules:
+1. Follow wiki UX.
+2. Keep only the specialized technical guidance that remains compatible.
+3. Escalate the conflict in output notes with affected UX-RULE-* references.
+

@@ -10,10 +10,10 @@
 } from "@/core/edit/commands";
 import { resolvePersonId } from "@/core/ai/matching";
 import type { AiAppliedChange, AiAuditTrailEntry, AiReviewDraft, AiReviewItem } from "@/types/ai";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 
 export type ApplyResult = {
-  nextDoc: GeneaDocument;
+  nextDoc: GraphDocument;
   appliedItemIds: string[];
   warnings: string[];
   appliedChanges: AiAppliedChange[];
@@ -42,12 +42,12 @@ function personKeyFromQuery(query?: string): string {
   return normalizeNameKey(query || "");
 }
 
-function ensureMetadataCollections(doc: GeneaDocument): void {
+function ensureMetadataCollections(doc: GraphDocument): void {
   doc.metadata.aiAuditTrail = doc.metadata.aiAuditTrail || [];
   doc.metadata.recycleBin = doc.metadata.recycleBin || [];
 }
 
-function softDeletePerson(doc: GeneaDocument, personId: string, runId: string, reason?: string): GeneaDocument {
+function softDeletePerson(doc: GraphDocument, personId: string, runId: string, reason?: string): GraphDocument {
   const person = doc.persons[personId];
   if (!person) return doc;
   ensureMetadataCollections(doc);
@@ -74,7 +74,7 @@ function softDeletePerson(doc: GeneaDocument, personId: string, runId: string, r
   return doc;
 }
 
-function softDeleteFamily(doc: GeneaDocument, familyId: string, runId: string, reason?: string): GeneaDocument {
+function softDeleteFamily(doc: GraphDocument, familyId: string, runId: string, reason?: string): GraphDocument {
   const family = doc.families[familyId];
   if (!family) return doc;
   ensureMetadataCollections(doc);
@@ -96,7 +96,7 @@ function softDeleteFamily(doc: GeneaDocument, familyId: string, runId: string, r
   return doc;
 }
 
-function unlinkSibling(doc: GeneaDocument, personId: string, relatedPersonId: string): GeneaDocument {
+function unlinkSibling(doc: GraphDocument, personId: string, relatedPersonId: string): GraphDocument {
   const next = structuredClone(doc);
   for (const family of Object.values(next.families)) {
     if (family.childrenIds.includes(personId) && family.childrenIds.includes(relatedPersonId)) {
@@ -108,7 +108,7 @@ function unlinkSibling(doc: GeneaDocument, personId: string, relatedPersonId: st
   return next;
 }
 
-function appendInformantAttribution(doc: GeneaDocument, informantName: string, runId: string, personIds: Set<string>): void {
+function appendInformantAttribution(doc: GraphDocument, informantName: string, runId: string, personIds: Set<string>): void {
   for (const personId of personIds) {
     const person = doc.persons[personId];
     if (!person) continue;
@@ -123,7 +123,7 @@ function appendInformantAttribution(doc: GeneaDocument, informantName: string, r
 }
 
 function resolveTargetId(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   explicitId: string | undefined,
   query: string | undefined,
   candidateId: string | undefined,
@@ -181,7 +181,7 @@ function firstSurname(person: { surname?: string } | undefined): string | undefi
 }
 
 function inferMexicanChildSurname(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   anchorId: string,
   targetFamilyId?: string,
   relatedId?: string
@@ -226,14 +226,14 @@ function pushSkipped(
 }
 
 function applyEntityItem(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   item: AiReviewItem,
   runId: string,
   touchedPeople: Set<string>,
   warnings: string[],
   appliedChanges: AiAppliedChange[],
   tempResolution: TempResolutionState
-): GeneaDocument {
+): GraphDocument {
   const action = item.action;
 
   if (action.kind === "create_person") {
@@ -387,13 +387,13 @@ function applyEntityItem(
 }
 
 function applyRelationItem(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   item: AiReviewItem,
   touchedPeople: Set<string>,
   warnings: string[],
   appliedChanges: AiAppliedChange[],
   tempResolution: TempResolutionState
-): GeneaDocument {
+): GraphDocument {
   const action = item.action;
 
   if (action.kind === "create_relation") {
@@ -570,7 +570,7 @@ function applyRelationItem(
   return doc;
 }
 
-export function applyApprovedAiReview(baseDoc: GeneaDocument, review: AiReviewDraft): ApplyResult {
+export function applyApprovedAiReview(baseDoc: GraphDocument, review: AiReviewDraft): ApplyResult {
   let nextDoc = structuredClone(baseDoc);
   const touchedPeople = new Set<string>();
   const warnings: string[] = [];
@@ -679,4 +679,5 @@ export function applyApprovedAiReview(baseDoc: GeneaDocument, review: AiReviewDr
     appliedChanges
   };
 }
+
 

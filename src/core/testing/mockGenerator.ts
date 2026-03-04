@@ -60,7 +60,7 @@ export class MockTreeGenerator {
             families: {},
             media: {},
             metadata: {
-                sourceFormat: "GSZ",
+                sourceFormat: "GSK",
                 gedVersion: "7.0.x",
                 importProvenance: []
             }

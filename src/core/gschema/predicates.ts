@@ -3,7 +3,7 @@
  *
  * A "predicate" is a dot-separated path that identifies what type of
  * attribute a Claim is asserting. The catalog below is the canonical
- * set of predicates used in GeneaSketch 0.4.0+.
+ * set of predicates used in GeneaSketch 0.2.0+.
  *
  * Extensions are allowed with the prefix "ext." (e.g., "ext.myapp.customField").
  * Unknown predicates are valid but will be captured in the quarantine for review.
@@ -22,6 +22,9 @@ export const PersonPredicates = {
     NAME_GIVEN: "person.name.given",
     NAME_SURNAME: "person.name.surname",
     NAME_NICKNAME: "person.name.nickname",
+    NAME_PREFIX: "person.name.prefix",
+    NAME_SUFFIX: "person.name.suffix",
+    NAME_TITLE: "person.name.title",
     NAME_TYPE: "person.name.type",
     SEX: "person.sex",
     LIFE_STATUS: "person.lifeStatus",
@@ -55,6 +58,15 @@ export const PersonPredicates = {
 
     // Custom event (type embedded in predicate, e.g. "person.event.custom.NATU.date")
     EVENT_CUSTOM_PREFIX: "person.event.custom",
+
+    // App extensions (lossless projection / structured naming)
+    EXT_SURNAME_PATERNAL: "ext.person.name.surname_paternal",
+    EXT_SURNAME_MATERNAL: "ext.person.name.surname_maternal",
+    EXT_SURNAME_ORDER: "ext.person.name.surname_order",
+    EXT_NOTES_RAWTAGS: "ext.person.notes.rawTags",
+    EXT_NOTES_REFS: "ext.person.notes.noteRefs",
+    EXT_EVENTS_FULL: "ext.person.events.full",
+    EXT_NAMES_FULL: "ext.person.names.full",
 } as const;
 
 /** All standard predicates for Union nodes. */
@@ -65,6 +77,9 @@ export const UnionPredicates = {
     EVENT_DIVORCE_DATE: "union.event.divorce.date",
     EVENT_DIVORCE_PLACE: "union.event.divorce.place",
     ATTR_STATUS: "union.attr.status",
+    EXT_NOTES_RAWTAGS: "ext.family.notes.rawTags",
+    EXT_NOTES_REFS: "ext.family.notes.noteRefs",
+    EXT_EVENTS_FULL: "ext.family.events.full",
 } as const;
 
 export type PersonPredicate = typeof PersonPredicates[keyof typeof PersonPredicates];
@@ -87,6 +102,9 @@ export const GEDCOM_TO_PREDICATE: Record<string, string> = {
     "INDI.NAME.GIVN": PersonPredicates.NAME_GIVEN,
     "INDI.NAME.SURN": PersonPredicates.NAME_SURNAME,
     "INDI.NAME.NICK": PersonPredicates.NAME_NICKNAME,
+    "INDI.NAME.NPFX": PersonPredicates.NAME_PREFIX,
+    "INDI.NAME.NSFX": PersonPredicates.NAME_SUFFIX,
+    "INDI.TITL": PersonPredicates.NAME_TITLE,
     "INDI.NAME.TYPE": PersonPredicates.NAME_TYPE,
     "INDI.SEX": PersonPredicates.SEX,
 

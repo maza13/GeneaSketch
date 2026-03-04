@@ -357,9 +357,7 @@ export async function refineBirthRangeWithAi(
     throw new BirthRefinementDomainError("Persona no encontrada para refinamiento.");
   }
 
-  const local = estimatePersonBirthYear(params.personId, params.document, {
-    estimatorVersion: params.settings.birthEstimatorVersion
-  });
+  const local = estimatePersonBirthYear(params.personId, params.document);
   if (!local) {
     throw new BirthRefinementDomainError("No hay inferencia local disponible.");
   }

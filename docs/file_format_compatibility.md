@@ -2,12 +2,11 @@
 
 ## Supported Inputs
 - `.ged` (plain GEDCOM text)
-- `.gdz` (legacy zipped GED import)
-- `.gsz` (native GeneaSketch zipped format)
+- `.gsk` (native GeneaSketch package)
 
 ## Internal Canonical Target
 - For merged documents, the canonical output metadata is:
-  - `sourceFormat = GSZ`
+  - `sourceFormat = GSK`
   - `gedVersion = 7.0.x`
 
 ## GED Version Policy
@@ -26,8 +25,8 @@
   - `importedAt` (ISO date-time)
 
 ## Notes
-- `.gdz` remains supported for compatibility only.
-- `.gsz` is the native working format for the project.
+- `.gdz` and `.gsz` are retired in runtime (hard cut).
+- `.gsk` is the native working format for the project.
 
 ## GED Export Targets
 - `GED 7.0.3` (default)

@@ -1,8 +1,15 @@
-﻿import type { GeneaDocument } from "@/types/domain";
-import { useAppStore } from "@/state/store";
+import type { GraphDocument } from "@/types/domain";
+import { useAppStore, type AppState } from "@/state/store";
+import { useShallow } from 'zustand/react/shallow';
 
-export function LayerPanel({ document, hideHeader = false }: { document: GeneaDocument | null; hideHeader?: boolean }) {
-    const { viewConfig, setOverlay, clearOverlayType } = useAppStore();
+export function LayerPanel({ document, hideHeader = false }: { document: GraphDocument | null; hideHeader?: boolean }) {
+    const viewConfig = useAppStore(state => state.viewConfig);
+    const { setOverlay, clearOverlayType } = useAppStore(useShallow((state: AppState) => ({
+        setOverlay: state.setOverlay,
+        clearOverlayType: state.clearOverlayType
+    })));
+
+
 
     if (!document) return null;
 
@@ -10,11 +17,11 @@ export function LayerPanel({ document, hideHeader = false }: { document: GeneaDo
     const activeLayerId = activeOverlay?.config.layerId;
 
     const layers = [
-        { id: "layer-symmetry", label: "Completitud y Simetria", icon: "🟢", desc: "Evalua falta de fechas y progenitores en ramas." },
-        { id: "layer-places", label: "Coloreo Geografico", icon: "🌍", desc: "Muestro inteligente: Prioriza residencia, nacimiento y defunción." },
-        { id: "layer-warnings", label: "Diagnostico Critico", icon: "🟠", desc: "Ilumina en rojo posibles errores logicos, incestos y fechas cronologicas imposibles." },
-        { id: "layer-endogamy", label: "Colapso Consanguineo", icon: "🟣", desc: "Traza aristas especiales senalando familias con progenitores ciclicos." },
-        { id: "layer-timeline", label: "Linea de Tiempo", icon: "🕒", desc: "Simulacion visual de vitalidad y eventos a traves de los años." }
+        { id: "layer-symmetry", label: "Completitud y Simetria", icon: "??", desc: "Evalua falta de fechas y progenitores en ramas." },
+        { id: "layer-places", label: "Coloreo Geografico", icon: "??", desc: "Muestro inteligente: Prioriza residencia, nacimiento y defunci�n." },
+        { id: "layer-warnings", label: "Diagnostico Critico", icon: "??", desc: "Ilumina en rojo posibles errores logicos, incestos y fechas cronologicas imposibles." },
+        { id: "layer-endogamy", label: "Colapso Consanguineo", icon: "??", desc: "Traza aristas especiales senalando familias con progenitores ciclicos." },
+        { id: "layer-timeline", label: "Linea de Tiempo", icon: "??", desc: "Simulacion visual de vitalidad y eventos a traves de los a�os." }
     ];
 
     const toggleLayer = (layerId: string) => {
@@ -77,7 +84,7 @@ export function LayerPanel({ document, hideHeader = false }: { document: GeneaDo
                                     { id: 'intelligent', label: 'Auto' },
                                     { id: 'birth', label: 'Nacimiento' },
                                     { id: 'residence', label: 'Residencia' },
-                                    { id: 'death', label: 'Defunción' }
+                                    { id: 'death', label: 'Defunci�n' }
                                 ].map(m => (
                                     <button
                                         key={m.id}
@@ -113,3 +120,4 @@ export function LayerPanel({ document, hideHeader = false }: { document: GeneaDo
         </div>
     );
 }
+

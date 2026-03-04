@@ -1,5 +1,5 @@
-﻿
-import type { GeneaDocument, PendingRelationType } from "@/types/domain";
+
+import type { GraphDocument, PendingRelationType } from "@/types/domain";
 
 function IconEye() {
   return (
@@ -35,7 +35,7 @@ function IconUnlink() {
 
 
 type Props = {
-  document: GeneaDocument | null;
+  document: GraphDocument | null;
   selectedPersonId: string | null;
   detailsMode: "expanded" | "compact";
   onToggleDetailsExpanded: () => void;
@@ -147,18 +147,18 @@ export function RightPanel({
                 </div>
                 {familySummary ? (
                   <div className="person-meta">
-                    👨‍👩‍👧‍👦 {familySummary.parents} padres · 💍 {familySummary.spouses} parejas · 👶 {familySummary.children} hijos
+                    ??????????? {familySummary.parents} padres � ?? {familySummary.spouses} parejas � ?? {familySummary.children} hijos
                   </div>
                 ) : null}
                 {familySummary ? (
                   <div className="person-meta">
-                    {familySummary.originFamilies} familias de origen · {familySummary.ownFamilies} familias propias
+                    {familySummary.originFamilies} familias de origen � {familySummary.ownFamilies} familias propias
                   </div>
                 ) : null}
                 {person.isPlaceholder ? <div className="person-warn">Nodo raiz vacio. Completa nombre para activarlo.</div> : null}
               </>
             ) : (
-              <div className="person-meta">🗄️ Sin selección</div>
+              <div className="person-meta">??? Sin selecci�n</div>
             )}
 
             {person && detailsExpanded ? (
@@ -172,9 +172,9 @@ export function RightPanel({
                     Padres <span className="badge-count">{parents.length}</span>
                   </div>
                   <div className="relation-actions">
-                    <button onClick={() => onAddRelation(person.id, "father")}>👨➕ Agregar padre</button>
+                    <button onClick={() => onAddRelation(person.id, "father")}>??? Agregar padre</button>
                     <button onClick={() => onLinkExistingRelation(person.id, "father")} title="Vincular padre existente" className="icon-button" aria-label="Vincular padre existente"><IconLink /></button>
-                    <button onClick={() => onAddRelation(person.id, "mother")}>👩➕ Agregar madre</button>
+                    <button onClick={() => onAddRelation(person.id, "mother")}>??? Agregar madre</button>
                     <button onClick={() => onLinkExistingRelation(person.id, "mother")} title="Vincular madre existente" className="icon-button" aria-label="Vincular madre existente"><IconLink /></button>
                   </div>
                   {parents.length > 0 ? (
@@ -191,7 +191,7 @@ export function RightPanel({
                       ))}
                     </div>
                   ) : (
-                    <div className="person-meta">👨‍👩‍👦 Sin padres registrados.</div>
+                    <div className="person-meta">???????? Sin padres registrados.</div>
                   )}
                 </div>
 
@@ -200,9 +200,9 @@ export function RightPanel({
                     Parejas <span className="badge-count">{spouses.length}</span>
                   </div>
                   <div className="relation-actions">
-                    <button onClick={() => onAddRelation(person.id, "spouse")}>💍➕ Agregar pareja</button>
+                    <button onClick={() => onAddRelation(person.id, "spouse")}>??? Agregar pareja</button>
                     <button onClick={() => onLinkExistingRelation(person.id, "spouse")} title="Vincular pareja existente" className="icon-button" aria-label="Vincular pareja existente"><IconLink /></button>
-                    <button onClick={() => onAddRelation(person.id, "sibling")}>👦👧➕ Agregar hermano</button>
+                    <button onClick={() => onAddRelation(person.id, "sibling")}>????? Agregar hermano</button>
                     <button onClick={() => onLinkExistingRelation(person.id, "sibling")} title="Vincular hermano existente" className="icon-button" aria-label="Vincular hermano existente"><IconLink /></button>
                   </div>
                   {spouses.length > 0 ? (
@@ -219,7 +219,7 @@ export function RightPanel({
                       ))}
                     </div>
                   ) : (
-                    <div className="person-meta">💍 Sin parejas registradas.</div>
+                    <div className="person-meta">?? Sin parejas registradas.</div>
                   )}
                 </div>
 
@@ -228,7 +228,7 @@ export function RightPanel({
                     Hijos <span className="badge-count">{children.length}</span>
                   </div>
                   <div className="relation-actions">
-                    <button onClick={() => onAddRelation(person.id, "child")}>👶➕ Agregar hijo</button>
+                    <button onClick={() => onAddRelation(person.id, "child")}>??? Agregar hijo</button>
                     <button onClick={() => onLinkExistingRelation(person.id, "child")} title="Vincular hijo existente" className="icon-button" aria-label="Vincular hijo existente"><IconLink /></button>
                   </div>
                   {children.length > 0 ? (
@@ -245,14 +245,14 @@ export function RightPanel({
                       ))}
                     </div>
                   ) : (
-                    <div className="person-meta">👶 Sin hijos registrados.</div>
+                    <div className="person-meta">?? Sin hijos registrados.</div>
                   )}
                 </div>
               </details>
             ) : null}
             {person && !detailsExpanded ? (
               <div className="person-meta" style={{ opacity: 0.7, fontSize: "11px", marginTop: "10px", fontStyle: "italic" }}>
-                Sección contraída. Usa "Expandir" para ver detalles y familiares.
+                Secci�n contra�da. Usa "Expandir" para ver detalles y familiares.
               </div>
             ) : null}
           </div>
@@ -262,3 +262,4 @@ export function RightPanel({
     </aside>
   );
 }
+

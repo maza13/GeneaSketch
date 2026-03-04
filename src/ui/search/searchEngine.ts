@@ -1,4 +1,4 @@
-import type { GeneaDocument, Person } from "@/types/domain";
+import type { GraphDocument, Person } from "@/types/domain";
 import {
   normalizeSearchText,
   parseSemanticQuery,
@@ -39,7 +39,7 @@ function personLabel(person: Person): string {
   return `${person.name}${person.surname ? ` ${person.surname}` : ""}`.trim();
 }
 
-function searchByName(document: GeneaDocument, target: string): Person[] {
+function searchByName(document: GraphDocument, target: string): Person[] {
   if (!target) return [];
   return Object.values(document.persons).filter((person) => {
     const label = normalizeSearchText(personLabel(person));
@@ -116,7 +116,7 @@ function mergeFilters(uiFilters: SearchFilterState | undefined, parsed: Partial<
   };
 }
 
-function applyFilters(rows: SearchResult[], document: GeneaDocument, filters: SearchFilterState): SearchResult[] {
+function applyFilters(rows: SearchResult[], document: GraphDocument, filters: SearchFilterState): SearchResult[] {
   return rows.filter((row) => {
     const person = document.persons[row.personId];
     if (!person) return false;
@@ -129,7 +129,7 @@ function applyFilters(rows: SearchResult[], document: GeneaDocument, filters: Se
 }
 
 export function buildSearchResults(
-  document: GeneaDocument,
+  document: GraphDocument,
   query: string,
   sortField: SearchSortField,
   sortDirection: SearchSortDirection,
@@ -197,3 +197,4 @@ export function buildSearchResults(
   rows = Array.from(dedup.values());
   return sortResults(applyFilters(rows, document, activeFilters), sortField, sortDirection);
 }
+

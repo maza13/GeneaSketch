@@ -5,13 +5,13 @@ import { consanguinityAlphaFromIntensity, normalizeConsanguinityIntensity } from
 import { analyzeGeneaDocument } from "@/core/diagnostics/analyzer";
 import { computeLayout } from "@/core/layout";
 import { getPersonMarkerPlace } from "@/core/graph/locationMarkers";
-import type { ExpandedGraph, GeneaDocument } from "@/types/domain";
+import type { ExpandedGraph, GraphDocument } from "@/types/domain";
 import type { ColorThemeConfig, NodeInteraction } from "@/types/editor";
 import { ContextCard } from "@/ui/context/ContextCard";
 
 type Props = {
     graph: ExpandedGraph;
-    document: GeneaDocument | null;
+    document: GraphDocument | null;
     fitNonce: number;
     onBgClick?: () => void;
     onBgDoubleClick?: () => void;
@@ -21,7 +21,7 @@ type Props = {
     colorTheme: ColorThemeConfig;
     dtreeConfig?: {
         isVertical: boolean;
-        layoutEngine?: "legacy" | "vnext";
+        layoutEngine?: "vnext" | "v2";
         collapsedNodeIds: string[];
         overlays: import("@/types/domain").ActiveOverlay[];
     };
@@ -1003,7 +1003,7 @@ export function DTreeView({
 
     const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
     const initialFitDone = useRef(false);
-    const lastDocRef = useRef<GeneaDocument | null>(null);
+    const lastDocRef = useRef<GraphDocument | null>(null);
 
     // 1. Initialize Zoom behavior once
     useEffect(() => {
@@ -1763,5 +1763,7 @@ export function DTreeView({
         </div>
     );
 }
+
+
 
 

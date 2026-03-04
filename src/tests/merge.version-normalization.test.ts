@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { calculateDiff } from "@/core/edit/diff";
 import { applyDiff } from "@/core/edit/merge";
 import type { GeneaDocument } from "@/types/domain";
 
 describe("merge version normalization", () => {
-  it("normalizes merged metadata to GSZ + GED 7.0.x", () => {
+  it("normalizes merged metadata to GSK + GED 7.0.x", () => {
     const base: GeneaDocument = {
       persons: {
         "@I1@": { id: "@I1@", name: "Base", sex: "M", lifeStatus: "alive", events: [], famc: [], fams: [], mediaRefs: [], sourceRefs: [] }
@@ -20,13 +20,15 @@ describe("merge version normalization", () => {
       },
       families: {},
       media: {},
-      metadata: { sourceFormat: "GSZ", gedVersion: "7.0.x" }
+      metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" }
     };
 
     const diff = calculateDiff(base, incoming, new Map());
     const { merged } = applyDiff(base, diff);
 
-    expect(merged.metadata.sourceFormat).toBe("GSZ");
+    expect(merged.metadata.sourceFormat).toBe("GSK");
     expect(merged.metadata.gedVersion).toBe("7.0.x");
   });
 });
+
+

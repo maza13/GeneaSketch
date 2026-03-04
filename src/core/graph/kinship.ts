@@ -1,4 +1,4 @@
-﻿import { GeneaDocument, Person } from "@/types/domain";
+﻿import { GraphDocument, Person } from "@/types/domain";
 import type { ResolvedKinshipRelationship } from "@/types/kinship";
 import { resolveKinshipLabelFromDistances, resolveUiDisplayLabel } from "@/core/kinship/nomenclature";
 
@@ -14,7 +14,7 @@ export type KinshipResult = {
 // Helper to reliably extract the biological parents for a node.
 // This prevents mathematical overestimations (e.g., > 50% for a child) caused by
 // duplicate `FAMC` records or adoptive families in a GEDCOM file.
-function getBiologicalParents(person: Person, doc: GeneaDocument): { fatherId?: string; motherId?: string } {
+function getBiologicalParents(person: Person, doc: GraphDocument): { fatherId?: string; motherId?: string } {
     let fatherId: string | undefined = undefined;
     let motherId: string | undefined = undefined;
 
@@ -35,17 +35,17 @@ type HeatmapResult = { dnaMap: Map<string, number>, inbreedingMap: Map<string, n
 
 // Internal cache for genetic heatmaps and kinship values to avoid redundant deep recursive calculations.
 // heatmapCache: doc -> basePersonId -> result
-const heatmapCache = new WeakMap<GeneaDocument, Map<string, HeatmapResult>>();
+const heatmapCache = new WeakMap<GraphDocument, Map<string, HeatmapResult>>();
 // globalKinshipCache: doc -> "idA|idB" -> coefficient
-const globalKinshipCache = new WeakMap<GeneaDocument, Map<string, number>>();
+const globalKinshipCache = new WeakMap<GraphDocument, Map<string, number>>();
 // globalGenerationCache: doc -> personId -> depth
-const globalGenerationCache = new WeakMap<GeneaDocument, Map<string, number>>();
+const globalGenerationCache = new WeakMap<GraphDocument, Map<string, number>>();
 
 /**
  * Calculates the genetic shared DNA and endogamy between a base person and everyone else.
  * Uses exact recursive Kinship calculation (Tabular Method equivalent) natively handling complex endogamy.
  */
-export function calculateGeneticHeatmap(doc: GeneaDocument, baseId: string): HeatmapResult {
+export function calculateGeneticHeatmap(doc: GraphDocument, baseId: string): HeatmapResult {
     // 1. Check top-level heatmap cache
     let docHeatmapCache = heatmapCache.get(doc);
     if (!docHeatmapCache) {
@@ -215,7 +215,7 @@ export function calculateGeneticHeatmap(doc: GeneaDocument, baseId: string): Hea
 /**
  * Finds the kinship relationship between two people.
  */
-export function findKinship(doc: GeneaDocument, p1Id: string, p2Id: string): KinshipResult | null {
+export function findKinship(doc: GraphDocument, p1Id: string, p2Id: string): KinshipResult | null {
     if (p1Id === p2Id) {
         const relationship = resolveKinshipLabelFromDistances({
             d1: 0,
@@ -295,7 +295,7 @@ export function findKinship(doc: GeneaDocument, p1Id: string, p2Id: string): Kin
     };
 }
 
-function getAncestorsWithPaths(doc: GeneaDocument, startId: string): Map<string, number[]> {
+function getAncestorsWithPaths(doc: GraphDocument, startId: string): Map<string, number[]> {
     const map = new Map<string, number[]>();
     const queue: { id: string, dist: number }[] = [{ id: startId, dist: 0 }];
     map.set(startId, [0]);
@@ -320,7 +320,7 @@ function getAncestorsWithPaths(doc: GeneaDocument, startId: string): Map<string,
     return map;
 }
 
-function checkLineage(doc: GeneaDocument, startId: string, ancestorId: string, sex: "M" | "F"): boolean {
+function checkLineage(doc: GraphDocument, startId: string, ancestorId: string, sex: "M" | "F"): boolean {
     if (startId === ancestorId) return true;
     const p = doc.persons[startId];
     if (!p) return false;
@@ -332,7 +332,7 @@ function checkLineage(doc: GeneaDocument, startId: string, ancestorId: string, s
     return checkLineage(doc, parentId, ancestorId, sex);
 }
 
-function findPathIds(doc: GeneaDocument, p1: string, p2: string, targets: Set<string>): string[] {
+function findPathIds(doc: GraphDocument, p1: string, p2: string, targets: Set<string>): string[] {
     const getPathToTargets = (start: string) => {
         const validPathNodes = new Set<string>();
 
@@ -372,7 +372,7 @@ function findPathIds(doc: GeneaDocument, p1: string, p2: string, targets: Set<st
 /**
  * Finds the oldest ancestor in a pure patrilineal (M) or matrilineal (F) line.
  */
-export function getOldestLinealAncestor(doc: GeneaDocument, startId: string, mode: "patrilineal" | "matrilineal"): string {
+export function getOldestLinealAncestor(doc: GraphDocument, startId: string, mode: "patrilineal" | "matrilineal"): string {
     let curr = startId;
     while (true) {
         const p = doc.persons[curr];
@@ -398,7 +398,7 @@ export function getOldestLinealAncestor(doc: GeneaDocument, startId: string, mod
  * Returns all persons in a lineage (descendants) starting from a specific ancestor,
  * strictly following the sex rule of the mode.
  */
-export function getLineagePath(doc: GeneaDocument, startId: string, mode: "patrilineal" | "matrilineal"): { personIds: Set<string>, oldestId: string } {
+export function getLineagePath(doc: GraphDocument, startId: string, mode: "patrilineal" | "matrilineal"): { personIds: Set<string>, oldestId: string } {
     const oldestId = getOldestLinealAncestor(doc, startId, mode);
     const personIds = new Set<string>();
     const visited = new Set<string>();
@@ -473,3 +473,4 @@ export function getLifeOverlapInfo(p1: Person, p2: Person): string | null {
 
     return "Vivieron en épocas similares.";
 }
+

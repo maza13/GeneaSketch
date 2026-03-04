@@ -1,6 +1,6 @@
 ﻿import { resolvePersonId } from "@/core/ai/matching";
 import type { AiResolvedAction, AiReviewDraft, AiReviewItem, AiReviewItemStatus, AiReviewRisk } from "@/types/ai";
-import type { GeneaDocument } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
 import type { SafetyAnnotation } from "@/core/ai/safety";
 
 function riskForAction(action: AiResolvedAction, issues: string[]): AiReviewRisk {
@@ -10,7 +10,7 @@ function riskForAction(action: AiResolvedAction, issues: string[]): AiReviewRisk
   return "medium";
 }
 
-function describeAction(doc: GeneaDocument, action: AiResolvedAction): { title: string; description: string } {
+function describeAction(doc: GraphDocument, action: AiResolvedAction): { title: string; description: string } {
   const getPersonName = (id?: string) => {
     if (!id) return null;
     const p = doc.persons[id];
@@ -66,7 +66,7 @@ function describeAction(doc: GeneaDocument, action: AiResolvedAction): { title: 
   };
 }
 
-function collectActionIssues(doc: GeneaDocument, action: AiResolvedAction): string[] {
+function collectActionIssues(doc: GraphDocument, action: AiResolvedAction): string[] {
   const issues: string[] = [];
   if (action.kind === "update_person") {
     const resolved = resolvePersonId(doc, action.personId, action.matchQuery);
@@ -98,7 +98,7 @@ function collectActionIssues(doc: GeneaDocument, action: AiResolvedAction): stri
   return issues;
 }
 
-function actionCandidates(doc: GeneaDocument, action: AiResolvedAction) {
+function actionCandidates(doc: GraphDocument, action: AiResolvedAction) {
   if (action.kind === "update_person" || action.kind === "delete_person") {
     return resolvePersonId(doc, action.personId, action.matchQuery).candidates;
   }
@@ -122,7 +122,7 @@ function actionCandidates(doc: GeneaDocument, action: AiResolvedAction) {
 }
 
 export function buildReviewItems(
-  doc: GeneaDocument,
+  doc: GraphDocument,
   actions: AiResolvedAction[],
   _contextKind: "local" | "global",
   annotations?: Record<number, SafetyAnnotation>
@@ -179,4 +179,5 @@ export function createEmptyReview(runId: string, _contextKind: "local" | "global
     createdAt: new Date().toISOString()
   };
 }
+
 

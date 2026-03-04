@@ -1,15 +1,15 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildTimeline } from "@/core/timeline/buildTimeline";
 import { buildTimelineHighlightPayload } from "@/core/timeline/highlightMapping";
 import { inferTimelineStatus, inferTimelineEvents } from "@/core/timeline/livingPresence";
-import type { ExpandedGraph, GeneaDocument, ViewConfig } from "@/types/domain";
+import type { ExpandedGraph, GraphDocument, ViewConfig } from "@/types/domain";
 import type { TimelineItem } from "@/types/editor";
 import { TimelineListView } from "@/ui/timeline/TimelineListView";
 import { TimelineScaleView } from "@/ui/timeline/TimelineScaleView";
 import { TimelineEventTooltip } from "@/ui/timeline/TimelineEventTooltip";
 
 type Props = {
-  document: GeneaDocument | null;
+  document: GraphDocument | null;
   expandedGraph: ExpandedGraph;
   viewConfig: ViewConfig | null;
   onTimelineView: (view: "list" | "scale") => void;
@@ -321,3 +321,4 @@ export function TimelineRightPanel({
     </aside>
   );
 }
+

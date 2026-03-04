@@ -1,4 +1,6 @@
-export type SourceFormat = "GED" | "GDZ" | "GSZ";
+import type { GSchemaGraph as GSchemaGraphData, GSchemaOperation } from "@/core/gschema/types";
+
+export type SourceFormat = "GED" | "GSK";
 export type ViewMode = "fan" | "tree" | "network";
 export type Preset =
   | "custom"
@@ -62,6 +64,9 @@ export type PersonNameVariant = {
   given?: string;
   surname?: string;
   nickname?: string;
+  prefix?: string;
+  suffix?: string;
+  title?: string;
   type?: "primary" | "aka" | "nick" | "other";
   primary?: boolean;
 };
@@ -79,6 +84,9 @@ export type Person = {
   id: string;
   name: string;
   surname?: string;
+  surnamePaternal?: string;
+  surnameMaternal?: string;
+  surnameOrder?: "paternal_first" | "maternal_first" | "single";
   names?: PersonNameVariant[];
   sex: "M" | "F" | "U";
   lifeStatus: "alive" | "deceased";
@@ -312,6 +320,10 @@ export type GeneaDocument = {
   };
 };
 
+
+
+export type GraphDocument = GeneaDocument;
+
 export type RightPanelView = "details" | "timeline";
 export type TimelineScope = "visible" | "all";
 export type TimelineViewMode = "list" | "scale";
@@ -362,7 +374,7 @@ export type ViewConfig = {
   showSpouses: boolean;
   dtree?: {
     isVertical: boolean;
-    layoutEngine?: "legacy" | "vnext" | "v2";
+    layoutEngine?: "vnext" | "v2";
     collapsedNodeIds: string[];
     // Highlight & Overlay Systems
     overlays: ActiveOverlay[];
@@ -423,14 +435,17 @@ export type ExpandedGraph = {
 };
 
 export type SessionSnapshot = {
-  schemaVersion: number;
-  document: GeneaDocument | null;
+  schemaVersion: 7;
+  graph?: {
+    data: GSchemaGraphData;
+    journal: GSchemaOperation[];
+  } | null;
   viewConfig: ViewConfig | null;
   visualConfig?: VisualConfig;
   focusHistory: string[];
   focusIndex: number;
   recentFiles?: RecentFileEntry[];
-  recentPayloads?: Record<string, GeneaDocument>;
+  recentPayloads?: Record<string, RecentPayloadV2>;
   mergeDraft?: import("@/types/merge-draft").MergeDraftSnapshot | null;
   aiSettings?: import("@/types/ai").AiSettings;
 };
@@ -468,3 +483,15 @@ export type RecentFileEntry = {
   kind: "open" | "import";
   lastUsedAt: string;
 };
+
+export type RecentPayloadV2 = {
+  graph: {
+    data: GSchemaGraphData;
+    journal: GSchemaOperation[];
+  };
+  sourceVersion: SourceGedVersion;
+  fileName: string;
+  kind: RecentFileEntry["kind"];
+  importedAt: string;
+};
+

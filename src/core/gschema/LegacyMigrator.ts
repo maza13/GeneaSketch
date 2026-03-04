@@ -7,7 +7,7 @@
  * Migration strategy:
  * 1. Read the .gsz (GEDCOM + embedded media + gskMeta) using existing parser.
  * 2. Run documentToGSchema() to build the GSchemaGraph.
- * 3. Preserve the original gskMeta in the manifest metadata.
+ * 3. Normalize output to core-only .gsk contract.
  * 4. Serialize to .gsk via exportGskPackage().
  *
  * GEDCOM round-trip guarantee:
@@ -20,7 +20,6 @@ import type { GeneaDocument, SourceGedVersion } from "@/types/domain";
 import type { GskMetadata } from "@/core/gskFormat";
 import { documentToGSchema, gschemaToDocument } from "./GedcomBridge";
 import { exportGskPackage } from "./GskPackage";
-import type { GskExportOptions } from "./GskPackage";
 import type { ViewConfig, VisualConfig } from "@/types/domain";
 
 // ─────────────────────────────────────────────
@@ -65,11 +64,11 @@ export interface MigrationInput {
  * Migrates a legacy GeneaDocument (from .ged / .gsz / .gdz) to a .gsk package.
  *
  * @example
- * const result = await importZippedGeneaAnyVersion(file, "gsz");
- * if (result.document) {
+ * const parsed = { document, sourceVersion };
+ * if (parsed.document) {
  *   const gsk = await migrateToGsk({
- *     document: result.document,
- *     sourceVersion: result.sourceVersion,
+ *     document: parsed.document,
+ *     sourceVersion: parsed.sourceVersion,
  *     sourceFileName: file.name,
  *     gskMeta: result.gskMeta,
  *     viewConfig: store.viewConfig ?? undefined,
@@ -111,16 +110,10 @@ export async function migrateToGsk(input: MigrationInput): Promise<MigrationResu
         );
     }
 
-    // Step 3: Package as .gsk
-    const exportOptions: GskExportOptions = {
+    // Step 3: Package as .gsk (core-only output)
+    const blob = await exportGskPackage(graph, {
         mediaPolicy: input.mediaPolicy ?? "embed",
-        meta: {
-            viewConfig: input.viewConfig,
-            visualConfig: input.visualConfig,
-        },
-    };
-
-    const blob = await exportGskPackage(graph, exportOptions);
+    });
 
     return {
         blob,

@@ -30,7 +30,7 @@ import type { ViewConfig, VisualConfig } from "@/types/domain";
 import type { ColorThemeConfig } from "@/types/editor";
 import { canonicalizeJson } from "./canonicalJson";
 import type { GskImportMode } from "./errorCatalog";
-import { ERROR_CATALOG, isGskModeEntry } from "./errorCatalog";
+import { ERROR_CATALOG, ERROR_CODES, isGskModeEntry } from "./errorCatalog";
 
 export interface GskPackageMeta {
     viewConfig?: ViewConfig;
@@ -39,6 +39,10 @@ export interface GskPackageMeta {
 }
 
 export interface GskExportOptions {
+    /**
+     * Legacy app metadata. Ignored by core-only export schema >= 0.5.0.
+     * Kept temporarily for call-site compatibility.
+     */
     meta?: GskPackageMeta;
     mediaPolicy?: "embed" | "reference";
 }
@@ -55,7 +59,11 @@ export async function exportGskPackage(
     const zip = new JSZip();
 
     const graphData: GSchemaGraphData = graph.toData();
-    const graphDataForJson: GSchemaGraphData = { ...graphData, nodes: { ...graphData.nodes } };
+    const graphDataForJson: GSchemaGraphData = {
+        ...graphData,
+        schemaVersion: CORE_ONLY_SCHEMA_VERSION,
+        nodes: { ...graphData.nodes },
+    };
     if (options.mediaPolicy !== "reference") {
         for (const [uid, node] of Object.entries(graphDataForJson.nodes)) {
             if (node.type === "Media" && (node as MediaNode).dataUrl) {
@@ -68,6 +76,7 @@ export async function exportGskPackage(
     const journalStr = serializeJournalToJsonl(journalOps);
 
     const manifest = graph.toManifest();
+    manifest.schemaVersion = CORE_ONLY_SCHEMA_VERSION;
     manifest.journalHeadOpSeq = journalOps.reduce((max, op) => Math.max(max, op.opSeq), -1);
     manifest.graphDerivedFromOpSeq = manifest.journalHeadOpSeq;
     const graphJsonStr = JSON.stringify(graphDataForJson, null, 2);
@@ -119,21 +128,6 @@ export async function exportGskPackage(
     mediaEntries.sort((a, b) => a.path.localeCompare(b.path));
     manifest.mediaEntries = mediaEntries;
 
-    const metaFolder = zip.folder("meta")!;
-    const metaEntries: Array<{ path: string; raw: unknown }> = [];
-    if (options.meta?.viewConfig) {
-        metaFolder.file("viewConfig.json", JSON.stringify(options.meta.viewConfig, null, 2));
-        metaEntries.push({ path: "meta/viewConfig.json", raw: options.meta.viewConfig });
-    }
-    if (options.meta?.visualConfig) {
-        metaFolder.file("visualConfig.json", JSON.stringify(options.meta.visualConfig, null, 2));
-        metaEntries.push({ path: "meta/visualConfig.json", raw: options.meta.visualConfig });
-    }
-    if (options.meta?.colorTheme) {
-        metaFolder.file("colorTheme.json", JSON.stringify(options.meta.colorTheme, null, 2));
-        metaEntries.push({ path: "meta/colorTheme.json", raw: options.meta.colorTheme });
-    }
-
     const integrityEntries: GskIntegrityEntry[] = [];
     integrityEntries.push({
         path: "graph.json",
@@ -170,17 +164,6 @@ export async function exportGskPackage(
             canonicalized: false,
         });
     }
-    for (const metaEntry of metaEntries.sort((a, b) => a.path.localeCompare(b.path))) {
-        const canonicalMeta = canonicalizeJson(metaEntry.raw);
-        integrityEntries.push({
-            path: metaEntry.path,
-            sha256: await computeSha256FromString(canonicalMeta),
-            bytes: new TextEncoder().encode(canonicalMeta).byteLength,
-            role: "meta",
-            canonicalized: true,
-        });
-    }
-
     const entriesWithoutManifest = [...integrityEntries].sort((a, b) => a.path.localeCompare(b.path));
     manifest.integrity = {
         algorithm: "sha256",
@@ -230,6 +213,14 @@ const PARENT_CHILD_UNION_CODES = new Set([
 const EDGE_UNKNOWN_CODES = new Set([
     "EDGE_TYPE_UNKNOWN",
 ]);
+
+const APP_META_PATHS = [
+    "meta/viewConfig.json",
+    "meta/visualConfig.json",
+    "meta/colorTheme.json",
+] as const;
+
+const CORE_ONLY_SCHEMA_VERSION = "0.5.0";
 
 function resolveImportMode(options: GskImportOptions): GskImportMode {
     if (options.mode) return options.mode;
@@ -338,6 +329,64 @@ type LegacyQuarantineShape = {
 
 function isLegacyBefore040(schemaVersion: string): boolean {
     return schemaVersion.startsWith("0.1.") || schemaVersion.startsWith("0.2.") || schemaVersion.startsWith("0.3.");
+}
+
+type SemVerTuple = [number, number, number];
+
+function parseSemVerTuple(version: string): SemVerTuple | null {
+    const normalized = version.trim().replace(/^v/i, "");
+    const core = normalized.split("-", 1)[0];
+    const rawParts = core.split(".");
+    if (rawParts.length < 2 || rawParts.length > 3) return null;
+    const parts: number[] = [];
+    for (let i = 0; i < 3; i++) {
+        const token = rawParts[i] ?? "0";
+        if (!/^\d+$/.test(token)) return null;
+        parts.push(Number(token));
+    }
+    return [parts[0], parts[1], parts[2]];
+}
+
+function compareSemVer(versionA: string, versionB: string): number {
+    const parsedA = parseSemVerTuple(versionA);
+    const parsedB = parseSemVerTuple(versionB);
+    if (!parsedA || !parsedB) {
+        return versionA.localeCompare(versionB, undefined, { numeric: true, sensitivity: "base" });
+    }
+    for (let i = 0; i < 3; i++) {
+        if (parsedA[i] > parsedB[i]) return 1;
+        if (parsedA[i] < parsedB[i]) return -1;
+    }
+    return 0;
+}
+
+export function isCoreOnlySchema(schemaVersion: string): boolean {
+    return compareSemVer(schemaVersion, CORE_ONLY_SCHEMA_VERSION) >= 0;
+}
+
+export function isLegacySchema(schemaVersion: string): boolean {
+    return compareSemVer(schemaVersion, CORE_ONLY_SCHEMA_VERSION) < 0;
+}
+
+function listPresentAppMetaPaths(zip: JSZip): string[] {
+    return APP_META_PATHS.filter((path) => Boolean(zip.file(path)));
+}
+
+async function readLegacyMeta(zip: JSZip, warnings: string[]): Promise<GskPackageMeta> {
+    const meta: GskPackageMeta = {};
+    const viewConfigRaw = await zip.file("meta/viewConfig.json")?.async("string");
+    if (viewConfigRaw) {
+        try { meta.viewConfig = JSON.parse(viewConfigRaw); } catch { warnings.push("Could not parse viewConfig.json"); }
+    }
+    const visualConfigRaw = await zip.file("meta/visualConfig.json")?.async("string");
+    if (visualConfigRaw) {
+        try { meta.visualConfig = JSON.parse(visualConfigRaw); } catch { warnings.push("Could not parse visualConfig.json"); }
+    }
+    const colorThemeRaw = await zip.file("meta/colorTheme.json")?.async("string");
+    if (colorThemeRaw) {
+        try { meta.colorTheme = JSON.parse(colorThemeRaw); } catch { warnings.push("Could not parse colorTheme.json"); }
+    }
+    return meta;
 }
 
 function manifestPreimage(manifest: GskPackageManifest): unknown {
@@ -545,6 +594,24 @@ export async function importGskPackage(
     const manifest: GskPackageManifest = JSON.parse(manifestRaw);
     await verifySecurityContract(manifest, mode, warnings);
     await verifyIntegrityBlock(zip, manifest, mode, warnings);
+    const presentAppMetaPaths = listPresentAppMetaPaths(zip);
+    if (presentAppMetaPaths.length > 0) {
+        if (isCoreOnlySchema(manifest.schemaVersion)) {
+            reportByMode(
+                warnings,
+                mode,
+                ERROR_CODES.CORE_META_FORBIDDEN,
+                `schemaVersion ${manifest.schemaVersion} forbids app metadata files: ${presentAppMetaPaths.join(", ")}`
+            );
+        } else if (isLegacySchema(manifest.schemaVersion)) {
+            reportByMode(
+                warnings,
+                mode,
+                ERROR_CODES.LEGACY_META_EXTENSION_DETECTED,
+                `legacy app metadata extension detected: ${presentAppMetaPaths.join(", ")}`
+            );
+        }
+    }
 
     const journalRaw = await zip.file("journal.jsonl")?.async("string");
     const journalLineCount = (journalRaw ?? "")
@@ -940,19 +1007,9 @@ export async function importGskPackage(
         throw new Error("Invalid .gsk integrity: graph and journal are both invalid");
     }
 
-    const meta: GskPackageMeta = {};
-    const viewConfigRaw = await zip.file("meta/viewConfig.json")?.async("string");
-    if (viewConfigRaw) {
-        try { meta.viewConfig = JSON.parse(viewConfigRaw); } catch { warnings.push("Could not parse viewConfig.json"); }
-    }
-    const visualConfigRaw = await zip.file("meta/visualConfig.json")?.async("string");
-    if (visualConfigRaw) {
-        try { meta.visualConfig = JSON.parse(visualConfigRaw); } catch { warnings.push("Could not parse visualConfig.json"); }
-    }
-    const colorThemeRaw = await zip.file("meta/colorTheme.json")?.async("string");
-    if (colorThemeRaw) {
-        try { meta.colorTheme = JSON.parse(colorThemeRaw); } catch { warnings.push("Could not parse colorTheme.json"); }
-    }
+    const meta: GskPackageMeta = isLegacySchema(manifest.schemaVersion) && presentAppMetaPaths.length > 0
+        ? await readLegacyMeta(zip, warnings)
+        : {};
 
     if (!graph) {
         throw new Error("Invalid .gsk integrity: graph could not be reconstructed");
