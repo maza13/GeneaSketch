@@ -147,18 +147,22 @@ export function TimelineRightPanel({
   }, [timelineOverlay?.config.livingIds]);
 
   return (
-    <aside className="panel panel-right timeline-panel timeline-panel--embedded">
-      <div className="panel-header-row">
-        <h2>Timeline</h2>
-        <div className="panel-header-actions">
+    <div className="gs-panel timeline-panel timeline-panel--embedded">
+      <div className="gs-panel-header">
+        <span className="material-symbols-outlined gs-panel-header-icon">history_toggle_off</span>
+        <span className="gs-panel-header-title">Timeline</span>
+        <div className="gs-panel-header-actions">
           <button
             className="panel-icon-btn"
             onClick={onToggleTimelineExpanded}
             title={timelineExpanded ? "Contraer timeline" : "Expandir timeline"}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: timelineExpanded ? "rotate(0deg)" : "rotate(180deg)" }}>
-              <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <span
+              className="material-symbols-outlined"
+              style={{ transform: timelineExpanded ? "rotate(0deg)" : "rotate(180deg)", transition: "transform 200ms ease" }}
+            >
+              expand_less
+            </span>
           </button>
           {onClosePanel ? (
             <button
@@ -166,69 +170,79 @@ export function TimelineRightPanel({
               onClick={onClosePanel}
               title="Cerrar timeline"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span className="material-symbols-outlined">close</span>
             </button>
           ) : null}
         </div>
       </div>
-      <div className={timelineExpanded ? "panel-section-body panel-section-body--expanded timeline-body" : "panel-section-body panel-section-body--compact timeline-body"}>
-        {!timelineExpanded ? <div className="timeline-collapsed-hint">Timeline contraido. Usa "Expandir" para ver eventos.</div> : null}
-        {timelineExpanded ? (
-          <div className="timeline-body-content">
-            <div className="timeline-summary">
+
+      <div className="gs-panel-body" style={{ padding: 0 }}>
+        {!timelineExpanded ? (
+          <div className="timeline-collapsed-hint" style={{ padding: "12px", fontSize: "12px", opacity: 0.6, fontStyle: "italic", textAlign: "center" }}>
+            Timeline contraido. Usa el icono de expandir para ver eventos.
+          </div>
+        ) : (
+          <div className="timeline-body-content" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            <div className="timeline-summary" style={{ padding: "8px 12px", fontSize: "11px", display: "flex", justifyContent: "space-between", background: "var(--bg-panel-alt)", borderBottom: "1px solid var(--line-soft)" }}>
               <span>{items.length} eventos</span>
               <span>Alcance: {scopeLabel}</span>
             </div>
 
-            <div className="timeline-tabs">
+            <div className="timeline-tabs" style={{ display: "flex", padding: "4px", gap: "4px", borderBottom: "1px solid var(--line-soft)" }}>
               <button
                 className={timelineView === "list" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
                 onClick={() => onTimelineView("list")}
+                style={{ flex: 1 }}
               >
                 Lista
               </button>
               <button
                 className={timelineView === "scale" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
                 onClick={() => onTimelineView("scale")}
+                style={{ flex: 1 }}
               >
                 Escala
               </button>
               <button
-                className="timeline-tab timeline-tab--ghost"
+                className="panel-icon-btn"
                 onClick={() => onTimelineHighlight(null)}
                 disabled={!activeItemId}
+                title="Limpiar resaltado"
+                style={{ width: "auto", padding: "0 8px" }}
               >
-                Limpiar resaltado
+                <span className="material-symbols-outlined">filter_alt_off</span>
               </button>
             </div>
 
-            <div className="timeline-living-controls">
-              <div className="timeline-living-title">Vivos por periodo (inferido)</div>
-              <div className="timeline-living-row timeline-living-mode">
+            <div className="timeline-living-controls" style={{ padding: "12px", borderBottom: "1px solid var(--line-soft)" }}>
+              <div className="timeline-living-title" style={{ fontSize: "11px", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase", color: "var(--gs-ink-muted)" }}>Presencia en el tiempo</div>
+
+              <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
                 <button
-                  className={livingMode === "year" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
+                  className={livingMode === "year" ? "gs-panel-btn-subtle gs-panel-btn-subtle--active" : "gs-panel-btn-subtle"}
+                  style={{ flex: 1 }}
                   onClick={() => {
                     setLivingMode("year");
                     setLivingEnabled(true);
                   }}
                 >
-                  {"A\u00f1o"}
+                  Año
                 </button>
                 <button
-                  className={livingMode === "decade" ? "timeline-tab timeline-tab--active" : "timeline-tab"}
+                  className={livingMode === "decade" ? "gs-panel-btn-subtle gs-panel-btn-subtle--active" : "gs-panel-btn-subtle"}
+                  style={{ flex: 1 }}
                   onClick={() => {
                     setLivingMode("decade");
                     setLivingValue(Math.floor(livingValue / 10) * 10);
                     setLivingEnabled(true);
                   }}
                 >
-                  {"D\u00e9cada"}
+                  Década
                 </button>
               </div>
-              <div className="timeline-living-row">
-                <label className="timeline-living-switch">
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <label className="toggle" style={{ flex: 1, fontSize: "12px" }}>
                   <input
                     type="checkbox"
                     checked={livingEnabled}
@@ -236,27 +250,37 @@ export function TimelineRightPanel({
                   />
                   Resaltar vivos
                 </label>
-                <div className="timeline-living-value">
+                <div style={{ fontSize: "14px", fontWeight: 700, minWidth: "50px", textAlign: "right", fontFamily: "monospace" }}>
                   {livingMode === "year" ? `${effectiveValue}` : `${effectiveValue}s`}
                 </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "4px" }}>
                 <button
+                  className="gs-panel-btn-subtle"
+                  style={{ flex: 1 }}
+                  onClick={() => setIsPlaying(!isPlaying)}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px", verticalAlign: "middle", marginRight: "4px" }}>
+                    {isPlaying ? "pause" : "play_arrow"}
+                  </span>
+                  {isPlaying ? "Pausar" : "Reproducir"}
+                </button>
+                <button
+                  className="gs-panel-btn-subtle"
                   onClick={() => {
                     setLivingEnabled(false);
                     onTimelineStatus([], [], livingValue, []);
                   }}
                   disabled={livingCount === 0}
                 >
-                  Quitar
-                </button>
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  style={{ fontWeight: "bold", color: isPlaying ? "var(--danger-text)" : "var(--accent)" }}
-                >
-                  {isPlaying ? "|| Pausar" : "> Reproducir"}
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>restart_alt</span>
                 </button>
               </div>
+
               <input
-                className="timeline-year-slider"
+                className="gs-slider"
+                style={{ width: "100%", marginTop: "12px" }}
                 type="range"
                 min={bounds.min}
                 max={bounds.max}
@@ -269,14 +293,14 @@ export function TimelineRightPanel({
                   setLivingEnabled(true);
                 }}
               />
-              <div className="timeline-living-meta">
+              <div style={{ fontSize: "10px", marginTop: "4px", color: "var(--gs-ink-muted)", textAlign: "center" }}>
                 {livingMode === "year"
                   ? `${livingCount} personas vivas en ${effectiveValue}`
                   : `${livingCount} personas vivas en la decada de ${effectiveValue}`}
               </div>
             </div>
 
-            <div className="timeline-content">
+            <div className="timeline-content" style={{ flex: 1, minHeight: 0 }}>
               {timelineView === "scale" ? (
                 <TimelineScaleView
                   items={items}
@@ -312,13 +336,12 @@ export function TimelineRightPanel({
               hover.kind === "item" ? (
                 <TimelineEventTooltip item={hover.item} x={hover.x} y={hover.y} />
               ) : (
-                <TimelineEventTooltip items={hover.items} x={hover.x} y={hover.y} />
+                <TimelineEventTooltip items={hover.items} x={hover.y} y={hover.y} />
               )
             ) : null}
           </div>
-        ) : null}
+        )}
       </div>
-    </aside>
+    </div>
   );
 }
-

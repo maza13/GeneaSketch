@@ -90,7 +90,7 @@ export function TopMenuBar({ menus, actions = [], menuLayout, onChangeLayout }: 
                     </div>
                     <div className="menu-dropdown-label">{item.label}</div>
                     {item.shortcut && <div className="menu-dropdown-shortcut">{item.shortcut}</div>}
-                    {item.children && <div className="menu-dropdown-chevron">›</div>}
+                    {item.children && <span className="material-symbols-outlined menu-dropdown-chevron">chevron_right</span>}
                 </button>
 
                 {item.children && (
@@ -107,14 +107,7 @@ export function TopMenuBar({ menus, actions = [], menuLayout, onChangeLayout }: 
             {/* ── Brand + Layout switcher ────────────────────── */}
             <div className="topbar-brand">
                 <span className="topbar-logo">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <circle cx="12" cy="5" r="2.5" fill="currentColor" opacity="0.9" />
-                        <circle cx="5" cy="19" r="2.5" fill="currentColor" opacity="0.7" />
-                        <circle cx="19" cy="19" r="2.5" fill="currentColor" opacity="0.7" />
-                        <line x1="12" y1="7.5" x2="5" y2="16.5" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
-                        <line x1="12" y1="7.5" x2="19" y2="16.5" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
-                        <line x1="5" y1="19" x2="19" y2="19" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-                    </svg>
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>account_tree</span>
                 </span>
                 <span className="topbar-appname">GeneaSketch</span>
 
@@ -159,7 +152,7 @@ export function TopMenuBar({ menus, actions = [], menuLayout, onChangeLayout }: 
                             disabled={action.disabled}
                             onClick={() => action.onClick?.()}
                         >
-                            {action.icon || <span className="topbar-action-label">{action.label}</span>}
+                            {action.icon || <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>bolt</span>}
                         </button>
                     ))}
                 </div>

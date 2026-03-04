@@ -9,23 +9,18 @@ type ShellSideToggleProps = {
 
 function ShellSideToggle({ side, collapsed, onClick }: ShellSideToggleProps) {
     const isLeft = side === "left";
+    // Which chevron to show: points toward the canvas when collapsed, toward panel when open
+    const icon = isLeft
+        ? (collapsed ? "chevron_right" : "chevron_left")
+        : (collapsed ? "chevron_left" : "chevron_right");
+
     return (
         <button
             className={`shell-panel-toggle shell-panel-toggle--${side}`}
             onClick={onClick}
             title={`${collapsed ? "Mostrar" : "Ocultar"} panel ${isLeft ? "izquierdo" : "derecho"}`}
         >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                {isLeft ? (
-                    collapsed
-                        ? <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                        : <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                ) : (
-                    collapsed
-                        ? <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                        : <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                )}
-            </svg>
+            <span className="material-symbols-outlined">{icon}</span>
         </button>
     );
 }
@@ -55,10 +50,14 @@ export function AppShell({
     onToggleLeft,
     onToggleRight,
     detailsMode,
-    timelineMode
+    timelineMode,
 }: AppShellProps) {
     const layoutClassName = buildLayoutClassName(leftCollapsed, rightCollapsed);
-    const rightStackClassName = `right-panel-stack ${detailsMode === "expanded" ? "details-expanded" : "details-compact"} ${timelineMode === "expanded" ? "timeline-expanded" : "timeline-compact"}`;
+    const rightStackClassName = [
+        "panel-right-stack",
+        detailsMode === "expanded" ? "details-expanded" : "details-compact",
+        timelineMode === "expanded" ? "timeline-expanded" : "timeline-compact",
+    ].join(" ");
 
     return (
         <div className="app-container">
@@ -67,19 +66,30 @@ export function AppShell({
             </header>
 
             <main className={layoutClassName}>
-                {!leftCollapsed && leftPanel}
+                {/* Left sidebar — always in DOM, slides via CSS */}
+                <aside
+                    className={`shell-sidebar shell-sidebar--left${leftCollapsed ? " shell-sidebar--collapsed" : ""}`}
+                    aria-hidden={leftCollapsed}
+                >
+                    {leftPanel}
+                </aside>
 
+                {/* Canvas — fills remaining space */}
                 <section className="canvas-panel">
                     <ShellSideToggle side="left" collapsed={leftCollapsed} onClick={onToggleLeft} />
                     <ShellSideToggle side="right" collapsed={rightCollapsed} onClick={onToggleRight} />
                     {canvas}
                 </section>
 
-                {!rightCollapsed && (
-                    <section className={rightStackClassName}>
+                {/* Right sidebar — always in DOM, slides via CSS */}
+                <aside
+                    className={`shell-sidebar shell-sidebar--right${rightCollapsed ? " shell-sidebar--collapsed" : ""}`}
+                    aria-hidden={rightCollapsed}
+                >
+                    <div className={rightStackClassName}>
                         {rightPanel}
-                    </section>
-                )}
+                    </div>
+                </aside>
             </main>
 
             {footer}

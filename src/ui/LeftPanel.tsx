@@ -1,4 +1,5 @@
 import type { GraphDocument, ViewConfig, VisualConfig } from "@/types/domain";
+
 import { LayerPanel } from "./LayerPanel";
 
 type Props = {
@@ -28,7 +29,7 @@ export function LeftPanel({
   onDepth,
   onInclude,
   onGridEnabled,
-  onClearPositions
+  onClearPositions,
 }: Props) {
   const positionCount = Object.keys(visualConfig.nodePositions).length;
   const layersOpen = sections?.layersOpen ?? true;
@@ -37,57 +38,57 @@ export function LeftPanel({
   const anyClosed = !layersOpen || !treeConfigOpen || !canvasToolsOpen;
 
   return (
-    <aside className="panel panel-left" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className="panel-left-inner">
-        <div className="panel-header-row">
-          <h2>Capas y árbol</h2>
-          <div className="panel-header-actions">
-            <button
-              className="panel-icon-btn"
-              onClick={() => onSetSections({ layersOpen: true, treeConfigOpen: true, canvasToolsOpen: true })}
-              title="Expandir todas las secciones"
-              disabled={!anyClosed}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <button
-              className="panel-icon-btn"
-              onClick={() => onSetSections({ layersOpen: false, treeConfigOpen: false, canvasToolsOpen: false })}
-              title="Contraer todas las secciones"
-              disabled={anyClosed}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+    // gs-panel fills the shell-sidebar container provided by AppShell
+    <div className="gs-panel" style={{ height: "100%" }}>
+
+      {/* ── Panel header ──────────────────────────────── */}
+      <div className="gs-panel-header">
+        <span className="material-symbols-outlined gs-panel-header-icon">explore</span>
+        <span className="gs-panel-header-title">Explorador</span>
+        <div className="gs-panel-header-actions">
+          <button
+            className="panel-icon-btn"
+            onClick={() => onSetSections({ layersOpen: true, treeConfigOpen: true, canvasToolsOpen: true })}
+            title="Expandir todas las secciones"
+            disabled={!anyClosed}
+          >
+            <span className="material-symbols-outlined">unfold_more</span>
+          </button>
+          <button
+            className="panel-icon-btn"
+            onClick={() => onSetSections({ layersOpen: false, treeConfigOpen: false, canvasToolsOpen: false })}
+            title="Contraer todas las secciones"
+            disabled={anyClosed}
+          >
+            <span className="material-symbols-outlined">unfold_less</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Panel body ────────────────────────────────── */}
+      <div className="gs-panel-body">
+
+        {/* Section 1: Capas de análisis */}
+        <div className={`gs-panel-section ${layersOpen ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+          <div className="gs-panel-section-header" onClick={() => onToggleSection("layers")}>
+            <span className="material-symbols-outlined gs-panel-section-icon">layers</span>
+            <span className="gs-panel-section-label">Capas de análisis</span>
+            <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
+          </div>
+          <div className="gs-panel-section-body">
+            <LayerPanel document={document} hideHeader />
           </div>
         </div>
 
-        <section className="left-section">
-          <header className="left-section__header">
-            <h3>Capas de análisis</h3>
-            <button className="panel-icon-btn" onClick={() => onToggleSection("layers")} title={layersOpen ? "Contraer sección" : "Expandir sección"}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: layersOpen ? "rotate(0deg)" : "rotate(180deg)" }}>
-                <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </header>
-          {layersOpen ? <LayerPanel document={document} hideHeader /> : null}
-        </section>
-
-        {viewConfig ? (
-          <section className="left-section">
-            <header className="left-section__header">
-              <h3>Configuración del árbol</h3>
-              <button className="panel-icon-btn" onClick={() => onToggleSection("treeConfig")} title={treeConfigOpen ? "Contraer sección" : "Expandir sección"}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: treeConfigOpen ? "rotate(0deg)" : "rotate(180deg)" }}>
-                  <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </header>
-            {treeConfigOpen ? (
+        {/* Section 2: Configuración del árbol */}
+        {viewConfig && (
+          <div className={`gs-panel-section ${treeConfigOpen ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+            <div className="gs-panel-section-header" onClick={() => onToggleSection("treeConfig")}>
+              <span className="material-symbols-outlined gs-panel-section-icon">account_tree</span>
+              <span className="gs-panel-section-label">Configuración del árbol</span>
+              <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
+            </div>
+            <div className="gs-panel-section-body">
               <div className="builder builder--tree">
                 {viewConfig.dtree && (
                   <label className="toggle">
@@ -115,14 +116,16 @@ export function LeftPanel({
                     <span>1. Ancestros</span>
                     <span className="value-bubble">{viewConfig.depth.ancestors}</span>
                   </div>
-                  <input type="range" min={0} max={25} step={1} value={viewConfig.depth.ancestors} onChange={(event) => onDepth("ancestors", Number(event.target.value))} />
+                  <input type="range" min={0} max={25} step={1} value={viewConfig.depth.ancestors}
+                    onChange={(event) => onDepth("ancestors", Number(event.target.value))} />
                 </div>
                 <div className="depth-control">
                   <div className="label-row">
                     <span>2. Descendientes</span>
                     <span className="value-bubble">{viewConfig.depth.descendants}</span>
                   </div>
-                  <input type="range" min={0} max={25} step={1} value={viewConfig.depth.descendants} onChange={(event) => onDepth("descendants", Number(event.target.value))} />
+                  <input type="range" min={0} max={25} step={1} value={viewConfig.depth.descendants}
+                    onChange={(event) => onDepth("descendants", Number(event.target.value))} />
                 </div>
                 <div className="builder-subsection">
                   <h4>Ramas colaterales</h4>
@@ -131,53 +134,87 @@ export function LeftPanel({
                       <span>A. Tíos (de ancestros)</span>
                       <span className="value-bubble">{viewConfig.depth.unclesGreatUncles}</span>
                     </div>
-                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.unclesGreatUncles} onChange={(event) => onDepth("unclesGreatUncles", Number(event.target.value))} />
+                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.unclesGreatUncles}
+                      onChange={(event) => onDepth("unclesGreatUncles", Number(event.target.value))} />
                   </div>
                   <div className="depth-control">
                     <div className="label-row">
                       <span>B. Hermanos y descendientes</span>
                       <span className="value-bubble">{viewConfig.depth.siblingsNephews}</span>
                     </div>
-                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.siblingsNephews} onChange={(event) => onDepth("siblingsNephews", Number(event.target.value))} />
+                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.siblingsNephews}
+                      onChange={(event) => onDepth("siblingsNephews", Number(event.target.value))} />
                   </div>
                   <div className="depth-control">
                     <div className="label-row">
                       <span>C. Tíos directos y descendientes</span>
                       <span className="value-bubble">{viewConfig.depth.unclesCousins}</span>
                     </div>
-                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.unclesCousins} onChange={(event) => onDepth("unclesCousins", Number(event.target.value))} />
+                    <input type="range" min={0} max={6} step={1} value={viewConfig.depth.unclesCousins}
+                      onChange={(event) => onDepth("unclesCousins", Number(event.target.value))} />
                   </div>
                 </div>
                 <label className="toggle">
-                  <input type="checkbox" checked={viewConfig.showSpouses} onChange={(event) => onInclude("spouses", event.target.checked)} />
+                  <input type="checkbox" checked={viewConfig.showSpouses}
+                    onChange={(event) => onInclude("spouses", event.target.checked)} />
                   Mostrar parejas
                 </label>
               </div>
-            ) : null}
-          </section>
-        ) : null}
+            </div>
+          </div>
+        )}
 
-        <section className="left-section">
-          <header className="left-section__header">
-            <h3>Herramientas de lienzo</h3>
-            <button className="panel-icon-btn" onClick={() => onToggleSection("canvasTools")} title={canvasToolsOpen ? "Contraer sección" : "Expandir sección"}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: canvasToolsOpen ? "rotate(0deg)" : "rotate(180deg)" }}>
-                <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </header>
-          {canvasToolsOpen ? (
+        {/* Section 3: Herramientas de lienzo */}
+        <div className={`gs-panel-section ${canvasToolsOpen ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+          <div className="gs-panel-section-header" onClick={() => onToggleSection("canvasTools")}>
+            <span className="material-symbols-outlined gs-panel-section-icon">build</span>
+            <span className="gs-panel-section-label">Herramientas de lienzo</span>
+            <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
+          </div>
+          <div className="gs-panel-section-body">
             <div className="builder builder--tools">
               <label className="toggle">
-                <input type="checkbox" checked={visualConfig.gridEnabled} onChange={(event) => onGridEnabled(event.target.checked)} />
+                <input type="checkbox" checked={visualConfig.gridEnabled}
+                  onChange={(event) => onGridEnabled(event.target.checked)} />
                 Cuadrícula
               </label>
-              {positionCount > 0 ? <button onClick={onClearPositions}>Limpiar posiciones ({positionCount})</button> : null}
+              {positionCount > 0 && (
+                <button onClick={onClearPositions}>
+                  Limpiar posiciones ({positionCount})
+                </button>
+              )}
             </div>
-          ) : null}
-        </section>
+          </div>
+        </div>
+
+        {/* ── Future slots (reserved space) ─────────────── */}
+        <div className="gs-panel-divider" />
+
+        <div className="gs-panel-section gs-panel-section--future">
+          <div className="gs-panel-section-header">
+            <span className="material-symbols-outlined gs-panel-section-icon">bookmark</span>
+            <span className="gs-panel-section-label">Favoritos</span>
+            <span className="gs-panel-future-badge">Pronto</span>
+          </div>
+        </div>
+
+        <div className="gs-panel-section gs-panel-section--future">
+          <div className="gs-panel-section-header">
+            <span className="material-symbols-outlined gs-panel-section-icon">filter_list</span>
+            <span className="gs-panel-section-label">Filtros rápidos</span>
+            <span className="gs-panel-future-badge">Pronto</span>
+          </div>
+        </div>
+
+        <div className="gs-panel-section gs-panel-section--future">
+          <div className="gs-panel-section-header">
+            <span className="material-symbols-outlined gs-panel-section-icon">history</span>
+            <span className="gs-panel-section-label">Historial</span>
+            <span className="gs-panel-future-badge">Pronto</span>
+          </div>
+        </div>
+
       </div>
-    </aside>
+    </div>
   );
 }
-

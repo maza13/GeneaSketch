@@ -1,265 +1,268 @@
-
-import type { GraphDocument, PendingRelationType } from "@/types/domain";
-
-function IconEye() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5c5.5 0 9.5 5.2 9.5 7s-4 7-9.5 7S2.5 14.8 2.5 12 6.5 5 12 5zm0 2c-3.9 0-7 3.7-7 5s3.1 5 7 5 7-3.7 7-5-3.1-5-7-5zm0 2.5A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5z" />
-    </svg>
-  );
-}
-
-function IconEdit() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 17.25V20h2.75L17.8 8.95l-2.75-2.75L4 17.25zm14.7-9.2a.75.75 0 0 0 0-1.06l-1.7-1.7a.75.75 0 0 0-1.06 0l-1.3 1.3 2.75 2.75 1.31-1.29z" />
-    </svg>
-  );
-}
-
-function IconLink() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M10 14a4 4 0 0 1 0-6l2-2a4 4 0 0 1 5.7 5.6l-1.1 1.1-1.4-1.4 1.1-1.1a2 2 0 0 0-2.8-2.8l-2 2a2 2 0 0 0 0 2.8l.3.3-1.4 1.4-.3-.3zm4 2a4 4 0 0 1 0 6l-2 2a4 4 0 0 1-5.7-5.6l1.1-1.1 1.4 1.4-1.1 1.1a2 2 0 0 0 2.8 2.8l2-2a2 2 0 0 0 0-2.8l-.3-.3 1.4-1.4.3.3z" />
-    </svg>
-  );
-}
-
-function IconUnlink() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 7.5 3.5 4 5 2.5 8.5 6 7 7.5zm9.5 9.5L20 20.5 21.5 19l-3.5-3.5-1.5 1.5zM8.5 17a4 4 0 0 1 0-5.7l1.1-1.1 1.4 1.4-1.1 1.1a2 2 0 1 0 2.8 2.8l1.1-1.1 1.4 1.4-1.1 1.1a4 4 0 0 1-5.6 0zm7-7a4 4 0 0 1 0 5.7l-1.1 1.1-1.4-1.4 1.1-1.1a2 2 0 1 0-2.8-2.8l-1.1 1.1-1.4-1.4 1.1-1.1a4 4 0 0 1 5.6 0z" />
-    </svg>
-  );
-}
+import { useState } from "react";
+import type { GraphDocument, Person, PendingRelationType } from "@/types/domain";
 
 
 type Props = {
-  document: GraphDocument | null;
-  selectedPersonId: string | null;
-  detailsMode: "expanded" | "compact";
-  onToggleDetailsExpanded: () => void;
-  onEditPerson: (personId: string) => void;
-  onViewPersonDetail: (personId: string) => void;
-  onAddRelation: (anchorId: string, type: PendingRelationType) => void;
-  onLinkExistingRelation: (anchorId: string, type: PendingRelationType) => void;
-  onUnlinkRelation: (personId: string, relatedId: string, type: "parent" | "child" | "spouse") => void;
+    document: GraphDocument | null;
+    selectedPersonId: string | null;
+    detailsMode: "expanded" | "compact";
+    onToggleDetailsExpanded: () => void;
+    onEditPerson: (personId: string) => void;
+    onViewPersonDetail: (personId: string) => void;
+    onAddRelation: (personId: string, type: PendingRelationType) => void;
+    onLinkExistingRelation: (anchorId: string, type: PendingRelationType) => void;
+    onUnlinkRelation: (personId: string, relatedId: string, type: "parent" | "child" | "spouse") => void;
 };
+
 export function RightPanel({
-  document,
-  selectedPersonId,
-  detailsMode,
-  onToggleDetailsExpanded,
-  onEditPerson,
-  onViewPersonDetail,
-  onAddRelation,
-  onLinkExistingRelation,
-  onUnlinkRelation
+    document,
+    selectedPersonId,
+    detailsMode,
+    onToggleDetailsExpanded,
+    onEditPerson,
+    onViewPersonDetail,
+    onAddRelation,
+    onLinkExistingRelation,
+    onUnlinkRelation,
 }: Props) {
-  const detailsExpanded = detailsMode === "expanded";
-  const person = selectedPersonId && document ? document.persons[selectedPersonId] : null;
-  const birth = person?.events.find((event) => event.type === "BIRT")?.date;
-  const death = person?.events.find((event) => event.type === "DEAT")?.date;
+    // Local state for section collapsing
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+        bio: true,
+        parents: true,
+        spouses: true,
+        children: true,
+    });
 
-  const parents: { id: string; name: string }[] = [];
-  const spouses: { id: string; name: string }[] = [];
-  const children: { id: string; name: string }[] = [];
-  const parentIds = new Set<string>();
-  const spouseIds = new Set<string>();
-  const childIds = new Set<string>();
+    const toggleSection = (id: string) => {
+        setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
 
-  if (person && document) {
-    for (const famId of person.famc) {
-      const fam = document.families[famId];
-      if (!fam) continue;
-      if (fam.husbandId && document.persons[fam.husbandId] && !parentIds.has(fam.husbandId)) {
-        parentIds.add(fam.husbandId);
-        parents.push({ id: fam.husbandId, name: document.persons[fam.husbandId].name });
-      }
-      if (fam.wifeId && document.persons[fam.wifeId] && !parentIds.has(fam.wifeId)) {
-        parentIds.add(fam.wifeId);
-        parents.push({ id: fam.wifeId, name: document.persons[fam.wifeId].name });
-      }
+    const person = selectedPersonId && document ? document.persons[selectedPersonId] : null;
+
+    // Helper to find relatives
+    const getParents = (p: Person) => {
+        if (!document) return [];
+        return Object.values(document.families)
+            .filter((f) => f.childrenIds.includes(p.id))
+            .flatMap((f) => [f.husbandId, f.wifeId])
+            .filter((id): id is string => !!id && id !== p.id)
+            .map((id) => document.persons[id])
+            .filter((p): p is Person => !!p);
+    };
+
+    const getSpouses = (p: Person) => {
+        if (!document) return [];
+        return p.fams
+            .map((famId) => document.families[famId])
+            .filter(Boolean)
+            .map((f) => (f.husbandId === p.id ? f.wifeId : f.husbandId))
+            .filter((id): id is string => !!id)
+            .map((id) => document.persons[id])
+            .filter((p): p is Person => !!p);
+    };
+
+    const getChildren = (p: Person) => {
+        if (!document) return [];
+        return p.fams
+            .map((famId) => document.families[famId])
+            .filter(Boolean)
+            .flatMap((f) => f.childrenIds)
+            .map((id) => document.persons[id])
+            .filter((p): p is Person => !!p);
+    };
+
+    if (!person) {
+        return (
+            <div className="gs-panel" style={{ height: "100%" }}>
+                <div className="gs-panel-header">
+                    <span className="material-symbols-outlined gs-panel-header-icon">person_off</span>
+                    <span className="gs-panel-header-title">Sin selección</span>
+                </div>
+                <div className="gs-panel-body" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: 0.5, textAlign: "center", padding: "40px 20px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 48, marginBottom: 12 }}>person_search</span>
+                    <p style={{ fontSize: 13, lineHeight: 1.5 }}>Selecciona a una persona en el árbol para ver sus detalles y familiares.</p>
+                </div>
+            </div>
+        );
     }
-    for (const famId of person.fams) {
-      const fam = document.families[famId];
-      if (!fam) continue;
-      const spouseId = fam.husbandId === person.id ? fam.wifeId : fam.husbandId;
-      if (spouseId && document.persons[spouseId] && !spouseIds.has(spouseId)) {
-        spouseIds.add(spouseId);
-        spouses.push({ id: spouseId, name: document.persons[spouseId].name });
-      }
-      for (const childId of fam.childrenIds) {
-        if (document.persons[childId] && !childIds.has(childId)) {
-          childIds.add(childId);
-          children.push({ id: childId, name: document.persons[childId].name });
-        }
-      }
-    }
-  }
 
-  const familySummary =
-    person && document
-      ? {
-        originFamilies: person.famc.length,
-        ownFamilies: person.fams.length,
-        parents: parents.length,
-        spouses: spouses.length,
-        children: children.length
-      }
-      : null;
+    const parents = getParents(person);
+    const spouses = getSpouses(person);
+    const children = getChildren(person);
 
-  return (
-    <aside className="panel panel-right">
-      <div className="panel-header-row">
-        <h2>Detalles</h2>
-        <div className="panel-header-actions">
-          <button
-            className="panel-icon-btn"
-            onClick={onToggleDetailsExpanded}
-            title={detailsExpanded ? "Contraer detalles" : "Expandir detalles"}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ transform: detailsExpanded ? "rotate(0deg)" : "rotate(180deg)" }}>
-              <path d="M7 13l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+    return (
+        <div className="gs-panel" style={{ height: "100%" }}>
+            {/* ── Panel Header ─────────────────────────────── */}
+            <div className="gs-panel-header">
+                <span className="material-symbols-outlined gs-panel-header-icon">contact_page</span>
+                <span className="gs-panel-header-title">Detalles</span>
+                <div className="gs-panel-header-actions">
+                    <button className="panel-icon-btn" onClick={() => onEditPerson(person.id)} title="Editar persona">
+                        <span className="material-symbols-outlined">edit</span>
+                    </button>
+                    <button className="panel-icon-btn" onClick={() => onViewPersonDetail(person.id)} title="Ficha completa">
+                        <span className="material-symbols-outlined">open_in_new</span>
+                    </button>
+                    <div className="gs-panel-divider--v" />
+                    <button className="panel-icon-btn" onClick={onToggleDetailsExpanded} title={detailsMode === "expanded" ? "Compactar" : "Expandir"}>
+                        <span className="material-symbols-outlined">{detailsMode === "expanded" ? "collapse_all" : "expand_all"}</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* ── Panel Body ───────────────────────────────── */}
+            <div className="gs-panel-body" style={{ padding: "0 0 20px 0" }}>
+
+                {/* Person Primary Info */}
+                <div style={{ padding: "20px 16px", borderBottom: "1px solid var(--line-soft)", background: "var(--bg-panel-alt)" }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--gs-ink-primary)" }}>{person.name}</h2>
+                    <div style={{ display: "flex", gap: "8px", color: "var(--gs-ink-muted)", fontSize: 12 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>fingerprint</span>
+                        <code>{person.id}</code>
+                        <span style={{ opacity: 0.3 }}>|</span>
+                        <span>{person.sex === "M" ? "Hombre" : person.sex === "F" ? "Mujer" : "No definido"}</span>
+                    </div>
+                </div>
+
+                {/* Section: Biografía rápida */}
+                <div className={`gs-panel-section ${openSections.bio ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+                    <div className="gs-panel-section-header" onClick={() => toggleSection("bio")}>
+                        <span className="material-symbols-outlined gs-panel-section-icon">badge</span>
+                        <span className="gs-panel-section-label">Vida</span>
+                        <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
+                    </div>
+                    <div className="gs-panel-section-body" style={{ padding: "10px 20px" }}>
+                        <div style={{ display: "grid", gap: "12px" }}>
+                            <div style={{ display: "flex", gap: "10px" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--gs-accent-gold)" }}>celebration</span>
+                                <div>
+                                    <div style={{ fontSize: 11, color: "var(--gs-ink-muted)", fontWeight: 600, textTransform: "uppercase" }}>Nacimiento</div>
+                                    <div style={{ fontSize: 13 }}>{person.birthDate || "Fecha desconocida"}</div>
+                                    <div style={{ fontSize: 12, color: "var(--gs-ink-secondary)" }}>{person.birthPlace || "Lugar desconocido"}</div>
+                                </div>
+                            </div>
+                            <div style={{ display: "flex", gap: "10px" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--gs-ink-muted)" }}>shutter_speed</span>
+                                <div>
+                                    <div style={{ fontSize: 11, color: "var(--gs-ink-muted)", fontWeight: 600, textTransform: "uppercase" }}>Defunción</div>
+                                    <div style={{ fontSize: 13 }}>{person.deathDate || (person.lifeStatus === "alive" ? "Vive" : "Fecha desconocida")}</div>
+                                    <div style={{ fontSize: 12, color: "var(--gs-ink-secondary)" }}>{person.deathPlace || (person.lifeStatus === "alive" ? "" : "Lugar desconocido")}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section: Padres */}
+                <div className={`gs-panel-section ${openSections.parents ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+                    <div className="gs-panel-section-header" onClick={() => toggleSection("parents")}>
+                        <span className="material-symbols-outlined gs-panel-section-icon">escalator_warning</span>
+                        <span className="gs-panel-section-label">Padres ({parents.length})</span>
+                        <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
+                    </div>
+                    <div className="gs-panel-section-body" style={{ padding: "8px 12px" }}>
+                        {parents.map(p => (
+                            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 8px", borderRadius: "6px" }} className="gs-list-item">
+                                <span className="material-symbols-outlined" style={{ fontSize: 20, color: p.sex === "M" ? "#3b82f6" : "#ec4899" }}>
+                                    {p.sex === "M" ? "male" : "female"}
+                                </span>
+                                <span style={{ fontSize: 13, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: "pointer" }} onClick={() => onViewPersonDetail(p.id)}>{p.name}</span>
+                                <button className="panel-icon-btn" onClick={() => onUnlinkRelation(person.id, p.id, "parent")} title="Desvincular">
+                                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>link_off</span>
+                                </button>
+                            </div>
+                        ))}
+                        <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <button className="gs-panel-btn-subtle" onClick={() => onAddRelation(person.id, "father")}>+ Padre</button>
+                                <button className="gs-panel-btn-subtle" style={{ fontSize: 9 }} onClick={() => onLinkExistingRelation(person.id, "father")}>Vincular existente</button>
+                            </div>
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <button className="gs-panel-btn-subtle" onClick={() => onAddRelation(person.id, "mother")}>+ Madre</button>
+                                <button className="gs-panel-btn-subtle" style={{ fontSize: 9 }} onClick={() => onLinkExistingRelation(person.id, "mother")}>Vincular existente</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section: Parejas */}
+                <div className={`gs-panel-section ${openSections.spouses ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+                    <div className="gs-panel-section-header" onClick={() => toggleSection("spouses")}>
+                        <span className="material-symbols-outlined gs-panel-section-icon">favorite</span>
+                        <span className="gs-panel-section-label">Parejas ({spouses.length})</span>
+                        <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
+                    </div>
+                    <div className="gs-panel-section-body" style={{ padding: "8px 12px" }}>
+                        {spouses.map(p => (
+                            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 8px", borderRadius: "6px" }} className="gs-list-item">
+                                <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--gs-accent-red)" }}>favorite</span>
+                                <span style={{ fontSize: 13, flex: 1, cursor: "pointer" }} onClick={() => onViewPersonDetail(p.id)}>{p.name}</span>
+                                <button className="panel-icon-btn" onClick={() => onUnlinkRelation(person.id, p.id, "spouse")} title="Desvincular">
+                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link_off</span>
+                                </button>
+                            </div>
+                        ))}
+                        <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
+                            <button className="gs-panel-btn-subtle" style={{ flex: 1 }} onClick={() => onAddRelation(person.id, "spouse")}>+ Pareja</button>
+                            <button className="gs-panel-btn-subtle" style={{ flex: 1, fontSize: 10 }} onClick={() => onLinkExistingRelation(person.id, "spouse")}>Vincular existente</button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section: Hijos */}
+                <div className={`gs-panel-section ${openSections.children ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+                    <div className="gs-panel-section-header" onClick={() => toggleSection("children")}>
+                        <span className="material-symbols-outlined gs-panel-section-icon">child_care</span>
+                        <span className="gs-panel-section-label">Hijos ({children.length})</span>
+                        <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
+                    </div>
+                    <div className="gs-panel-section-body" style={{ padding: "8px 12px" }}>
+                        <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                            {children.map(p => (
+                                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 8px", borderRadius: "6px" }} className="gs-list-item">
+                                    <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--gs-ink-muted)" }}>child_care</span>
+                                    <span style={{ fontSize: 13, flex: 1, cursor: "pointer" }} onClick={() => onViewPersonDetail(p.id)}>{p.name}</span>
+                                    <button className="panel-icon-btn" onClick={() => onUnlinkRelation(person.id, p.id, "child")} title="Desvincular">
+                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link_off</span>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
+                            <button className="gs-panel-btn-subtle" style={{ flex: 1 }} onClick={() => onAddRelation(person.id, "child")}>+ Hijo</button>
+                            <button className="gs-panel-btn-subtle" style={{ flex: 1, fontSize: 10 }} onClick={() => onLinkExistingRelation(person.id, "child")}>Vincular existente</button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Future slots (reserved space) ─────────────── */}
+                <div className="gs-panel-divider" style={{ margin: "16px 12px" }} />
+
+                <div className="gs-panel-section gs-panel-section--future">
+                    <div className="gs-panel-section-header">
+                        <span className="material-symbols-outlined gs-panel-section-icon">sticky_note_2</span>
+                        <span className="gs-panel-section-label">Notas rápidas</span>
+                        <span className="gs-panel-future-badge">Pronto</span>
+                    </div>
+                </div>
+
+                <div className="gs-panel-section gs-panel-section--future">
+                    <div className="gs-panel-section-header">
+                        <span className="material-symbols-outlined gs-panel-section-icon">source</span>
+                        <span className="gs-panel-section-label">Fuentes vinculadas</span>
+                        <span className="gs-panel-future-badge">Pronto</span>
+                    </div>
+                </div>
+
+                <div className="gs-panel-section gs-panel-section--future">
+                    <div className="gs-panel-section-header">
+                        <span className="material-symbols-outlined gs-panel-section-icon">psychology</span>
+                        <span className="gs-panel-section-label">Hipótesis</span>
+                        <span className="gs-panel-future-badge">Pronto</span>
+                    </div>
+                </div>
+
+            </div>
         </div>
-      </div>
-      <div className={detailsExpanded ? "panel-section-body panel-section-body--expanded" : "panel-section-body panel-section-body--compact"}>
-        <div className="detail-stack">
-          <div className="person-card person-card--primary">
-            {person ? (
-              <>
-                <div className="person-header">
-                  <div>
-                    <div className="person-name">{person.name}</div>
-                    {person.surname ? <div className="person-surname">{person.surname}</div> : null}
-                  </div>
-                  <div className="primary-actions">
-                    <button onClick={() => onViewPersonDetail(person.id)} className="icon-button" title="Ver persona detallada" aria-label="Ver persona detallada"><IconEye /></button>
-                    <button onClick={() => onEditPerson(person.id)} className="icon-button" title="Editar persona" aria-label="Editar persona"><IconEdit /></button>
-                  </div>
-                </div>
-                <div className="person-meta">{person.id}</div>
-                <div className="person-meta">Sexo: {person.sex}</div>
-                <div className="person-meta">
-                  {birth ? `nac.${birth} ` : "nac. ?"} - {person.lifeStatus === "deceased" ? `def.${death ?? "?"} ` : "vivo"}
-                </div>
-                {familySummary ? (
-                  <div className="person-meta">
-                    ??????????? {familySummary.parents} padres � ?? {familySummary.spouses} parejas � ?? {familySummary.children} hijos
-                  </div>
-                ) : null}
-                {familySummary ? (
-                  <div className="person-meta">
-                    {familySummary.originFamilies} familias de origen � {familySummary.ownFamilies} familias propias
-                  </div>
-                ) : null}
-                {person.isPlaceholder ? <div className="person-warn">Nodo raiz vacio. Completa nombre para activarlo.</div> : null}
-              </>
-            ) : (
-              <div className="person-meta">??? Sin selecci�n</div>
-            )}
-
-            {person && detailsExpanded ? (
-              <details className="panel-disclosure minimal" open>
-                <summary>
-                  Familiares <span className="badge-count">{parents.length + spouses.length + children.length}</span>
-                </summary>
-
-                <div className="relation-section">
-                  <div className="relation-title">
-                    Padres <span className="badge-count">{parents.length}</span>
-                  </div>
-                  <div className="relation-actions">
-                    <button onClick={() => onAddRelation(person.id, "father")}>??? Agregar padre</button>
-                    <button onClick={() => onLinkExistingRelation(person.id, "father")} title="Vincular padre existente" className="icon-button" aria-label="Vincular padre existente"><IconLink /></button>
-                    <button onClick={() => onAddRelation(person.id, "mother")}>??? Agregar madre</button>
-                    <button onClick={() => onLinkExistingRelation(person.id, "mother")} title="Vincular madre existente" className="icon-button" aria-label="Vincular madre existente"><IconLink /></button>
-                  </div>
-                  {parents.length > 0 ? (
-                    <div className="relation-list">
-                      {parents.map((p) => (
-                        <div key={p.id} className="relation-row">
-                          <span title={p.id}>{p.name}</span>
-                          <div className="row-actions">
-                            <button onClick={() => onViewPersonDetail(p.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
-                            <button onClick={() => onEditPerson(p.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
-                            <button onClick={() => onUnlinkRelation(person.id, p.id, "parent")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="person-meta">???????? Sin padres registrados.</div>
-                  )}
-                </div>
-
-                <div className="relation-section">
-                  <div className="relation-title">
-                    Parejas <span className="badge-count">{spouses.length}</span>
-                  </div>
-                  <div className="relation-actions">
-                    <button onClick={() => onAddRelation(person.id, "spouse")}>??? Agregar pareja</button>
-                    <button onClick={() => onLinkExistingRelation(person.id, "spouse")} title="Vincular pareja existente" className="icon-button" aria-label="Vincular pareja existente"><IconLink /></button>
-                    <button onClick={() => onAddRelation(person.id, "sibling")}>????? Agregar hermano</button>
-                    <button onClick={() => onLinkExistingRelation(person.id, "sibling")} title="Vincular hermano existente" className="icon-button" aria-label="Vincular hermano existente"><IconLink /></button>
-                  </div>
-                  {spouses.length > 0 ? (
-                    <div className="relation-list">
-                      {spouses.map((s) => (
-                        <div key={s.id} className="relation-row">
-                          <span title={s.id}>{s.name}</span>
-                          <div className="row-actions">
-                            <button onClick={() => onViewPersonDetail(s.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
-                            <button onClick={() => onEditPerson(s.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
-                            <button onClick={() => onUnlinkRelation(person.id, s.id, "spouse")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="person-meta">?? Sin parejas registradas.</div>
-                  )}
-                </div>
-
-                <div className="relation-section">
-                  <div className="relation-title">
-                    Hijos <span className="badge-count">{children.length}</span>
-                  </div>
-                  <div className="relation-actions">
-                    <button onClick={() => onAddRelation(person.id, "child")}>??? Agregar hijo</button>
-                    <button onClick={() => onLinkExistingRelation(person.id, "child")} title="Vincular hijo existente" className="icon-button" aria-label="Vincular hijo existente"><IconLink /></button>
-                  </div>
-                  {children.length > 0 ? (
-                    <div className="relation-list">
-                      {children.map((c) => (
-                        <div key={c.id} className="relation-row">
-                          <span title={c.id}>{c.name}</span>
-                          <div className="row-actions">
-                            <button onClick={() => onViewPersonDetail(c.id)} title="Ver detalle" aria-label="Ver detalle" className="icon-button"><IconEye /></button>
-                            <button onClick={() => onEditPerson(c.id)} title="Editar" aria-label="Editar" className="icon-button"><IconEdit /></button>
-                            <button onClick={() => onUnlinkRelation(person.id, c.id, "child")} title="Desvincular" aria-label="Desvincular" className="icon-button"><IconUnlink /></button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="person-meta">?? Sin hijos registrados.</div>
-                  )}
-                </div>
-              </details>
-            ) : null}
-            {person && !detailsExpanded ? (
-              <div className="person-meta" style={{ opacity: 0.7, fontSize: "11px", marginTop: "10px", fontStyle: "italic" }}>
-                Secci�n contra�da. Usa "Expandir" para ver detalles y familiares.
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-    </aside>
-  );
+    );
 }
-

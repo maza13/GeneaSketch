@@ -13,20 +13,20 @@
 ### Layout de la aplicación
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ TITLEBAR (Tauri custom) — 32px — --titlebar-height          │
-├─────────────────────────────────────────────────────────────┤
-│ MENUBAR NATIVA — altura variable (~40px)                    │
+│ TOPBAR — 44px — --shell-topbar-h                            │
 ├──────────────┬──────────────────────────┬───────────────────┤
-│ LEFT SIDEBAR │    CANVAS (D3 tree)      │  RIGHT PANEL      │
-│ 260px        │    flex: 1               │  320px            │
-│ --sidebar-   │    overflow: hidden      │  overflow-y: auto │
-│  width       │                          │                   │
-│              │                          │                   │
-└──────────────┴──────────────────────────┴───────────────────┘
+│ LEFT PANEL   │    CANVAS / PAGE         │  RIGHT PANEL      │
+│ 280px        │    flex: 1               │  340px            │
+│ --shell-     │    min-height: 0         │  --shell-         │
+│  left-w      │    overflow: hidden      │   right-w         │
+├──────────────┴──────────────────────────┴───────────────────┤
+│ FOOTER — 28px — --shell-footer-h                            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Sidebar colapsado
-Cuando el sidebar se colapsa: ancho = `--sidebar-collapsed` (52px). Solo iconos visibles.
+### Comportamiento de Paneles
+Los paneles laterales son **retractables**. Cuando se colapsan, se deslizan hacia afuera (`translateX`) y su ancho efectivo en el layout pasa a ser `0px`, permitiendo que el lienzo ocupe todo el espacio.
+
 
 ### Z-index — capas
 ```
