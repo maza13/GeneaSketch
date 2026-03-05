@@ -1,6 +1,7 @@
 import { deleteDB, openDB } from "idb";
-import type { WorkspaceProfileV1 } from "@/types/workspaceProfile";
+import type { WorkspaceProfileV2 } from "@/types/workspaceProfile";
 import { WORKSPACE_PROFILE_SCHEMA_VERSION } from "@/types/workspaceProfile";
+import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
 
 const DB_NAME = "geneasketch-workspace-db";
 const STORE_NAME = "workspace_profiles";
@@ -19,9 +20,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object";
 }
 
-function isValidProfile(value: unknown): value is WorkspaceProfileV1 {
-  if (!isRecord(value)) return false;
-  if (value.profileSchemaVersion !== WORKSPACE_PROFILE_SCHEMA_VERSION) return false;
+function hasBaseProfileShape(value: Record<string, unknown>): boolean {
   if (typeof value.graphId !== "string" || value.graphId.length === 0) return false;
   if (!isRecord(value.viewConfig)) return false;
   if (!isRecord(value.visualConfig)) return false;
@@ -30,27 +29,86 @@ function isValidProfile(value: unknown): value is WorkspaceProfileV1 {
   return true;
 }
 
+function isValidProfileV2(value: unknown): value is WorkspaceProfileV2 {
+  if (!isRecord(value)) return false;
+  if (value.profileSchemaVersion !== WORKSPACE_PROFILE_SCHEMA_VERSION) return false;
+  return hasBaseProfileShape(value);
+}
+
+function isLegacyProfileV1(value: unknown): value is Record<string, unknown> {
+  if (!isRecord(value)) return false;
+  if (value.profileSchemaVersion !== 1) return false;
+  return hasBaseProfileShape(value);
+}
+
+function hasLegacyDtreeFlags(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const dtree = isRecord(value.dtree) ? value.dtree : null;
+  if (!dtree) return false;
+  return dtree.renderVersion !== undefined || dtree.layoutEngine === "v2";
+}
+
+function sanitizeViewConfig(viewConfig: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...viewConfig,
+    dtree: normalizeDtreeConfig(viewConfig.dtree as any)
+  };
+}
+
+function normalizeProfilePayload(value: unknown): { profile: WorkspaceProfileV2 | null; shouldWriteBack: boolean } {
+  if (isValidProfileV2(value)) {
+    const sanitizedViewConfig = sanitizeViewConfig(value.viewConfig as Record<string, unknown>);
+    const shouldWriteBack = hasLegacyDtreeFlags(value.viewConfig);
+    return {
+      profile: {
+        ...value,
+        viewConfig: sanitizedViewConfig as WorkspaceProfileV2["viewConfig"]
+      },
+      shouldWriteBack
+    };
+  }
+
+  if (isLegacyProfileV1(value)) {
+    const sanitizedViewConfig = sanitizeViewConfig(value.viewConfig as Record<string, unknown>);
+    const migrated: WorkspaceProfileV2 = {
+      ...(value as Omit<WorkspaceProfileV2, "profileSchemaVersion" | "viewConfig">),
+      profileSchemaVersion: WORKSPACE_PROFILE_SCHEMA_VERSION,
+      viewConfig: sanitizedViewConfig as WorkspaceProfileV2["viewConfig"]
+    };
+    return {
+      profile: migrated,
+      shouldWriteBack: true
+    };
+  }
+
+  return { profile: null, shouldWriteBack: false };
+}
+
 export class WorkspaceProfileService {
-  static async load(graphId: string): Promise<WorkspaceProfileV1 | null> {
+  static async load(graphId: string): Promise<WorkspaceProfileV2 | null> {
     if (!graphId) return null;
     try {
       const db = await getDb();
       const value: unknown = await db.get(STORE_NAME, graphId);
-      if (!isValidProfile(value)) {
+      const normalized = normalizeProfilePayload(value);
+      if (!normalized.profile) {
         if (value != null) {
           console.warn(`[WorkspaceProfileService] Invalid profile payload for graphId=${graphId}; ignoring.`);
         }
         return null;
       }
-      return value;
+      if (normalized.shouldWriteBack) {
+        await db.put(STORE_NAME, normalized.profile);
+      }
+      return normalized.profile;
     } catch (error) {
       console.warn("[WorkspaceProfileService] load failed", error);
       return null;
     }
   }
 
-  static async save(profile: WorkspaceProfileV1): Promise<void> {
-    if (!isValidProfile(profile)) {
+  static async save(profile: WorkspaceProfileV2): Promise<void> {
+    if (!isValidProfileV2(profile)) {
       console.warn("[WorkspaceProfileService] save skipped: invalid profile payload.");
       return;
     }

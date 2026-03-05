@@ -80,7 +80,7 @@ export interface ViewSlice {
     setGridEnabled: (enabled: boolean) => void;
     setGridSize: (size: number) => void;
     setDTreeOrientation: (isVertical: boolean) => void;
-    setDTreeLayoutEngine: (engine: string) => void;
+    setDTreeLayoutEngine: (engine: "vnext") => void;
     toggleDTreeNodeCollapse: (nodeId: string) => void;
     setOverlay: (overlay: ActiveOverlay) => void;
     removeOverlay: (id: string) => void;

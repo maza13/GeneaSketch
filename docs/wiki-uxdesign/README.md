@@ -3,7 +3,7 @@
 ## Resumen
 Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementacion consistente en desktop.
 
-- **Version wiki UX:** `1.1.0`
+- **Version wiki UX:** `1.3.0`
 - **Contrato operativo para agentes:** `12_instrucciones_agentes_ia.md`
 - **Tokens runtime (fuente de verdad):** `src/styles/tokens.css`
 
@@ -20,7 +20,8 @@ Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementa
 10. [10_anti_patrones](./10_anti_patrones.md)
 11. [11_checklist_entrega](./11_checklist_entrega.md)
 12. [12_instrucciones_agentes_ia](./12_instrucciones_agentes_ia.md)
-13. [CHANGELOG](./CHANGELOG.md)
+13. [13_dtree-v3-control-plane](./13_dtree-v3-control-plane.md)
+14. [CHANGELOG](./CHANGELOG.md)
 
 ## Convencion editorial
 - Esta wiki define el estandar UX/UI y su aplicacion en componentes e interacciones.
@@ -43,6 +44,7 @@ Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementa
 | [10](./10_anti_patrones.md) | vigente | Anti-patrones |
 | [11](./11_checklist_entrega.md) | vigente | Checklist de entrega |
 | [12](./12_instrucciones_agentes_ia.md) | vigente | Contrato para agentes + gobernanza |
+| [13](./13_dtree-v3-control-plane.md) | vigente | Gobernanza, gates y cierre DTree V3 |
 
 ## Navegacion
 [Siguiente: 01_filosofia_y_principios ->](./01_filosofia_y_principios.md)

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+﻿import { useState, useCallback } from "react";
 import { useAppStore, ensureExpanded, type AppState } from "@/state/store";
 import { useShallow } from "zustand/react/shallow";
 import { FileIOService } from "@/io/fileIOService";
@@ -8,6 +8,7 @@ import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { extractSubTree, type ExtractDirection } from "@/core/edit/generators";
 import { downloadBlob } from "@/utils/download";
 import { exportSvgAsPdf, exportSvgAsRaster } from "@/utils/svgExport";
+import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
 import type {
   RecentPayloadV2,
   SourceGedVersion,
@@ -18,7 +19,7 @@ import type {
 import type { GraphDocument, GraphSource } from "@/core/read-model/types";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { ColorThemeConfig } from "@/types/editor";
-import type { WorkspaceProfileV1 } from "@/types/workspaceProfile";
+import type { WorkspaceProfileV2 } from "@/types/workspaceProfile";
 
 export type PdfExportState = {
   scope: "viewport" | "full";
@@ -32,15 +33,28 @@ export type PdfExportState = {
 
 type LegacyGskMeta = { viewConfig?: ViewConfig; visualConfig?: VisualConfig; colorTheme?: ColorThemeConfig } | null | undefined;
 
+function normalizeHydratedViewConfig(viewConfig: ViewConfig | null | undefined): ViewConfig | null {
+  if (!viewConfig) return viewConfig ?? null;
+  const normalizedDtree = normalizeDtreeConfig(viewConfig.dtree);
+  return {
+    ...viewConfig,
+    dtree: normalizedDtree
+  };
+}
+
 export function resolveProfileHydration(
   state: AppState,
-  profile?: Pick<WorkspaceProfileV1, "viewConfig" | "visualConfig" | "colorTheme"> | null,
+  profile?: Pick<WorkspaceProfileV2, "viewConfig" | "visualConfig" | "colorTheme"> | null,
   gskMeta?: LegacyGskMeta,
 ): { nextViewConfig: ViewConfig | null; nextVisualConfig: VisualConfig; nextTheme?: ColorThemeConfig } {
   const nextViewConfig = profile?.viewConfig ?? gskMeta?.viewConfig ?? state.viewConfig;
   const nextVisualConfig = profile?.visualConfig ?? gskMeta?.visualConfig ?? state.visualConfig;
   const nextTheme = profile?.colorTheme ?? gskMeta?.colorTheme;
-  return { nextViewConfig, nextVisualConfig, nextTheme };
+  return {
+    nextViewConfig: normalizeHydratedViewConfig(nextViewConfig),
+    nextVisualConfig,
+    nextTheme
+  };
 }
 
 export function hasMeaningfulTree(graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null): boolean {
@@ -221,7 +235,7 @@ export function useGskFile(
       setStatus(`Abriendo ${file.name}...`);
       try {
         if (hasMeaningfulTree(gschemaGraph)) {
-          const ok = window.confirm("�Seguro que deseas cerrar el �rbol actual y abrir uno nuevo? Se perder�n cambios no guardados.");
+          const ok = window.confirm("¿Seguro que deseas cerrar el árbol actual y abrir uno nuevo? Se perderán cambios no guardados.");
           if (!ok) {
             setStatus("Apertura cancelada.");
             return;
@@ -238,7 +252,7 @@ export function useGskFile(
         setParseWarnings(parsed.warnings.map((warning) => `${warning.code}: ${warning.message}`));
         if (parsed.errors.length || !parsed.graph) {
           setParseErrors(parsed.errors.map((error) => `L${error.line} ${error.entity ? `[${error.entity}] ` : ""}${error.message}`));
-          setStatus("Error de importaci�n (.ged/.gsk).");
+          setStatus("Error de importación (.ged/.gsk).");
           return;
         }
 
@@ -261,11 +275,11 @@ export function useGskFile(
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes("Invalid .gsk integrity")) {
-          setParseErrors([`Archivo .gsk inv�lido: ${message}`]);
+          setParseErrors([`Archivo .gsk inválido: ${message}`]);
           setStatus("Error de integridad en .gsk");
           return;
         }
-        setStatus(`Error cr�tico: ${message}`);
+        setStatus(`Error crítico: ${message}`);
       }
     },
     [gschemaGraph, parseInputFile, setParseErrors, setParseWarnings, applyLoadedPayload, addRecentFile],
@@ -299,11 +313,11 @@ export function useGskFile(
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes("Invalid .gsk integrity")) {
-          setParseErrors([`Archivo .gsk inv�lido: ${message}`]);
+          setParseErrors([`Archivo .gsk inválido: ${message}`]);
           setStatus("Error de integridad en .gsk");
           return;
         }
-        setStatus(`Error cr�tico: ${message}`);
+        setStatus(`Error crítico: ${message}`);
       }
     },
     [gschemaGraph, openAndReplace, parseInputFile, addRecentFile, setParseErrors],
@@ -353,7 +367,7 @@ export function useGskFile(
       const branchGraph = documentToGSchema(branchDocument, "7.0.x").graph;
       const blob = await FileIOService.exportGsk(branchGraph);
       downloadBlob(blob, `Rama_${direction}.gsk`);
-      setStatus("Rama extra�da y descargada");
+      setStatus("Rama extraída y descargada");
     },
     [gschemaGraph],
   );
@@ -446,7 +460,7 @@ export function useGskFile(
 
       const incomingDoc = projectOrNull(recentGraph);
       if (!incomingDoc) {
-        setStatus("No se pudo preparar el reciente para importaci�n.");
+        setStatus("No se pudo preparar el reciente para importación.");
         return;
       }
       setImportIncomingDoc(incomingDoc);
@@ -463,7 +477,7 @@ export function useGskFile(
       clearMergeDraft();
       clearMergeFocus();
       setImportIncomingDoc(null);
-      setStatus(`Fusi�n completada: +${stats.addedPersons} personas, ${stats.updatedPersons} actualizadas y +${stats.addedFamilies} familias.`);
+      setStatus(`Fusión completada: +${stats.addedPersons} personas, ${stats.updatedPersons} actualizadas y +${stats.addedFamilies} familias.`);
     },
     [loadGraph, clearMergeDraft, clearMergeFocus],
   );
@@ -488,3 +502,4 @@ export function useGskFile(
     handleMergeApply,
   };
 }
+

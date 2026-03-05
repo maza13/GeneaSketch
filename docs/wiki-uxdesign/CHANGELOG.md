@@ -4,6 +4,14 @@
 Este archivo registra solo cambios de estructura, contenido y gobernanza de `docs/wiki-uxdesign/`.
 No registra cambios de contrato `.gsk` (ver `../wiki-gsk/CHANGELOG.md`) ni cambios de guía de usuario general (ver `../wiki-software/CHANGELOG.md`) ni release pública global (ver `../../CHANGELOG.md`).
 
+## [1.3.0] - 2026-03-04
+### Cambiado
+- Cierre del capítulo `DTree V3` en el documento de control (`13_dtree-v3-control-plane.md`) con estado final de hard-cut V3-only.
+- Estado operativo actualizado para dejar explícito que el fallback `v2` fue retirado en `072`.
+
+### Añadido
+- Sección de cierre con evidencia de gates finales (`test`, `build`, `perf`, `validate`) y consolidación de contratos runtime/persistencia.
+
 ## [1.2.0] - 2026-03-04
 ### Añadido
 - Refinamiento de anatomía del Right Panel para mostrar prefijos, sufijos y títulos nobiliarios (Soporte Issue #020).

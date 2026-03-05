@@ -4,9 +4,10 @@ import { ensureExpanded } from "../helpers/graphHelpers";
 import { withFocusHistory } from "../helpers/sessionHelpers";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import { UiEngine } from "@/core/engine/UiEngine";
+import { createDefaultDtreeConfig } from "@/core/dtree/dtreeConfig";
 import type { ActiveOverlay } from "@/types/domain";
 
-const defaultDtree = () => ({ isVertical: true, collapsedNodeIds: [] as string[], overlays: [] as ActiveOverlay[] });
+const defaultDtree = () => createDefaultDtreeConfig();
 const defaultRightStack = () => ({ detailsMode: "expanded" as const, timelineMode: "compact" as const, detailsAutoCompactedByTimeline: false });
 
 export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) => ({
@@ -265,7 +266,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         if (!state.viewConfig) return {};
         const viewConfig = {
             ...state.viewConfig,
-            dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), isVertical }
+            dtree: { ...(state.viewConfig.dtree || defaultDtree()), isVertical }
         };
         return {
             viewConfig,
@@ -277,7 +278,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         if (!state.viewConfig) return {};
         const viewConfig = {
             ...state.viewConfig,
-            dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), layoutEngine: engine as any }
+            dtree: { ...(state.viewConfig.dtree || defaultDtree()), layoutEngine: engine }
         };
         return {
             viewConfig,
@@ -292,7 +293,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         else collapsed.add(nodeId);
         const viewConfig = {
             ...state.viewConfig,
-            dtree: { ...(state.viewConfig.dtree || { isVertical: true, collapsedNodeIds: [], overlays: [] }), collapsedNodeIds: Array.from(collapsed) }
+            dtree: { ...(state.viewConfig.dtree || defaultDtree()), collapsedNodeIds: Array.from(collapsed) }
         };
         return {
             viewConfig,

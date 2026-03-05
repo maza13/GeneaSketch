@@ -47,7 +47,7 @@ describe("SessionService", () => {
     expect(dbData.has(autosessionKey)).toBe(false);
   });
 
-  it("normalizes supported snapshots to schema v7 and writes them back", async () => {
+  it("normalizes supported snapshots to schema v8 and writes them back", async () => {
     dbData.set(autosessionKey, {
       schemaVersion: SESSION_LEGACY_MIN_SCHEMA_VERSION,
       graph: null,
@@ -61,6 +61,42 @@ describe("SessionService", () => {
 
     expect(restored?.schemaVersion).toBe(SESSION_SNAPSHOT_SCHEMA_VERSION);
     expect(persisted?.schemaVersion).toBe(SESSION_SNAPSHOT_SCHEMA_VERSION);
+  });
+
+  it("migrates legacy dtree flags during restore and writes back schema v8", async () => {
+    dbData.set(autosessionKey, {
+      schemaVersion: 7,
+      graph: null,
+      viewConfig: {
+        mode: "tree",
+        preset: "hourglass",
+        focusPersonId: null,
+        focusFamilyId: null,
+        homePersonId: "",
+        rightPanelView: "details",
+        timeline: { scope: "visible", view: "list", scaleZoom: 1, scaleOffset: 0 },
+        depth: { ancestors: 1, descendants: 1, unclesGreatUncles: 0, siblingsNephews: 0, unclesCousins: 0 },
+        showSpouses: true,
+        dtree: {
+          isVertical: true,
+          layoutEngine: "v2",
+          renderVersion: "v2",
+          collapsedNodeIds: [],
+          overlays: []
+        }
+      },
+      focusHistory: [],
+      focusIndex: -1
+    });
+
+    const restored = await SessionService.restoreAutosession();
+    const persisted = dbData.get(autosessionKey) as { schemaVersion?: number; viewConfig?: any } | undefined;
+
+    expect(restored?.schemaVersion).toBe(SESSION_SNAPSHOT_SCHEMA_VERSION);
+    expect(restored?.viewConfig?.dtree?.layoutEngine).toBe("vnext");
+    expect((restored?.viewConfig?.dtree as any)?.renderVersion).toBeUndefined();
+    expect(persisted?.schemaVersion).toBe(SESSION_SNAPSHOT_SCHEMA_VERSION);
+    expect(persisted?.viewConfig?.dtree?.layoutEngine).toBe("vnext");
   });
 
   it("returns null for corrupted payload and removes invalid snapshot", async () => {

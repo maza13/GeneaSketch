@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UiEngine } from "@/core/engine/UiEngine";
-import type { WorkspaceProfileV1 } from "@/types/workspaceProfile";
+import type { WorkspaceProfileV2 } from "@/types/workspaceProfile";
 import { WORKSPACE_PROFILE_SCHEMA_VERSION } from "@/types/workspaceProfile";
 
 const storeData = new Map<string, unknown>();
@@ -33,7 +33,7 @@ vi.mock("idb", () => ({
 
 import { WorkspaceProfileService } from "@/io/workspaceProfileService";
 
-function buildProfile(graphId: string): WorkspaceProfileV1 {
+function buildProfile(graphId: string): WorkspaceProfileV2 {
   return {
     profileSchemaVersion: WORKSPACE_PROFILE_SCHEMA_VERSION,
     graphId,
@@ -85,6 +85,31 @@ describe("WorkspaceProfileService", () => {
 
     const loaded = await WorkspaceProfileService.load("graph-corrupt");
     expect(loaded).toBeNull();
+  });
+
+  it("migrates legacy v1 payloads to v2 and writes back sanitized dtree", async () => {
+    const legacyProfile = buildProfile("graph-legacy");
+    storeData.set("graph-legacy", {
+      ...legacyProfile,
+      profileSchemaVersion: 1,
+      viewConfig: {
+        ...legacyProfile.viewConfig,
+        dtree: {
+          ...(legacyProfile.viewConfig.dtree || {}),
+          layoutEngine: "v2",
+          renderVersion: "v2"
+        }
+      }
+    });
+
+    const loaded = await WorkspaceProfileService.load("graph-legacy");
+    const persisted = storeData.get("graph-legacy") as WorkspaceProfileV2 | undefined;
+
+    expect(loaded?.profileSchemaVersion).toBe(WORKSPACE_PROFILE_SCHEMA_VERSION);
+    expect(loaded?.viewConfig.dtree?.layoutEngine).toBe("vnext");
+    expect((loaded?.viewConfig.dtree as any)?.renderVersion).toBeUndefined();
+    expect(persisted?.profileSchemaVersion).toBe(WORKSPACE_PROFILE_SCHEMA_VERSION);
+    expect(persisted?.viewConfig.dtree?.layoutEngine).toBe("vnext");
   });
 
   it("keeps profiles isolated per graphId", async () => {

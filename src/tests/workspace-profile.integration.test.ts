@@ -51,9 +51,37 @@ describe("workspace profile hydration precedence", () => {
     const state = baseState();
     const result = resolveProfileHydration(state, null, null);
 
-    expect(result.nextViewConfig).toBe(state.viewConfig);
+    expect(result.nextViewConfig).toStrictEqual(state.viewConfig);
     expect(result.nextVisualConfig).toBe(state.visualConfig);
     expect(result.nextTheme).toBeUndefined();
+  });
+
+  it("normalizes legacy dtree flags to hard-cut contract when profile/meta is legacy", () => {
+    const state = baseState();
+    const currentDtree = state.viewConfig?.dtree;
+    if (!currentDtree) throw new Error("Expected default dtree config in base state.");
+    const legacyProfileView = {
+      ...state.viewConfig!,
+      dtree: {
+        isVertical: currentDtree.isVertical,
+        layoutEngine: "v2",
+        collapsedNodeIds: [...currentDtree.collapsedNodeIds],
+        overlays: [...currentDtree.overlays],
+        renderVersion: "v2"
+      }
+    } as any;
+
+    const result = resolveProfileHydration(
+      state,
+      {
+        viewConfig: legacyProfileView,
+        visualConfig: state.visualConfig
+      },
+      null
+    );
+
+    expect(result.nextViewConfig?.dtree?.layoutEngine).toBe("vnext");
+    expect((result.nextViewConfig?.dtree as any)?.renderVersion).toBeUndefined();
   });
 });
 

@@ -2,6 +2,28 @@
 
 Todos los cambios notables de GeneaSketch se documentan aqui.
 
+## 4 de marzo de 2026 - Nota de arquitectura (Cierre DTree V3 065-072)
+
+### Para usuarios (resumen rapido)
+- El render genealogico queda consolidado en la ruta V3.
+- Se elimina la ruta de contingencia V2 para reducir complejidad operativa.
+- La app mantiene apertura de datos legacy con migracion tolerante en segundo plano.
+
+### Detalle tecnico
+- Hard-cut runtime: `DTreeView` legacy retirado; `App` monta `DTreeViewV3` en camino unico.
+- Hard-cut contrato dtree/layout: fuera `renderVersion`, `layoutEngine` queda vnext-only, sin fallback `v2 -> vnext`.
+- Persistencia versionada con migracion de lectura y write-back:
+  - Session snapshot `schemaVersion 7 -> 8`
+  - Workspace profile `schemaVersion 1 -> 2`
+- Limpieza UX de referencias V2 en menu/ayuda y validacion de cadena TODO `065..072`.
+
+### Estado de gates
+- `npm run test`: verde.
+- `npm run build`: verde.
+- `npm run test:perf:layout`: verde.
+- `npm run test:perf:overlays`: verde.
+- `npm run plan:dtree-v3:validate`: verde.
+
 ## 3 de marzo de 2026 - 0.4.4 (Beta GSchema, Desktop)
 
 ### Para usuarios (resumen rapido)

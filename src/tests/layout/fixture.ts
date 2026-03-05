@@ -62,7 +62,7 @@ export function createLayoutFixtureViewConfig(): ViewConfig {
     showSpouses: true,
     dtree: {
       isVertical: true,
-      layoutEngine: "v2",
+      layoutEngine: "vnext",
       collapsedNodeIds: [],
       overlays: []
     }
@@ -70,7 +70,7 @@ export function createLayoutFixtureViewConfig(): ViewConfig {
 }
 
 export function buildLayoutInput(
-  engine: LayoutEngine = "v2",
+  engine: LayoutEngine = "vnext",
   overrides?: Partial<LayoutInput>
 ): { doc: GeneaDocument; graph: ReturnType<typeof expandGraph>; input: LayoutInput } {
   const doc = createLayoutFixtureDoc();

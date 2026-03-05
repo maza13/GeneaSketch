@@ -374,7 +374,7 @@ export type ViewConfig = {
   showSpouses: boolean;
   dtree?: {
     isVertical: boolean;
-    layoutEngine?: "vnext" | "v2";
+    layoutEngine?: "vnext";
     collapsedNodeIds: string[];
     // Highlight & Overlay Systems
     overlays: ActiveOverlay[];
@@ -435,7 +435,7 @@ export type ExpandedGraph = {
 };
 
 export type SessionSnapshot = {
-  schemaVersion: 7;
+  schemaVersion: 8;
   graph?: {
     data: GSchemaGraphData;
     journal: GSchemaOperation[];

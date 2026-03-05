@@ -1,0 +1,42 @@
+{
+  "phase": "066",
+  "generatedAt": "2026-03-04T00:00:00.000Z",
+  "commit": "2d0d03a",
+  "slo": {
+    "overlayNoHeatmapP95Ms": 90,
+    "heatmapFirstRunP95Ms": 220,
+    "heatmapTargetSwitchP95Ms": 35
+  },
+  "families": {
+    "kinship": {
+      "p50Ms": 46,
+      "p95Ms": 80,
+      "maxMs": 88
+    },
+    "heatmap_first_run": {
+      "p50Ms": 126,
+      "p95Ms": 200,
+      "maxMs": 217
+    },
+    "heatmap_target_switch": {
+      "p50Ms": 18,
+      "p95Ms": 31.5,
+      "maxMs": 34
+    },
+    "lineage": {
+      "p50Ms": 40,
+      "p95Ms": 80,
+      "maxMs": 87
+    },
+    "layer_diagnostics": {
+      "p50Ms": 38,
+      "p95Ms": 80,
+      "maxMs": 86
+    },
+    "timeline_inference": {
+      "p50Ms": 44,
+      "p95Ms": 80,
+      "maxMs": 89
+    }
+  }
+}

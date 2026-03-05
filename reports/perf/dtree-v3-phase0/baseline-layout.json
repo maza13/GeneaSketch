@@ -1,0 +1,25 @@
+{
+  "phase": "066",
+  "generatedAt": "2026-03-04T00:00:00.000Z",
+  "commit": "2d0d03a",
+  "slo": {
+    "layoutP95Ms": 220
+  },
+  "scenarios": {
+    "S1_layout_fixture": {
+      "p50Ms": 36,
+      "p95Ms": 80,
+      "maxMs": 94
+    },
+    "S2_standard_tree": {
+      "p50Ms": 124,
+      "p95Ms": 195,
+      "maxMs": 212
+    },
+    "S3_endogamy_tree": {
+      "p50Ms": 132,
+      "p95Ms": 200,
+      "maxMs": 218
+    }
+  }
+}

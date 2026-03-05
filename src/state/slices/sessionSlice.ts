@@ -6,6 +6,7 @@ import { UiEngine } from "@/core/engine/UiEngine";
 import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { createDefaultAiSettings } from "@/core/ai/defaults";
 import { sanitizeMergeDraftSnapshot } from "@/core/edit/mergeDraftValidation";
+import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
 import type { ActiveOverlay, SessionSnapshot, ViewConfig } from "@/types/domain";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { GraphDocument } from "@/core/read-model/types";
@@ -167,14 +168,14 @@ function buildAutosessionSnapshot(state: AppState): SessionSnapshot {
             ...state.viewConfig,
             dtree: state.viewConfig.dtree
                 ? {
-                    ...state.viewConfig.dtree,
+                    ...normalizeDtreeConfig(state.viewConfig.dtree),
                     overlays: (state.viewConfig.dtree.overlays || []).filter((overlay) => overlay.type !== "merge_focus")
                 }
                 : state.viewConfig.dtree
         }
         : null;
     return {
-        schemaVersion: 7,
+        schemaVersion: SESSION_SNAPSHOT_SCHEMA_VERSION,
         graph: state.gschemaGraph
             ? {
                 data: state.gschemaGraph.toData(),
@@ -254,8 +255,7 @@ function normalizeRestoredViewConfig(
             detailsAutoCompactedByTimeline: !!rightStack.detailsAutoCompactedByTimeline
         },
         dtree: {
-            ...defaults.dtree,
-            ...(viewConfig.dtree || {}),
+            ...normalizeDtreeConfig(viewConfig.dtree),
             overlays
         }
     };

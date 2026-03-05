@@ -1,4 +1,3 @@
----
 status: complete
 priority: p1
 issue_id: "059"

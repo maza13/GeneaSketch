@@ -6,7 +6,7 @@ import { useAppStore } from "@/state/store";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
 import type { SessionSnapshot } from "@/types/domain";
 
-let restoreValue: SessionSnapshot | null = null;
+let restoreValue: any = null;
 
 function buildDocWithTwoPersons() {
   const doc = createNewTree();
@@ -389,6 +389,97 @@ describe("legacy restore normalization", () => {
     expect(timelineOverlay).toBeDefined();
     expect(timelineOverlay?.config.year).toBe(1988);
     expect(timelineOverlay?.config.currentYear).toBeUndefined();
+    expect(useAppStore.getState().viewConfig?.dtree?.layoutEngine).toBe("vnext");
+  });
+
+  it("normalizes legacy dtree flags by dropping renderVersion and forcing vnext", async () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+
+    restoreValue = {
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
+      viewConfig: {
+        mode: "tree",
+        preset: "hourglass",
+        focusPersonId: "@I1@",
+        focusFamilyId: null,
+        homePersonId: "@I1@",
+        depth: {
+          ancestors: 2,
+          descendants: 1,
+          unclesGreatUncles: 0,
+          siblingsNephews: 0,
+          unclesCousins: 0
+        },
+        showSpouses: true,
+        rightPanelView: "details",
+        timeline: {
+          scope: "visible",
+          view: "list",
+          scaleZoom: 1,
+          scaleOffset: 0
+        },
+        dtree: {
+          isVertical: true,
+          renderVersion: "v2",
+          layoutEngine: "v2",
+          collapsedNodeIds: [],
+          overlays: []
+        }
+      } as unknown as SessionSnapshot["viewConfig"],
+      focusHistory: ["@I1@"],
+      focusIndex: 0
+    };
+
+    await useAppStore.getState().restoreSession();
+    expect(useAppStore.getState().viewConfig?.dtree?.layoutEngine).toBe("vnext");
+    expect((useAppStore.getState().viewConfig?.dtree as any)?.renderVersion).toBeUndefined();
+  });
+
+  it("normalizes invalid legacy layoutEngine values to vnext during restore", async () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+
+    restoreValue = {
+      schemaVersion: 7,
+      graph: snapshotGraph(doc),
+      viewConfig: {
+        mode: "tree",
+        preset: "hourglass",
+        focusPersonId: "@I1@",
+        focusFamilyId: null,
+        homePersonId: "@I1@",
+        depth: {
+          ancestors: 2,
+          descendants: 1,
+          unclesGreatUncles: 0,
+          siblingsNephews: 0,
+          unclesCousins: 0
+        },
+        showSpouses: true,
+        rightPanelView: "details",
+        timeline: {
+          scope: "visible",
+          view: "list",
+          scaleZoom: 1,
+          scaleOffset: 0
+        },
+        dtree: {
+          isVertical: true,
+          layoutEngine: "broken-value",
+          collapsedNodeIds: [],
+          overlays: []
+        }
+      } as unknown as SessionSnapshot["viewConfig"],
+      focusHistory: ["@I1@"],
+      focusIndex: 0
+    };
+
+    await useAppStore.getState().restoreSession();
+    expect(useAppStore.getState().viewConfig?.dtree?.layoutEngine).toBe("vnext");
   });
 
   it("restores merge draft snapshot when present", async () => {

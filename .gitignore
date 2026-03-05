@@ -37,6 +37,17 @@ errors.txt
 out.txt
 reports/
 
+# Keep DTree V3 phase0 perf baselines versioned
+!reports/
+reports/*
+!reports/perf/
+reports/perf/*
+!reports/perf/dtree-v3-phase0/
+reports/perf/dtree-v3-phase0/*
+!reports/perf/dtree-v3-phase0/baseline-layout.json
+!reports/perf/dtree-v3-phase0/baseline-overlays.json
+!reports/perf/dtree-v3-phase0/summary.md
+
 # OS Files
 Thumbs.db
 Desktop.ini

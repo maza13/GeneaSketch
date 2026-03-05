@@ -109,7 +109,7 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
                             return;
                         }
                         p.setOverlay({ id: "genetic-heatmap", type: "heatmap", priority: 80, config: { personId: person.id, mode: "vibrant" } });
-                        p.setStatus(`Analizando parentescos desde: ${person.name}`);
+                        p.setStatus(`Analizando parentescos desde: ${person.name}. Selecciona otra persona para comparar.`);
                     }
                 });
                 items.push({

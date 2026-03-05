@@ -1,0 +1,277 @@
+{
+  "generated_at": "2026-03-05T00:48:53.539Z",
+  "total_entries": 6,
+  "by_id": {
+    "N0001": {
+      "file": "notes/entries/N0001-idea-integracin-con-apis-genealgicas-familysearchwikitree.md",
+      "title": "Integración con APIs Genealógicas (FamilySearch/WikiTree)",
+      "kind": "idea",
+      "phase": "active",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "user_requested",
+      "tags": [
+        "api",
+        "sync",
+        "future-feature"
+      ],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 80,
+      "confidence": "high",
+      "updated_at": "2026-03-04",
+      "last_reviewed_at": null
+    },
+    "N0002": {
+      "file": "notes/entries/N0002-idea-versionado-real-tipo-git-para-genealoga.md",
+      "title": "Versionado real tipo Git para genealogía",
+      "kind": "idea",
+      "phase": "active",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "user_requested",
+      "tags": [
+        "core",
+        "data-model",
+        "killer-feature"
+      ],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 90,
+      "confidence": "high",
+      "updated_at": "2026-03-04",
+      "last_reviewed_at": null
+    },
+    "N0003": {
+      "file": "notes/entries/N0003-idea-provenance-estricta-y-evidence-reasoning.md",
+      "title": "Provenance estricta y Evidence Reasoning",
+      "kind": "idea",
+      "phase": "active",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "user_requested",
+      "tags": [
+        "ui",
+        "research-focus",
+        "gps"
+      ],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 85,
+      "confidence": "high",
+      "updated_at": "2026-03-04",
+      "last_reviewed_at": null
+    },
+    "N0004": {
+      "file": "notes/entries/N0004-idea-agente-de-investigacin-autnomo.md",
+      "title": "Agente de Investigación Autónomo",
+      "kind": "idea",
+      "phase": "active",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "user_requested",
+      "tags": [
+        "ai",
+        "automation",
+        "future-tech"
+      ],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 80,
+      "confidence": "low",
+      "updated_at": "2026-03-04",
+      "last_reviewed_at": null
+    },
+    "N0005": {
+      "file": "notes/entries/N0005-idea-cpsulas-de-tiempo-legado-digital.md",
+      "title": "Cápsulas de Tiempo Legado Digital",
+      "kind": "idea",
+      "phase": "active",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "user_requested",
+      "tags": [
+        "emotion",
+        "monetization",
+        "legado"
+      ],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 85,
+      "confidence": "high",
+      "updated_at": "2026-03-04",
+      "last_reviewed_at": null
+    },
+    "N0006": {
+      "file": "notes/entries/N0006-idea-gamificacin-y-rbol-cooperativo.md",
+      "title": "Gamificación y Árbol Cooperativo",
+      "kind": "idea",
+      "phase": "active",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "user_requested",
+      "tags": [
+        "gamification",
+        "retention",
+        "social"
+      ],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 95,
+      "confidence": "high",
+      "updated_at": "2026-03-04",
+      "last_reviewed_at": null
+    }
+  },
+  "by_kind": {
+    "idea": [
+      "N0001",
+      "N0002",
+      "N0003",
+      "N0004",
+      "N0005",
+      "N0006"
+    ],
+    "note": [],
+    "task": []
+  },
+  "by_phase": {
+    "active": [
+      "N0001",
+      "N0002",
+      "N0003",
+      "N0004",
+      "N0005",
+      "N0006"
+    ],
+    "archived": []
+  },
+  "by_tag": {
+    "api": [
+      "N0001"
+    ],
+    "sync": [
+      "N0001"
+    ],
+    "future-feature": [
+      "N0001"
+    ],
+    "core": [
+      "N0002"
+    ],
+    "data-model": [
+      "N0002"
+    ],
+    "killer-feature": [
+      "N0002"
+    ],
+    "ui": [
+      "N0003"
+    ],
+    "research-focus": [
+      "N0003"
+    ],
+    "gps": [
+      "N0003"
+    ],
+    "ai": [
+      "N0004"
+    ],
+    "automation": [
+      "N0004"
+    ],
+    "future-tech": [
+      "N0004"
+    ],
+    "emotion": [
+      "N0005"
+    ],
+    "monetization": [
+      "N0005"
+    ],
+    "legado": [
+      "N0005"
+    ],
+    "gamification": [
+      "N0006"
+    ],
+    "retention": [
+      "N0006"
+    ],
+    "social": [
+      "N0006"
+    ]
+  },
+  "related_todos_map": {
+    "N0001": [],
+    "N0002": [],
+    "N0003": [],
+    "N0004": [],
+    "N0005": [],
+    "N0006": []
+  },
+  "signals": {
+    "N0001": {
+      "relevance_score": 80,
+      "confidence": "high",
+      "last_reviewed_at": null,
+      "review_after": null
+    },
+    "N0002": {
+      "relevance_score": 90,
+      "confidence": "high",
+      "last_reviewed_at": null,
+      "review_after": null
+    },
+    "N0003": {
+      "relevance_score": 85,
+      "confidence": "high",
+      "last_reviewed_at": null,
+      "review_after": null
+    },
+    "N0004": {
+      "relevance_score": 80,
+      "confidence": "low",
+      "last_reviewed_at": null,
+      "review_after": null
+    },
+    "N0005": {
+      "relevance_score": 85,
+      "confidence": "high",
+      "last_reviewed_at": null,
+      "review_after": null
+    },
+    "N0006": {
+      "relevance_score": 95,
+      "confidence": "high",
+      "last_reviewed_at": null,
+      "review_after": null
+    }
+  },
+  "promotion_state": {
+    "N0001": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0002": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0003": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0004": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0005": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0006": {
+      "is_promoted": false,
+      "promoted_todos": []
+    }
+  }
+}

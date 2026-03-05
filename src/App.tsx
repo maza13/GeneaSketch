@@ -12,13 +12,13 @@ import { WorkspaceProfileService } from "@/io/workspaceProfileService";
 import { useMenuConfig } from "@/hooks/useMenuConfig";
 import { useNodeActions } from "@/hooks/useNodeActions";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
+import { resolveNodeClickRouting } from "@/core/dtree/nodeClickRouting";
+import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
 
-import { DTreeView } from "@/views/DTreeView";
+import { DTreeViewV3 } from "@/views/DTreeViewV3";
 import { DiagnosticPanel } from "@/views/DiagnosticPanel";
 import { GlobalStatsPanel } from "@/views/GlobalStatsPanel";
 import { PersonStatsPanel } from "@/views/PersonStatsPanel";
-import { AboutReleaseModal } from "@/ui/AboutReleaseModal";
-import { AboutReleaseModalV2 } from "@/ui/AboutReleaseModalV2";
 import { AboutReleaseModalV3 } from "@/ui/AboutReleaseModalV3";
 import { BranchExtractionModal } from "@/ui/BranchExtractionModal";
 import { ColorThemeMenu } from "@/ui/ColorThemeMenu";
@@ -74,15 +74,6 @@ function isTypingTarget(target: EventTarget | null): boolean {
     if (!(target instanceof HTMLElement)) return false;
     const tag = target.tagName.toLowerCase();
     return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeDtreeConfig(config: any): any {
-    if (!config) return undefined;
-    return {
-        ...config,
-        layoutEngine: (config.layoutEngine ?? "vnext") as "vnext" | "v2"
-    };
 }
 
 
@@ -295,8 +286,6 @@ export function App() {
         setStatus
     });
 
-    const [showAboutModal, setShowAboutModal] = useState(false);
-    const [showAboutModalV2, setShowAboutModalV2] = useState(false);
     const [showAboutModalV3, setShowAboutModalV3] = useState(false);
     const [showWikiPanel, setShowWikiPanel] = useState(false);
     const [showFamilySearchPanel, setShowFamilySearchPanel] = useState(false);
@@ -446,32 +435,29 @@ export function App() {
     }
 
     const handleNodeClick = (interaction: NodeInteraction) => {
-        if (pendingKinshipSourceId) {
-            if (interaction.nodeKind === "person") {
-                setOverlay({
-                    id: "kinship-standard",
-                    type: "kinship",
-                    priority: 90,
-                    config: { person1Id: pendingKinshipSourceId, person2Id: interaction.nodeId }
-                });
-                setStatus("Calculando parentesco...");
-            }
+        const heatmapOverlayCandidate = viewConfig?.dtree?.overlays.find((overlay) => overlay.type === "heatmap");
+        const heatmapOverlay = heatmapOverlayCandidate?.type === "heatmap" ? heatmapOverlayCandidate : null;
+
+        const decision = resolveNodeClickRouting({
+            interaction,
+            pendingKinshipSourceId,
+            heatmapOverlay
+        });
+
+        if (decision.nextOverlay) {
+            setOverlay(decision.nextOverlay);
+        }
+        if (decision.inspectPersonId) {
+            inspectPerson(decision.inspectPersonId);
+        }
+        if (decision.statusMessage) {
+            setStatus(decision.statusMessage);
+        }
+        if (decision.clearPendingKinship) {
             setPendingKinshipSourceId(null);
-            return;
         }
-
-        const heatmapOverlay = viewConfig?.dtree?.overlays.find((overlay) => overlay.type === "heatmap");
-        if (heatmapOverlay && interaction.nodeKind === "person") {
-            setOverlay({
-                ...heatmapOverlay,
-                config: { ...heatmapOverlay.config, targetId: interaction.nodeId }
-            });
-            inspectPerson(interaction.nodeId);
+        if (decision.consume) {
             return;
-        }
-
-        if (interaction.nodeKind === "person") {
-            inspectPerson(interaction.nodeId);
         }
         setNodeMenu(interaction);
     };
@@ -583,8 +569,6 @@ export function App() {
         setShowMockTools,
         setShowFamilySearchPanel,
         setShowWikiPanel,
-        setShowAboutModal: () => setShowAboutModal(true),
-        setShowAboutModalV2: () => setShowAboutModalV2(true),
         setShowAboutModalV3: () => setShowAboutModalV3(true),
         openPersonWorkspaceV3: (id) => setWorkspacePersonIdV3(id),
         setColorTheme,
@@ -594,8 +578,12 @@ export function App() {
     });
 
 
-    const normalizedDtreeConfig = useMemo(() => normalizeDtreeConfig(viewConfig?.dtree), [viewConfig?.dtree]);
-    const modeBadge = viewConfig ? "DTree" : null;
+    const normalizedDtreeConfig = useMemo(
+        () => (viewConfig ? normalizeDtreeConfig(viewConfig.dtree) : undefined),
+        [viewConfig]
+    );
+
+    const modeBadge = viewConfig ? "DTree V3" : null;
 
     return (
         <div className="app-root-wrapper" style={{ "--canvas-bg-custom": colorTheme.background, "--node-fill-custom": colorTheme.personNode, "--node-text-custom": colorTheme.text, "--edge-color-custom": colorTheme.edges } as React.CSSProperties}>
@@ -621,7 +609,7 @@ export function App() {
                         personCount={document ? Object.keys(document.persons).length : null}
                         familyCount={document ? Object.keys(document.families).length : null}
                         sourceCount={document ? Object.keys(document.sources ?? {}).length : null}
-                        engineMode={viewConfig ? "DTree" : null}
+                        engineMode={viewConfig ? "DTree V3" : null}
                         isSaved={false}
                         appVersion="0.4.4"
                     />
@@ -746,7 +734,7 @@ export function App() {
                             {modeBadge ? <div className="mode-badge">{modeBadge}</div> : null}
                             {showMockTools ? <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1000, width: 300 }}><MockToolsPanel /></div> : null}
 
-                            <DTreeView
+                            <DTreeViewV3
                                 graph={expandedGraph}
                                 document={document}
                                 fitNonce={fitNonce}
@@ -832,8 +820,6 @@ export function App() {
                 onOpenSettings={() => setShowAiSettingsModal(true)}
             />
 
-            <AboutReleaseModal open={showAboutModal} onClose={() => setShowAboutModal(false)} />
-            <AboutReleaseModalV2 open={showAboutModalV2} onClose={() => setShowAboutModalV2(false)} />
             <AboutReleaseModalV3 open={showAboutModalV3} onClose={() => setShowAboutModalV3(false)} />
             <PanelErrorBoundary panelName="Wiki" onReset={() => setShowWikiPanel(false)}>
                 <WikiPanel open={showWikiPanel} onClose={() => setShowWikiPanel(false)} />

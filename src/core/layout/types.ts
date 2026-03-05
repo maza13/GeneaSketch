@@ -1,6 +1,6 @@
 import type { ExpandedGraph, ExpandedNode, GeneaDocument } from "@/types/domain";
 
-export type LayoutEngine = "vnext" | "v2";
+export type LayoutEngine = "vnext";
 
 export type LayoutPoint = {
   x: number;
@@ -29,10 +29,18 @@ export type LayoutOutput = {
   diagnostics: LayoutDiagnostics;
 };
 
+export type LayoutTimingsMs = {
+  total: number;
+  buildVirtualTree?: number;
+  solve?: number;
+};
+
 export type LayoutDiagnostics = {
+  // Kept for compatibility with existing consumers.
   engine: LayoutEngine;
+  effectiveEngine: LayoutEngine;
   warnings: string[];
-  fallbackFrom?: LayoutEngine;
+  timingsMs: LayoutTimingsMs;
 };
 
 export type VirtualLayoutNode = {

@@ -52,7 +52,7 @@ export type MenuConfigParams = {
     setTimelinePanelOpen: (show: boolean) => void;
     setTimelineScope: (scope: TimelineScope) => void;
     setTimelineView: (view: TimelineViewMode) => void;
-    setDTreeLayoutEngine: (engine: "vnext" | "v2") => void;
+    setDTreeLayoutEngine: (engine: "vnext") => void;
     setShowDiagnostics: (show: boolean) => void;
     setShowPersonStatsPersonId: (id: string | null) => void;
     setShowGlobalStatsPanel: (show: boolean) => void;
@@ -61,8 +61,6 @@ export type MenuConfigParams = {
     setShowMockTools: (update: (prev: boolean) => boolean) => void;
     setShowFamilySearchPanel: (show: boolean) => void;
     setShowWikiPanel: (show: boolean) => void;
-    setShowAboutModal: (show: boolean) => void;
-    setShowAboutModalV2: (show: boolean) => void;
     setShowAboutModalV3: (show: boolean) => void;
     openPersonWorkspaceV3: (id: string) => void;
     setColorTheme: (theme: ColorThemeConfig) => void;
@@ -153,8 +151,7 @@ export function useMenuConfig(p: MenuConfigParams) {
                 },
                 {
                     id: "advanced-layout", label: "Motor DTree", children: [
-                        { id: "layout-vnext", label: "vnext", checked: (p.viewConfig?.dtree?.layoutEngine ?? "vnext") === "vnext", disabled: !p.viewConfig, onClick: () => p.setDTreeLayoutEngine("vnext") },
-                        { id: "layout-v2", label: "v2", checked: (p.viewConfig?.dtree?.layoutEngine ?? "vnext") === "v2", disabled: !p.viewConfig, onClick: () => p.setDTreeLayoutEngine("v2") }
+                        { id: "layout-vnext", label: "vnext", checked: true, disabled: !p.viewConfig, onClick: () => p.setDTreeLayoutEngine("vnext") }
                     ]
                 }
             ]
@@ -174,7 +171,6 @@ export function useMenuConfig(p: MenuConfigParams) {
 
         // ── Ayuda ─────────────────────────────────────────────────────────────
         const itemWiki: MenuItem = { id: "wiki", label: "Wiki GeneaSketch", icon: ic("menu_book"), onClick: () => p.setShowWikiPanel(true) };
-        const itemAboutV2: MenuItem = { id: "about-v2", label: "Acerca de (V2)", icon: ic("info"), onClick: () => p.setShowAboutModalV2(true) };
         const itemAboutV3: MenuItem = { id: "about-v3", label: "Acerca de (V3)", icon: ic("info_i"), onClick: () => p.setShowAboutModalV3(true) };
 
         // ── Layout switcher ───────────────────────────────────────────────────
@@ -227,7 +223,7 @@ export function useMenuConfig(p: MenuConfigParams) {
                 {
                     id: "ayuda", label: "Ayuda", items: [
                         itemWiki, sep("s12"),
-                        itemAboutV2, itemAboutV3, sep("s13"),
+                        itemAboutV3, sep("s13"),
                         itemScenarios
                     ]
                 }
@@ -272,7 +268,7 @@ export function useMenuConfig(p: MenuConfigParams) {
                 {
                     id: "ayuda", label: "Ayuda", items: [
                         itemWiki, sep("s10"),
-                        itemAboutV2, itemAboutV3, sep("s11"),
+                        itemAboutV3, sep("s11"),
                         itemScenarios
                     ]
                 }
@@ -292,7 +288,7 @@ export function useMenuConfig(p: MenuConfigParams) {
                     itemSave, sep("s2"),
                     itemImport, sep("s3"),
                     itemExpGed7, itemExpGed5, sep("s4"),
-                    itemWiki, itemAboutV2, itemAboutV3, sep("s5"),
+                    itemWiki, itemAboutV3, sep("s5"),
                     itemScenarios
                 ]
             },
@@ -328,7 +324,7 @@ export function useMenuConfig(p: MenuConfigParams) {
         p.setShowColorThemeMenu, p.leftCollapsed, p.rightCollapsed, p.toggleShellPanel,
         p.timelineOpen, p.setTimelinePanelOpen, p.clearNodePositions, p.viewConfig,
         p.setTimelineScope, p.setTimelineView, p.setDTreeLayoutEngine, p.generateScenario,
-        p.setShowMockTools, p.setShowWikiPanel, p.setShowAboutModalV2, p.setShowAboutModalV3,
+        p.setShowMockTools, p.setShowWikiPanel, p.setShowAboutModalV3,
         p.menuLayout, p.setMenuLayout
     ]);
 
