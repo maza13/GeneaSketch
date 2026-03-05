@@ -662,22 +662,8 @@ export function documentToGSchema(
     }
 
     // ── 6. Initial Import operation ──────────
-    const initOp = {
-        opId: uid(), opSeq: (graph as unknown as { _nextOpSeq: number })._nextOpSeq ?? 0, type: "INITIAL_IMPORT" as const,
-        timestamp: nowSec(), actorId: "system_importer",
-        sourceFormat: (sourceVersion === "5.5.1" ? "GEDCOM_551" : "GEDCOM_703") as
-            "GEDCOM_551" | "GEDCOM_703" | "GSZ_03x" | "GSK_01x",
-        sourceFileName,
-        nodeCount: graph.nodeCount,
-        edgeCount: graph.edgeCount,
-        claimCount: Object.values(graph.toData().claims).reduce(
-            (sum, byPredicate) => sum + Object.values(byPredicate).reduce((inner, claims) => inner + claims.length, 0),
-            0
-        ),
-    };
-    const internals = graph as unknown as { _journal: unknown[]; _nextOpSeq: number };
-    internals._journal.push(initOp);
-    internals._nextOpSeq = initOp.opSeq + 1;
+    const format = (sourceVersion === "5.5.1" ? "GEDCOM_551" : "GEDCOM_703") as "GEDCOM_551" | "GEDCOM_703" | "GSZ_03x" | "GSK_01x";
+    graph.recordInitialImport(format, sourceFileName, "system_importer");
 
     return { graph, xrefMap, quarantineCount: graph.quarantineCount, warnings };
 }

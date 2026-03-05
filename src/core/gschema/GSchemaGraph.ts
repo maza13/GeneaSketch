@@ -446,7 +446,52 @@ export class GSchemaGraph {
         });
         this._quarantine.push(op);
     }
+
+    /** Records an INITIAL_IMPORT operation. Safe public API to avoid _journal bypass. */
+    recordInitialImport(
+        sourceFormat: "GEDCOM_551" | "GEDCOM_703" | "GSZ_03x" | "GSK_01x",
+        sourceFileName?: string,
+        actorId = "system_importer"
+    ): void {
+        let claimCount = 0;
+        for (const byPred of this._claims.values()) {
+            for (const arr of byPred.values()) {
+                claimCount += arr.length;
+            }
+        }
+
+        this._recordOperation<import("./types").InitialImportOperation>({
+            opId: uuidv4(),
+            type: "INITIAL_IMPORT",
+            timestamp: nowSec(),
+            actorId,
+            sourceFormat,
+            sourceFileName,
+            nodeCount: this.nodeCount,
+            edgeCount: this.edgeCount,
+            claimCount
+        });
+    }
+
     // ── Journal & Serialization ───────────────
+
+    /** @internal Controlled facade for append operations from Journal.ts */
+    _appendJournal(ops: readonly GSchemaOperation[], updateJournalArray: boolean): void {
+        if (ops.length === 0) return;
+
+        const maxApplied = ops.reduce((max, op) => Math.max(max, op.opSeq), -1);
+        if (updateJournalArray) {
+            this._journal.push(...ops);
+        }
+        this._nextOpSeq = Math.max(this._nextOpSeq, maxApplied + 1);
+    }
+
+    /** @internal Controlled facade for full replay replacement from Journal.ts */
+    _replaceJournal(ops: readonly GSchemaOperation[]): void {
+        this._journal = [...ops];
+        const maxOpSeq = ops.reduce((max, op) => Math.max(max, op.opSeq), -1);
+        this._nextOpSeq = maxOpSeq + 1;
+    }
 
     getJournal(): readonly GSchemaOperation[] {
         return this._journal;
