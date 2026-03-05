@@ -70,8 +70,6 @@ type GraphInternals = {
     _claims: Map<string, Map<string, Array<{ uid: string; isPreferred: boolean; quality: string; lifecycle: string }>>>;
     _quarantine: GSchemaOperation[];
     _adjacency: { out: Map<string, Set<string>>; in: Map<string, Set<string>> };
-    _journal: GSchemaOperation[];
-    _nextOpSeq: number;
 };
 
 export interface JournalApplyReport {
@@ -228,17 +226,18 @@ export function applyJournalOps(
         if (!seqCheck.ok) {
             throw new Error(`Invalid incremental journal opSeq: ${seqCheck.reason}`);
         }
+        const currentJournal = graph.getJournal();
+        const maxOpSeq = currentJournal.reduce((max, op) => Math.max(max, op.opSeq), -1);
+        const expectedNextSeq = maxOpSeq + 1;
+        if (ops[0].opSeq !== expectedNextSeq) {
+            throw new Error(`Invalid incremental journal opSeq: gap at start opSeq=${ops[0].opSeq} (expected ${expectedNextSeq})`);
+        }
     }
 
     const internals = getInternals(graph);
     applyOpsToGraphInternals(internals, ops, report);
 
-    if (appendToJournal) {
-        internals._journal.push(...ops);
-    }
-
-    const maxApplied = ops.reduce((max, op) => Math.max(max, op.opSeq), -1);
-    internals._nextOpSeq = Math.max(internals._nextOpSeq, maxApplied + 1);
+    graph._appendJournal(ops, appendToJournal);
     return report;
 }
 
@@ -255,9 +254,7 @@ export function replayJournalWithReport(
     const report: JournalApplyReport = { skippedUnknownEdges: [] };
     applyOpsToGraphInternals(internals, ops, report);
 
-    internals._journal = [...ops];
-    const maxOpSeq = ops.reduce((max, op) => Math.max(max, op.opSeq), -1);
-    internals._nextOpSeq = maxOpSeq + 1;
+    graph._replaceJournal(ops);
     return { graph, report };
 }
 
