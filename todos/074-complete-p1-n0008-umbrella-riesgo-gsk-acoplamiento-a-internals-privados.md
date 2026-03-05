@@ -84,29 +84,18 @@ Leave this section empty unless the task truly requires user intervention.
 - Integrated static analysis check for internal property bypass (077).
 - Reinforced integrity tests for opSeq gaps (078).
 - Verified full system stability with existing and new tests.
+- Automated closure and commit confirmed via `todo:close`.
 
 **Evidence:**
 - All child tasks (075, 076, 077, 078) closed and committed.
 - GSchema Test Suite: 100% Pass.
 - Static Analysis: 0 Violations.
+- Artifacts/paths: todos/074-complete-p1-n0008-umbrella-riesgo-gsk-acoplamiento-a-internals-privados.md
 
-
-(Add next-step recommendations only at closure, based on dependency state and current project context.)
-
----
-
-(Add more entries as work progresses)
-
-## Notes
-
-Additional context.
+**Next Recommendation:**
+- None. (Architectural risk N0008 fully mitigated).
 
 ## Evolution Log
-
-### 2026-03-05 - Task created from notes:promote
-
-- Source note: N0008
-- Promotion mode: complex
 
 ### 2026-03-05 - Auto close via todo:close
 
@@ -117,14 +106,11 @@ Additional context.
 - to: complete
 
 **Actions:**
-- Completed N0008 architectural risk mitigation. Encapsulated GSchemaGraph internals, implemented static analysis checks, and reinforced integrity tests.
+- Completed N0008 architectural risk mitigation.
 - Closed task with automated status update + rename + commit.
 
-**Evidence:**
-- Command: npm run todo:close -- ...
-- Result: automatic close and commit executed.
-- Artifacts/paths: todos/074-complete-p1-n0008-umbrella-riesgo-gsk-acoplamiento-a-internals-privados.md
+### 2026-03-05 - Task created from notes:promote
 
-**Next Recommendation (generated at closure):**
-- No direct dependent task found.
-- Recommended next unblocked task: 077 (p1).
+- Source note: N0008
+- Promotion mode: complex
+

@@ -27,6 +27,10 @@ Ensure the system strictly rejects journals with gaps or non-sequential operatio
 
 A bug was found where gaps were only reported as warnings in some flows.
 
+## Recommended Action
+
+Execute implementation end-to-end and close with automated commit.
+
 ## Acceptance Criteria
 
 - [x] Tests for gap detection added to `gschema.strict.test.ts`

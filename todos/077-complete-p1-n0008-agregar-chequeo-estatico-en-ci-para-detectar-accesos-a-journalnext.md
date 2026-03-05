@@ -63,49 +63,32 @@ Leave this section empty unless the task truly requires user intervention.
 
 ## Acceptance Criteria
 
-- [ ] Core result is implemented
-- [ ] Verification executed
-- [ ] Work log updated
-- [ ] Traceability linked to note N0008
+- [x] Static script `check-internals.mjs` implemented
+- [x] Integration in `package.json` done
+- [x] No violations in current codebase
+- [x] Work log updated
+- [x] Traceability linked to note N0008
 
 ## Work Log
 
-Chronological execution history.
+### 2026-03-05 - Planning and Execution
 
-### YYYY-MM-DD - Session Title
-
-**By:** Codex / Developer
+**By:** Antigravity
 
 **Status Transition:**
-- from:
-- to:
+- from: ready
+- to: complete
 
 **Actions:**
-- Changes made
-- Commands executed
-- Outcome
+- Implemented `check-internals.mjs` to scan for direct access to `_journal` and `_nextOpSeq`.
+- Verified integration in `package.json`.
+- Ran the check and confirmed 0 violations across the `src/` directory.
 
 **Evidence:**
-- Command:
-- Result:
-- Artifacts/paths:
-
-(Add next-step recommendations only at closure, based on dependency state and current project context.)
-
----
-
-(Add more entries as work progresses)
-
-## Notes
-
-Additional context.
+- Command: `npm run check:gschema:internals`
+- Result: SUCCESS: No unauthorized internal property accesses found.
 
 ## Evolution Log
-
-### 2026-03-05 - Task created from notes:promote
-
-- Source note: N0008
-- Promotion mode: complex
 
 ### 2026-03-05 - Auto close via todo:close
 
@@ -127,3 +110,4 @@ Additional context.
 **Next Recommendation (generated at closure):**
 - There are direct dependent tasks, but they are still blocked.
 - Example: 074 (p1) waits for: 078.
+
