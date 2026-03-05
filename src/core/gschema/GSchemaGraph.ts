@@ -28,6 +28,7 @@ import {
     type ParentChildEdge,
     type MemberEdge,
     type GskPackageManifest,
+    type NoteNode,
 } from "./types";
 import { normalizeClaims } from "./ClaimNormalization";
 import { validateGSchemaGraph, type ValidationResult } from "./validation";
@@ -313,6 +314,27 @@ export class GSchemaGraph {
     /** Typed convenience wrapper for adding a UnionNode. */
     addUnionNode(input: Omit<import("./types").UnionNode, "createdAt">, actorId = "system"): import("./types").UnionNode {
         return this.addNode(input, actorId) as import("./types").UnionNode;
+    }
+
+    /**
+     * Updates an existing Note node text and records the change in journal.
+     * Uses ADD_NODE as canonical upsert operation to keep replay deterministic.
+     */
+    updateNoteText(noteUid: string, text: string, actorId = "system_ui"): boolean {
+        const existing = this._nodes.get(noteUid);
+        if (!existing || existing.type !== "Note") return false;
+        const updated: NoteNode = { ...existing, text };
+        this._nodes.set(noteUid, updated);
+        this._updatedAt = nowIso();
+
+        this._recordOperation<AddNodeOperation>({
+            opId: uuidv4(),
+            type: "ADD_NODE",
+            timestamp: nowSec(),
+            actorId,
+            node: updated,
+        });
+        return true;
     }
 
     addEdge(edgeInput: Omit<GSchemaEdge, "createdAt">, actorId = "system"): GSchemaEdge {
