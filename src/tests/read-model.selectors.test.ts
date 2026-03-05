@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createNewTree } from "@/core/edit/commands";
 import { documentToGSchema } from "@/core/gschema/GedcomBridge";
+import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import {
   clearGraphProjectionCache,
+  getReadModelMode,
+  projectGraphDocument,
+  setReadModelMode,
   selectFamilies,
   selectGraphStats,
   selectPersons,
@@ -39,6 +43,7 @@ function buildGraph() {
 
 describe("read-model selectors", () => {
   beforeEach(() => {
+    setReadModelMode("direct");
     clearGraphProjectionCache();
   });
 
@@ -66,6 +71,74 @@ describe("read-model selectors", () => {
     const first = selectSearchEntries(graph);
     const second = selectSearchEntries(graph);
     expect(second).toBe(first);
+  });
+
+  it("invalidates projection cache when journalLength changes after note update", () => {
+    const graph = buildGraph();
+    graph.addNode({
+      type: "Note",
+      uid: "note-cache-1",
+      text: "before",
+      deleted: false,
+    } as import("@/core/gschema/types").NoteNode);
+
+    const first = projectGraphDocument(graph);
+    const second = projectGraphDocument(graph);
+    expect(second).toBe(first);
+
+    const beforeLen = graph.journalLength;
+    const ok = graph.updateNoteText("note-cache-1", "after");
+    expect(ok).toBe(true);
+    expect(graph.journalLength).toBe(beforeLen + 1);
+
+    const third = projectGraphDocument(graph);
+    expect(third).not.toBe(second);
+  });
+
+  it("keeps functional parity between direct and legacy modes for core selector outputs", () => {
+    const graph = buildGraph();
+
+    setReadModelMode("direct");
+    const directPersons = selectPersons(graph);
+    const directFamilies = selectFamilies(graph);
+    const directStats = selectGraphStats(graph);
+
+    setReadModelMode("legacy");
+    const legacyPersons = selectPersons(graph);
+    const legacyFamilies = selectFamilies(graph);
+    const legacyStats = selectGraphStats(graph);
+
+    expect(directPersons).toHaveLength(legacyPersons.length);
+    expect(directFamilies).toHaveLength(legacyFamilies.length);
+    expect(directStats).toStrictEqual(legacyStats);
+  });
+
+  it("supports rollback to legacy mode via central read-model switch", () => {
+    const graph = buildGraph();
+    setReadModelMode("direct");
+    const directDoc = projectGraphDocument(graph);
+
+    setReadModelMode("legacy");
+    expect(getReadModelMode()).toBe("legacy");
+    const legacyDoc = projectGraphDocument(graph);
+
+    expect(legacyDoc).not.toBeNull();
+    expect(directDoc).not.toBe(legacyDoc);
+    expect(Object.keys(legacyDoc?.persons || {}).length).toBe(Object.keys(directDoc?.persons || {}).length);
+  });
+
+  it("uses uid as stable fallback id when xref is missing in direct projection", () => {
+    const graph = GSchemaGraph.create();
+    graph.addPersonNode({ uid: "p-no-xref", type: "Person", sex: "F", isLiving: true });
+
+    setReadModelMode("direct");
+    const persons = selectPersons(graph);
+    const person = persons.find((entry) => entry.id === "p-no-xref");
+    const doc = projectGraphDocument(graph);
+
+    expect(person).toBeDefined();
+    expect(doc?.uidToXref?.["p-no-xref"]).toBe("p-no-xref");
+    expect(doc?.xrefToUid?.["p-no-xref"]).toBe("p-no-xref");
   });
 });
 

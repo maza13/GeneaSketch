@@ -1,5 +1,7 @@
 export {
+  getReadModelMode,
   projectGraphDocument,
+  setReadModelMode,
   clearGraphProjectionCache,
   selectFamilies,
   selectGraphStats,
@@ -17,5 +19,6 @@ export type {
   GraphTimelineInput,
   GraphSource,
   GraphPayload,
+  ReadModelMode,
   RecentPayloadV2,
 } from "./types";

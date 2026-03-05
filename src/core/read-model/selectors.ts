@@ -1,10 +1,12 @@
 import { gschemaToDocument as projectLegacyDocument } from "@/core/gschema/GedcomBridge";
 import type { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { clearReadModelCache, getCached, setCached } from "./cache";
+import { buildDirectDocument } from "./directProjection";
 import type {
   GraphFamily,
   GraphPerson,
   GraphProjectionDocument,
+  ReadModelMode,
   GraphSearchEntry,
   GraphStatsSummary,
   GraphTimelineInput,
@@ -12,10 +14,21 @@ import type {
 
 let lastKey = "";
 let lastDoc: GraphProjectionDocument | null = null;
+let readModelMode: ReadModelMode = "direct";
+
+export function setReadModelMode(mode: ReadModelMode): void {
+  if (mode === readModelMode) return;
+  readModelMode = mode;
+  clearGraphProjectionCache();
+}
+
+export function getReadModelMode(): ReadModelMode {
+  return readModelMode;
+}
 
 function keyFor(graph: GSchemaGraph | null): string {
   if (!graph) return "";
-  return `${graph.graphId}:${graph.journalLength}`;
+  return `${graph.graphId}:${graph.journalLength}:${readModelMode}`;
 }
 
 function keyedSelector(graph: GSchemaGraph | null, selector: string): string {
@@ -31,7 +44,9 @@ export function projectGraphDocument(graph: GSchemaGraph | null): GraphProjectio
   }
   const key = keyFor(graph);
   if (lastDoc && key === lastKey) return lastDoc;
-  lastDoc = projectLegacyDocument(graph) as GraphProjectionDocument;
+  lastDoc = readModelMode === "direct"
+    ? buildDirectDocument(graph)
+    : projectLegacyDocument(graph) as GraphProjectionDocument;
   lastKey = key;
   return lastDoc;
 }

@@ -2,7 +2,7 @@ import { StateCreator } from "zustand";
 import { AppState, ViewSlice } from "../types";
 import { ensureExpanded } from "../helpers/graphHelpers";
 import { withFocusHistory } from "../helpers/sessionHelpers";
-import { projectGraphDocument } from "@/core/read-model/selectors";
+import { projectGraphDocument, setReadModelMode as setGlobalReadModelMode } from "@/core/read-model/selectors";
 import { UiEngine } from "@/core/engine/UiEngine";
 import { createDefaultDtreeConfig } from "@/core/dtree/dtreeConfig";
 import type { ActiveOverlay } from "@/types/domain";
@@ -11,10 +11,23 @@ const defaultDtree = () => createDefaultDtreeConfig();
 const defaultRightStack = () => ({ detailsMode: "expanded" as const, timelineMode: "compact" as const, detailsAutoCompactedByTimeline: false });
 
 export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) => ({
+    readModelMode: "direct",
     viewConfig: null,
     visualConfig: UiEngine.createDefaultVisualConfig(),
     selectedPersonId: null,
     fitNonce: 0,
+
+    setReadModelMode: (mode) => set((state) => {
+        if (state.readModelMode === mode) return {};
+        setGlobalReadModelMode(mode);
+        const projected = projectGraphDocument(state.gschemaGraph);
+        return {
+            readModelMode: mode,
+            expandedGraph: state.viewConfig && projected
+                ? ensureExpanded(projected, state.viewConfig)
+                : state.expandedGraph
+        };
+    }),
 
     setSelectedPerson: (personId) => set((state) => {
         return { selectedPersonId: personId, ...withFocusHistory(state, personId) };

@@ -82,7 +82,8 @@ import { useShallow } from 'zustand/react/shallow';
 export function App() {
     // -- Reactive State (Granular Subscriptions) ------------------------------
     const gschemaGraph = useAppStore(state => state.gschemaGraph);
-    const document = useMemo(() => projectGraphDocument(gschemaGraph), [gschemaGraph?.graphId, gschemaGraph?.journalLength]);
+    const readModelMode = useAppStore(state => state.readModelMode);
+    const document = useMemo(() => projectGraphDocument(gschemaGraph), [gschemaGraph?.graphId, gschemaGraph?.journalLength, readModelMode]);
     const viewConfig = useAppStore(state => state.viewConfig);
     const visualConfig = useAppStore(state => state.visualConfig);
     const expandedGraph = useAppStore(state => state.expandedGraph);
@@ -335,13 +336,14 @@ export function App() {
                 graphId: gschemaGraph.graphId,
                 viewConfig: sanitizedViewConfig,
                 visualConfig,
+                readModelMode,
                 colorTheme,
                 updatedAt: new Date().toISOString(),
                 source: "local-autosave"
             });
         }, 1200);
         return () => clearTimeout(timer);
-    }, [gschemaGraph?.graphId, viewConfig, visualConfig, colorTheme]);
+    }, [gschemaGraph?.graphId, viewConfig, visualConfig, readModelMode, colorTheme]);
 
     useEffect(() => {
         checkRestoreAvailability();

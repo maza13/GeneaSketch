@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { documentToGSchema, gschemaToDocument } from "@/core/gschema/GedcomBridge";
 import { createNewTree } from "@/core/edit/commands";
+import { projectGraphDocument } from "@/core/read-model";
 import { SessionService } from "@/io/sessionService";
 import { useAppStore } from "@/state/store";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
@@ -230,12 +231,13 @@ describe("store explicit id actions", () => {
     const newPersonId = state.selectedPersonId;
     expect(newPersonId).toBeDefined();
     expect(newPersonId).not.toBeNull();
-    const created = (state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.persons[newPersonId!];
+    const projected = state.gschemaGraph ? projectGraphDocument(state.gschemaGraph) : null;
+    const created = projected?.persons[newPersonId!];
     expect(created).toBeDefined();
     expect(created?.famc.length).toBe(1);
 
     const familyId = created?.famc[0] as string;
-    const fam = (state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.families[familyId];
+    const fam = projected?.families[familyId];
     expect(fam?.husbandId).toBe("@I2@");
     expect(fam?.childrenIds.includes(newPersonId!)).toBe(true);
   });

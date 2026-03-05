@@ -5,13 +5,19 @@ import type {
   RecentPayloadV2,
 } from "@/types/domain";
 
+export type ReadModelMode = "direct" | "legacy";
+
 export type GraphDocument = GeneaDocument;
 export type GraphProjectionDocument = GraphDocument & {
   xrefToUid?: Record<string, string>;
   uidToXref?: Record<string, string>;
 };
-export type GraphPerson = Person;
-export type GraphFamily = Family;
+export type GraphPerson = Person & {
+  gschemaMeta?: { uid: string; source: "direct" };
+};
+export type GraphFamily = Family & {
+  gschemaMeta?: { uid: string; source: "direct" };
+};
 
 export type GraphStatsSummary = {
   persons: number;
