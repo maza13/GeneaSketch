@@ -307,4 +307,49 @@ describe("GSchema Phase D2 - Hardening", () => {
         expect(ged).toContain("1 _LONG " + "A".repeat(180));
         expect(ged).toContain("2 CONC " + "A".repeat(120));
     });
+
+    it("fails in strict mode when journal replay has a gap in opSeq", async () => {
+        const graph = GSchemaGraph.create();
+        graph.addPersonNode({ uid: "p1", type: "Person", sex: "M", isLiving: false });
+        graph.addPersonNode({ uid: "p2", type: "Person", sex: "F", isLiving: true });
+        graph.addPersonNode({ uid: "p3", type: "Person", sex: "M", isLiving: true });
+
+        const blob = await exportGskPackage(graph);
+        const zip = await JSZip.loadAsync(await blob.arrayBuffer());
+        const manifest = JSON.parse(await zip.file("manifest.json")!.async("string")) as Record<string, unknown>;
+        const journal = await zip.file("journal.jsonl")!.async("string");
+        const lines = journal.split("\n").filter((line) => line.trim().length > 0);
+
+        // Remove an operation from the middle of the journal to create a gap
+        if (lines.length > 2) {
+            lines.splice(1, 1);
+        }
+
+        delete manifest.journalHash;
+        delete (manifest as any).integrity;
+        zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+        zip.file("journal.jsonl", lines.join("\n"));
+        const payload = await zip.generateAsync({ type: "uint8array" });
+
+        await expect(importGskPackage(payload, { strict: true })).rejects.toThrow(/gap/);
+    });
+
+    it("fails in strict mode when fast-forwarding with a non-contiguous opSeq", async () => {
+        const graph = GSchemaGraph.create();
+        graph.addPersonNode({ uid: "p1", type: "Person", sex: "M", isLiving: false });
+        const lastSeq = graph.getJournal()[graph.getJournal().length - 1].opSeq;
+
+        // Try to apply an operation that skips a sequence number
+        const ops = [{
+            opId: "bad-op",
+            opSeq: lastSeq + 2, // Gap!
+            type: "ADD_NODE",
+            timestamp: 12345,
+            actorId: "test",
+            node: { uid: "p2", type: "Person", sex: "F", isLiving: false, createdAt: "2026-03-03" }
+        } as any];
+
+        const { applyJournalOps } = await import("../core/gschema/Journal");
+        expect(() => applyJournalOps(graph, ops, { strictOpSeq: true })).toThrow(/gap/);
+    });
 });

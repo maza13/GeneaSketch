@@ -637,9 +637,11 @@ export async function importGskPackage(
     let journalValid = journalRaw ? (journalOps.length === journalLineCount && seqCheck.ok) : false;
 
     if (journalRaw && journalOps.length !== journalLineCount) {
+        if (strict) throw new Error("CRITICAL: journal.jsonl contains malformed lines in strict mode");
         warnings.push("journal.jsonl contains malformed lines.");
     }
     if (journalRaw && !seqCheck.ok) {
+        if (strict) throw new Error(`CRITICAL: journal.jsonl opSeq is invalid in strict mode: ${seqCheck.reason} (gap/disorder)`);
         warnings.push(`journal.jsonl opSeq is invalid: ${seqCheck.reason}`);
     }
 
