@@ -1,9 +1,9 @@
 ---
 note_id: "N0009"
 kind: "note"
-phase: "active"
-active_state: "on_hold"
-archive_reason: null
+phase: "archived"
+active_state: null
+archive_reason: "promoted"
 complexity: "complex"
 connectivity: "interconnected"
 horizon: "near"
@@ -13,8 +13,8 @@ source_context: null
 tags: ["gsk", "ui", "read-model", "legacy"]
 related_notes: ["N0001", "N0002", "N0003", "N0008", "N0007"]
 related_paths: ["src/core/read-model/selectors.ts", "src/core/gschema/GedcomBridge.ts", "src/state/slices/docSlice.ts"]
-related_todos: []
-promoted_todos: []
+related_todos: ["083", "084", "085", "086", "087"]
+promoted_todos: ["083", "084", "085", "086", "087"]
 relevance_score: 74
 confidence: "medium"
 priority_hint: "p2"
@@ -24,6 +24,7 @@ updated_at: "2026-03-05"
 last_reviewed_at: "2026-03-05"
 review_after: "2026-03-19"
 ---
+
 
 
 
@@ -79,3 +80,9 @@ Esto no bloquea la version 0.5.0, pero si eleva el costo de evolucion en N0002/N
 
 - Reason: Deep re-analysis v2: phased migration and dependency chain refined
 - Updated via notes:update
+
+### 2026-03-05 - Promoted to TODO
+
+- Created TODO ids: 083, 084, 085, 086, 087
+- Mode: complex
+- Source: notes:promote via file-todos template

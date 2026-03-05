@@ -187,10 +187,8 @@ export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, ge
         if (!state.gschemaGraph) return {};
 
         const graphUid = state.xrefToUid?.[noteId] || noteId;
-        const node = state.gschemaGraph.node(graphUid);
-        if (node && node.type === "Note") {
-            (node as any).text = text;
-        } else {
+        const ok = GraphMutations.updateNoteInGraph(state.gschemaGraph, graphUid, text);
+        if (!ok) {
             console.warn("note update failed: missing node or not a Note in graph");
         }
 

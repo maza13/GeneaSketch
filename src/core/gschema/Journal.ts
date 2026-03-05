@@ -64,20 +64,8 @@ export async function computeJournalHash(ops: readonly GSchemaOperation[]): Prom
     return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }
 
-type GraphInternals = {
-    _nodes: Map<string, unknown>;
-    _edges: Map<string, { uid: string; fromUid: string; toUid: string; deleted?: boolean }>;
-    _claims: Map<string, Map<string, Array<{ uid: string; isPreferred: boolean; quality: string; lifecycle: string }>>>;
-    _quarantine: GSchemaOperation[];
-    _adjacency: { out: Map<string, Set<string>>; in: Map<string, Set<string>> };
-};
-
 export interface JournalApplyReport {
     skippedUnknownEdges: Array<{ opSeq: number; edgeUid: string; edgeType: string; opId: string }>;
-}
-
-function getInternals(graph: GSchemaGraph): GraphInternals {
-    return graph as unknown as GraphInternals;
 }
 
 function validateGaplessFromFirst(ops: readonly GSchemaOperation[]): { ok: boolean; reason?: string } {
@@ -95,120 +83,36 @@ function validateGaplessFromFirst(ops: readonly GSchemaOperation[]): { ok: boole
     return { ok: true };
 }
 
-function applyOpsToGraphInternals(
-    internals: GraphInternals,
+function applyOpsToGraph(
+    graph: GSchemaGraph,
     ops: readonly GSchemaOperation[],
     report: JournalApplyReport
 ): void {
-    const indexEdge = (edge: { uid: string; fromUid: string; toUid: string }) => {
-        if (!internals._adjacency.out.has(edge.fromUid)) internals._adjacency.out.set(edge.fromUid, new Set());
-        if (!internals._adjacency.in.has(edge.toUid)) internals._adjacency.in.set(edge.toUid, new Set());
-        internals._adjacency.out.get(edge.fromUid)!.add(edge.uid);
-        internals._adjacency.in.get(edge.toUid)!.add(edge.uid);
-    };
-
-    const deIndexEdge = (edge: { uid: string; fromUid: string; toUid: string }) => {
-        internals._adjacency.out.get(edge.fromUid)?.delete(edge.uid);
-        internals._adjacency.in.get(edge.toUid)?.delete(edge.uid);
-    };
-
     for (const op of ops) {
-        switch (op.type) {
-            case "ADD_NODE":
-                internals._nodes.set(op.node.uid, op.node);
-                break;
-            case "ADD_EDGE":
-                if (!isKnownEdgeType(op.edge.type)) {
-                    report.skippedUnknownEdges.push({
-                        opSeq: op.opSeq,
-                        edgeUid: op.edge.uid,
-                        edgeType: op.edge.type,
-                        opId: op.opId,
-                    });
-                    internals._quarantine.push({
-                        opId: `quarantine:unknown-edge:${op.opId}`,
-                        opSeq: op.opSeq,
-                        type: "QUARANTINE",
-                        timestamp: op.timestamp,
-                        actorId: op.actorId,
-                        importId: `journal:${op.opId}`,
-                        ast: {
-                            level: 1,
-                            tag: "_GSK_EDGE_UNKNOWN",
-                            value: JSON.stringify(op.edge),
-                            children: [],
-                            sourceLines: [JSON.stringify(op)],
-                        },
-                        reason: "unknown_edge_type",
-                        context: op.edge.uid,
-                    });
-                    break;
-                }
-                internals._edges.set(op.edge.uid, op.edge);
-                if (!op.edge.deleted) indexEdge(op.edge);
-                break;
-            case "ADD_CLAIM":
-                if (!internals._claims.has(op.claim.nodeUid)) internals._claims.set(op.claim.nodeUid, new Map());
-                {
-                    const byPred = internals._claims.get(op.claim.nodeUid)!;
-                    if (!byPred.has(op.claim.predicate)) byPred.set(op.claim.predicate, []);
-                    const claims = byPred.get(op.claim.predicate)!;
-                    if (claims.some((claim) => claim.uid === op.claim.uid)) {
-                        break;
-                    }
-                    if (op.claim.isPreferred) {
-                        for (const claim of claims) claim.isPreferred = false;
-                    }
-                    claims.push(op.claim as unknown as { uid: string; isPreferred: boolean; quality: string; lifecycle: string });
-                }
-                break;
-            case "SET_PREF_CLAIM":
-                {
-                    const claims = internals._claims.get(op.nodeUid)?.get(op.predicate) ?? [];
-                    for (const claim of claims) {
-                        claim.isPreferred = claim.uid === op.claimUid;
-                    }
-                }
-                break;
-            case "RETRACT_CLAIM":
-                for (const byPred of internals._claims.values()) {
-                    for (const claims of byPred.values()) {
-                        const target = claims.find((claim) => claim.uid === op.claimUid);
-                        if (target) {
-                            target.lifecycle = "retracted";
-                            target.isPreferred = false;
-                        }
-                    }
-                }
-                break;
-            case "SOFT_DELETE_NODE":
-                {
-                    const node = internals._nodes.get(op.nodeUid) as { deleted?: boolean } | undefined;
-                    if (node) node.deleted = true;
-                }
-                break;
-            case "SOFT_DELETE_EDGE":
-                {
-                    const edge = internals._edges.get(op.edgeUid);
-                    if (edge) {
-                        edge.deleted = true;
-                        deIndexEdge(edge);
-                    }
-                }
-                break;
-            case "REPAIR_CREATE_UNION":
-            case "REPAIR_CREATE_MEMBER_EDGE":
-            case "REPAIR_RELINK_PARENT_CHILD":
-                // Repair ops are audit entries; graph state is already reflected in snapshot/import flow.
-                break;
-            case "QUARANTINE":
-                if (!internals._quarantine.some((existing) => existing.opId === op.opId)) {
-                    internals._quarantine.push(op);
-                }
-                break;
-            case "INITIAL_IMPORT":
-                break;
+        if (op.type === "ADD_EDGE" && !isKnownEdgeType(op.edge.type)) {
+            report.skippedUnknownEdges.push({
+                opSeq: op.opSeq,
+                edgeUid: op.edge.uid,
+                edgeType: op.edge.type,
+                opId: op.opId,
+            });
+            graph.quarantine({
+                importId: `journal:${op.opId}`,
+                ast: {
+                    level: 1,
+                    tag: "_GSK_EDGE_UNKNOWN",
+                    value: JSON.stringify(op.edge),
+                    children: [],
+                    sourceLines: [JSON.stringify(op)],
+                },
+                reason: "unknown_edge_type",
+                context: op.edge.uid,
+            });
+            continue;
         }
+
+        // Use the internal apply mechanism to update state without recording new operations
+        (graph as any)._applyOperation(op);
     }
 }
 
@@ -234,8 +138,7 @@ export function applyJournalOps(
         }
     }
 
-    const internals = getInternals(graph);
-    applyOpsToGraphInternals(internals, ops, report);
+    applyOpsToGraph(graph, ops, report);
 
     graph._appendJournal(ops, appendToJournal);
     return report;
@@ -250,9 +153,8 @@ export function replayJournalWithReport(
     }
 
     const graph = GSchemaGraph.create();
-    const internals = getInternals(graph);
     const report: JournalApplyReport = { skippedUnknownEdges: [] };
-    applyOpsToGraphInternals(internals, ops, report);
+    applyOpsToGraph(graph, ops, report);
 
     graph._replaceJournal(ops);
     return { graph, report };

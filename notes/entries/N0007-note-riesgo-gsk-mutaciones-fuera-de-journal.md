@@ -1,9 +1,9 @@
 ---
 note_id: "N0007"
 kind: "note"
-phase: "active"
-active_state: "candidate"
-archive_reason: null
+phase: "archived"
+active_state: null
+archive_reason: "promoted"
 complexity: "complex"
 connectivity: "interconnected"
 horizon: "near"
@@ -13,8 +13,8 @@ source_context: null
 tags: ["gsk", "journal", "integrity", "versioning"]
 related_notes: ["N0001", "N0002", "N0003", "N0008", "N0009"]
 related_paths: ["src/state/slices/docSlice.ts", "src/core/gschema/Journal.ts", "src/core/gschema/GSchemaGraph.ts"]
-related_todos: []
-promoted_todos: []
+related_todos: ["079", "080", "081", "082"]
+promoted_todos: ["079", "080", "081", "082"]
 relevance_score: 82
 confidence: "medium"
 priority_hint: "p1"
@@ -24,6 +24,7 @@ updated_at: "2026-03-05"
 last_reviewed_at: "2026-03-05"
 review_after: "2026-03-12"
 ---
+
 
 
 # Riesgo GSK: mutaciones fuera de journal
@@ -46,14 +47,18 @@ El problema no es solo de trazabilidad historica: impacta coherencia operativa.
 
 ## Proposed Actions
 
-- Inventariar writes fuera de API publica (`rg` sobre mutaciones directas en nodos/aristas/claims en slices/hooks).
-- Encapsular update de notas en una ruta journalizada (GraphMutations o metodo publico del engine) y eliminar mutacion directa.
-- Agregar test de contrato: cada mutacion persistida debe incrementar `journalLength` o registrar op nueva verificable.
-- Agregar regresion para `updateNoteRecord` y cualquier flujo UI equivalente.
-- Definir criterio de salida:
-  - 0 write paths directos fuera de journal en flujos de edicion.
-  - tests `gschema.strict` y `gschema.regression` en verde sin excepciones nuevas.
-  - cache de proyeccion invalida correctamente tras mutaciones de nota.
+- Paso 1: Inventario y cierre de write paths directos.
+  - Ejecutar barrido de mutaciones fuera de API publica en slices/hooks/servicios.
+  - Clasificar cada hallazgo como: `eliminar`, `redirigir a API oficial`, `dejar temporalmente con guardrail`.
+  - Criterio: lista cerrada de write paths y decision tecnica por cada uno.
+- Paso 2: Ruta oficial journalizada para mutaciones de nota.
+  - Implementar/usar metodo publico del engine para `updateNoteRecord` (sin acceso a internals privados).
+  - Reemplazar mutacion directa en `docSlice` y flujos UI equivalentes.
+  - Criterio: toda edicion de nota relevante pasa por una ruta que registra operacion en journal.
+- Paso 3: Blindaje de contrato y regresion.
+  - Test de contrato: cada mutacion persistida incrementa `journalLength` o deja op verificable.
+  - Test de regresion para `updateNoteRecord` y para invalidez de cache de proyeccion (`graphId:journalLength`).
+  - Criterio: `gschema.strict` y `gschema.regression` en verde, sin excepciones nuevas.
 
 ## Evolution Log
 
@@ -71,3 +76,19 @@ El problema no es solo de trazabilidad historica: impacta coherencia operativa.
 
 - Reason: Deep re-analysis v2: dependencies clarified and acceptance gates tightened
 - Updated via notes:update
+
+### 2026-03-05 - Entry updated
+
+- Reason: Compact execution design for TODO promotion (3 detailed steps)
+- Updated manually before promote
+
+### 2026-03-05 - Promoted to TODO
+
+- Created TODO ids: 079, 080, 081, 082, 083
+- Mode: complex
+- Source: notes:promote via file-todos template
+
+### 2026-03-05 - Promotion refined
+
+- Reason: reduce execution steps while keeping detailed acceptance criteria
+- Active TODO plan consolidated to: 079, 080, 081, 082

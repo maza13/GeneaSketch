@@ -71,4 +71,24 @@ describe('GraphMutations (UI to Graph Translation)', () => {
         expect(pcEdges[0].fromUid).toBe(p1.uid); // parent
         expect(pcEdges[0].toUid).toBe(child.uid); // child
     });
+
+    test('updateNoteInGraph journals note text changes', () => {
+        const graph = GSchemaGraph.create();
+        const note = graph.addNode({
+            type: 'Note',
+            uid: 'note-1',
+            text: 'before',
+            deleted: false
+        } as import('@/core/gschema/types').NoteNode);
+
+        const beforeJournal = graph.journalLength;
+        const ok = GraphMutations.updateNoteInGraph(graph, note.uid, 'after');
+
+        expect(ok).toBe(true);
+        expect(graph.journalLength).toBe(beforeJournal + 1);
+        const updated = graph.node(note.uid);
+        expect(updated?.type).toBe('Note');
+        expect((updated as { text: string }).text).toBe('after');
+        expect(graph.getJournal()[graph.getJournal().length - 1]?.type).toBe('ADD_NODE');
+    });
 });

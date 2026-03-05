@@ -39,6 +39,10 @@ function createClaim<T>(
 }
 
 export const GraphMutations = {
+    updateNoteInGraph(graph: GSchemaGraph, noteUid: string, text: string, actorId = "system_ui"): boolean {
+        return graph.updateNoteText(noteUid, text, actorId);
+    },
+
     updatePersonInGraph(graph: GSchemaGraph, personUid: string, patch: PersonPatch, actorId = "system_ui"): void {
         const node = graph.node(personUid);
         if (!node || node.type !== "Person") return;

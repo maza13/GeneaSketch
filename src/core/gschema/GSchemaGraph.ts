@@ -185,6 +185,7 @@ export class GSchemaGraph {
     private _recordOperation<T extends GSchemaOperation>(opWithoutSeq: Omit<T, "opSeq">): T {
         const op = { ...opWithoutSeq, opSeq: this._nextOpSeq++ } as T;
         this._journal.push(op);
+        this._applyOperation(op); // Critical: ensure internal state is updated
         return op;
     }
 
@@ -297,9 +298,6 @@ export class GSchemaGraph {
 
     addNode(nodeInput: Omit<GSchemaNode, "createdAt">, actorId = "system"): GSchemaNode {
         const node: GSchemaNode = { ...nodeInput, createdAt: nowIso() } as GSchemaNode;
-        this._nodes.set(node.uid, node);
-        this._updatedAt = nowIso();
-
         this._recordOperation<AddNodeOperation>({
             opId: uuidv4(), type: "ADD_NODE", timestamp: nowSec(), actorId, node
         });
@@ -324,8 +322,6 @@ export class GSchemaGraph {
         const existing = this._nodes.get(noteUid);
         if (!existing || existing.type !== "Note") return false;
         const updated: NoteNode = { ...existing, text };
-        this._nodes.set(noteUid, updated);
-        this._updatedAt = nowIso();
 
         this._recordOperation<AddNodeOperation>({
             opId: uuidv4(),
@@ -339,10 +335,6 @@ export class GSchemaGraph {
 
     addEdge(edgeInput: Omit<GSchemaEdge, "createdAt">, actorId = "system"): GSchemaEdge {
         const edge: GSchemaEdge = { ...edgeInput, createdAt: nowIso() } as GSchemaEdge;
-        this._edges.set(edge.uid, edge);
-        indexEdge(this._adjacency, edge);
-        this._updatedAt = nowIso();
-
         this._recordOperation<AddEdgeOperation>({
             opId: uuidv4(), type: "ADD_EDGE", timestamp: nowSec(), actorId, edge
         });
@@ -352,6 +344,11 @@ export class GSchemaGraph {
     /** Typed convenience wrapper for adding a MemberEdge (Person → Union). */
     addMemberEdge(input: Omit<import("./types").MemberEdge, "createdAt">, actorId = "system"): import("./types").MemberEdge {
         return this.addEdge(input, actorId) as import("./types").MemberEdge;
+    }
+
+    /** Typed convenience wrapper for adding a ParentChildEdge (Person → Person). */
+    addParentChildEdge(input: Omit<import("./types").ParentChildEdge, "createdAt">, actorId = "system"): import("./types").ParentChildEdge {
+        return this.addEdge(input, actorId) as import("./types").ParentChildEdge;
     }
 
     /**
@@ -366,24 +363,6 @@ export class GSchemaGraph {
             claim.isPreferred = false;
         }
 
-        if (!this._claims.has(claim.nodeUid)) {
-            this._claims.set(claim.nodeUid, new Map());
-        }
-        const nodeMap = this._claims.get(claim.nodeUid)!;
-        if (!nodeMap.has(claim.predicate)) {
-            nodeMap.set(claim.predicate, []);
-        }
-        const existing = nodeMap.get(claim.predicate)!;
-
-        // If being set as preferred, unset all others
-        if (claim.isPreferred) {
-            for (const c of existing) c.isPreferred = false;
-        }
-
-        existing.push(claim);
-        normalizeClaims(existing);
-        this._updatedAt = nowIso();
-
         this._recordOperation<AddClaimOperation>({
             opId: uuidv4(), type: "ADD_CLAIM", timestamp: nowSec(), actorId, claim
         });
@@ -395,15 +374,9 @@ export class GSchemaGraph {
         const claims = this._claims.get(nodeUid)?.get(predicate);
         if (!claims) return false;
 
-        let found = false;
-        for (const c of claims) {
-            c.isPreferred = c.uid === claimUid;
-            if (c.uid === claimUid) found = true;
-        }
+        const found = claims.some(c => c.uid === claimUid);
         if (!found) return false;
-        normalizeClaims(claims);
 
-        this._updatedAt = nowIso();
         this._recordOperation<SetPrefClaimOperation>({
             opId: uuidv4(), type: "SET_PREF_CLAIM", timestamp: nowSec(), actorId,
             nodeUid, predicate, claimUid
@@ -413,31 +386,29 @@ export class GSchemaGraph {
 
     /** Marks a claim as retracted (soft delete). */
     retractClaim(claimUid: string, reason?: string, actorId = "user"): boolean {
+        let found = false;
         for (const nodeMap of this._claims.values()) {
             for (const claims of nodeMap.values()) {
-                const claim = claims.find(c => c.uid === claimUid);
-                if (claim) {
-                    claim.lifecycle = "retracted";
-                    claim.isPreferred = false;
-                    normalizeClaims(claims);
-                    this._updatedAt = nowIso();
-                    this._recordOperation<RetractClaimOperation>({
-                        opId: uuidv4(), type: "RETRACT_CLAIM", timestamp: nowSec(), actorId,
-                        claimUid, reason
-                    });
-                    return true;
+                if (claims.some(c => c.uid === claimUid)) {
+                    found = true;
+                    break;
                 }
             }
+            if (found) break;
         }
-        return false;
+        if (!found) return false;
+
+        this._recordOperation<RetractClaimOperation>({
+            opId: uuidv4(), type: "RETRACT_CLAIM", timestamp: nowSec(), actorId,
+            claimUid, reason
+        });
+        return true;
     }
 
     /** Soft-deletes a node (hidden from UI, preserved in journal). */
     softDeleteNode(nodeUid: string, reason?: string, actorId = "user"): boolean {
         const node = this._nodes.get(nodeUid);
         if (!node) return false;
-        (node as { deleted?: boolean }).deleted = true;
-        this._updatedAt = nowIso();
 
         this._recordOperation<SoftDeleteNodeOperation>({
             opId: uuidv4(), type: "SOFT_DELETE_NODE", timestamp: nowSec(), actorId,
@@ -450,9 +421,6 @@ export class GSchemaGraph {
     softDeleteEdge(edgeUid: string, reason?: string, actorId = "user"): boolean {
         const edge = this._edges.get(edgeUid);
         if (!edge) return false;
-        (edge as { deleted?: boolean }).deleted = true;
-        deIndexEdge(this._adjacency, edge);
-        this._updatedAt = nowIso();
 
         this._recordOperation<SoftDeleteEdgeOperation>({
             opId: uuidv4(), type: "SOFT_DELETE_EDGE", timestamp: nowSec(), actorId,
@@ -466,10 +434,12 @@ export class GSchemaGraph {
             opId: uuidv4(), type: "QUARANTINE", timestamp: nowSec(), actorId,
             ...entry
         });
-        this._quarantine.push(op);
+        this._applyOperation(op);
     }
 
-    /** Records an INITIAL_IMPORT operation. Safe public API to avoid _journal bypass. */
+    /**
+     * Records an INITIAL_IMPORT operation. Safe public API to avoid _journal bypass.
+     */
     recordInitialImport(
         sourceFormat: "GEDCOM_551" | "GEDCOM_703" | "GSZ_03x" | "GSK_01x",
         sourceFileName?: string,
@@ -493,6 +463,103 @@ export class GSchemaGraph {
             edgeCount: this.edgeCount,
             claimCount
         });
+    }
+
+    /**
+     * @internal
+     * Applies the effect of an operation to the internal graph state without
+     * recording it to the journal. Used for Replay and Journal Apply.
+     */
+    _applyOperation(op: GSchemaOperation): void {
+        switch (op.type) {
+            case "ADD_NODE":
+                this._nodes.set(op.node.uid, op.node);
+                this._updatedAt = nowIso();
+                break;
+            case "ADD_EDGE":
+                this._edges.set(op.edge.uid, op.edge);
+                if (!op.edge.deleted) indexEdge(this._adjacency, op.edge);
+                this._updatedAt = nowIso();
+                break;
+            case "ADD_CLAIM":
+                if (!this._claims.has(op.claim.nodeUid)) {
+                    this._claims.set(op.claim.nodeUid, new Map());
+                }
+                {
+                    const nodeMap = this._claims.get(op.claim.nodeUid)!;
+                    if (!nodeMap.has(op.claim.predicate)) {
+                        nodeMap.set(op.claim.predicate, []);
+                    }
+                    const existing = nodeMap.get(op.claim.predicate)!;
+                    // Skip if already applied (idempotency)
+                    if (existing.some(c => c.uid === op.claim.uid)) break;
+
+                    if (op.claim.isPreferred) {
+                        for (const c of existing) c.isPreferred = false;
+                    }
+                    existing.push(op.claim);
+                    normalizeClaims(existing);
+                }
+                this._updatedAt = nowIso();
+                break;
+            case "SET_PREF_CLAIM":
+                {
+                    const claims = this._claims.get(op.nodeUid)?.get(op.predicate);
+                    if (claims) {
+                        for (const c of claims) {
+                            c.isPreferred = c.uid === op.claimUid;
+                        }
+                        normalizeClaims(claims);
+                    }
+                }
+                this._updatedAt = nowIso();
+                break;
+            case "RETRACT_CLAIM":
+                for (const nodeMap of this._claims.values()) {
+                    for (const claims of nodeMap.values()) {
+                        const claim = claims.find(c => c.uid === op.claimUid);
+                        if (claim) {
+                            claim.lifecycle = "retracted";
+                            claim.isPreferred = false;
+                            normalizeClaims(claims);
+                            break;
+                        }
+                    }
+                }
+                this._updatedAt = nowIso();
+                break;
+            case "SOFT_DELETE_NODE":
+                {
+                    const node = this._nodes.get(op.nodeUid);
+                    if (node) (node as { deleted?: boolean }).deleted = true;
+                }
+                this._updatedAt = nowIso();
+                break;
+            case "SOFT_DELETE_EDGE":
+                {
+                    const edge = this._edges.get(op.edgeUid);
+                    if (edge) {
+                        (edge as { deleted?: boolean }).deleted = true;
+                        deIndexEdge(this._adjacency, edge);
+                    }
+                }
+                this._updatedAt = nowIso();
+                break;
+            case "QUARANTINE":
+                if (!this._quarantine.some(q => q.opId === op.opId)) {
+                    this._quarantine.push(op);
+                }
+                this._updatedAt = nowIso();
+                break;
+            case "INITIAL_IMPORT":
+                // Marker only, state is reflected in ADD_NODE etc.
+                break;
+            case "REPAIR_CREATE_UNION":
+            case "REPAIR_CREATE_MEMBER_EDGE":
+            case "REPAIR_RELINK_PARENT_CHILD":
+                // Audit/repair ops, state already handled by additive logic
+                break;
+        }
     }
 
     // ── Journal & Serialization ───────────────
