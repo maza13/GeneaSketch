@@ -1,0 +1,156 @@
+[
+  {
+    "id": "SA050-F001",
+    "dimension": 2,
+    "title": "Direct projection synthesizes IDs differently from legacy fallback",
+    "severity": "high",
+    "confidence": "high",
+    "releaseImpact": "0.5.0-blocking",
+    "status": "open",
+    "evidence": [
+      "24 semantic mismatches across 7 fixtures",
+      "canonical_tipico and compat_missing_union_repair are affected",
+      "directProjection.xrefOf falls back to raw uid while GedcomBridge synthesizes stable prefixed IDs"
+    ],
+    "affectedPaths": [
+      "src/core/read-model/directProjection.ts",
+      "src/core/gschema/GedcomBridge.ts",
+      "src/core/read-model/selectors.ts"
+    ],
+    "recommendedFix": "Align directProjection ID synthesis with the legacy xref strategy or centralize xref generation in a shared helper, then rerun parity fixtures."
+  },
+  {
+    "id": "SA050-F002",
+    "dimension": 3,
+    "title": "Dense-tree projection performance is far above the stated threshold",
+    "severity": "high",
+    "confidence": "high",
+    "releaseImpact": "0.5.0-blocking",
+    "status": "open",
+    "evidence": [
+      "projection p95 14137.248 ms vs threshold 250 ms",
+      "ttvProxy p95 15248.563 ms",
+      "scenario size 2765 persons / 1023 families"
+    ],
+    "affectedPaths": [
+      "src/core/read-model/selectors.ts",
+      "src/core/read-model/directProjection.ts",
+      "src/tests/perf/dense-tree.audit.test.ts"
+    ],
+    "recommendedFix": "Profile the direct projection hot path, remove repeated full-graph work, and rerun the dense-tree audit after optimization."
+  },
+  {
+    "id": "SA050-F003",
+    "dimension": 3,
+    "title": "Dense-tree search exceeds threshold under the audited scenario",
+    "severity": "high",
+    "confidence": "high",
+    "releaseImpact": "0.5.0-blocking",
+    "status": "open",
+    "evidence": [
+      "search p95 135.75 ms vs threshold 80 ms",
+      "search warm run improves to 51.754 ms but cold/warm variance remains too high"
+    ],
+    "affectedPaths": [
+      "src/ui/search/searchEngine.ts",
+      "src/core/read-model/selectors.ts",
+      "src/tests/perf/dense-tree.audit.test.ts"
+    ],
+    "recommendedFix": "Cache or pre-index search inputs for large projected documents and rerun the dense-tree audit."
+  },
+  {
+    "id": "SA050-F004",
+    "dimension": 6,
+    "title": "Mojibake in fastTrack regexes affects accented Spanish input matching",
+    "severity": "high",
+    "confidence": "high",
+    "releaseImpact": "0.5.0-blocking",
+    "status": "open",
+    "evidence": [
+      "runtime regexes contain mojibake sequences like naci[oÃ³] and muri[oÃ³]",
+      "issue classified as product-behavior, not cosmetic-only"
+    ],
+    "affectedPaths": [
+      "src/core/ai/fastTrack.ts"
+    ],
+    "recommendedFix": "Normalize literals/regexes to valid UTF-8 Spanish text and add a regression test for accented inputs."
+  },
+  {
+    "id": "SA050-F005",
+    "dimension": 4,
+    "title": "Structured claim evidence is flattened before reaching person workspace UI",
+    "severity": "medium",
+    "confidence": "high",
+    "releaseImpact": "0.5.0-postship",
+    "status": "open",
+    "evidence": [
+      "claim citations survive as event sourceRefs",
+      "evidenceGate, confidence, and structured citation review are not first-class UI surfaces"
+    ],
+    "affectedPaths": [
+      "src/ui/PersonWorkspacePanel.tsx",
+      "src/ui/person/sections/PersonSourcesSection.tsx",
+      "src/ui/person/sections/PersonEventsSection.tsx",
+      "src/core/read-model/directProjection.ts"
+    ],
+    "recommendedFix": "Decide whether 0.5.x should expose structured claim evidence directly or explicitly defer that surface to 0.6.0."
+  },
+  {
+    "id": "SA050-F006",
+    "dimension": 4,
+    "title": "Workspace profile hydration remains a two-phase load with unproven flicker risk",
+    "severity": "medium",
+    "confidence": "high",
+    "releaseImpact": "0.5.0-postship",
+    "status": "open",
+    "evidence": [
+      "loadGraph applies an immediate state before async WorkspaceProfileService.load resolves",
+      "functional tests cover precedence, not visual no-flicker behavior"
+    ],
+    "affectedPaths": [
+      "src/hooks/useGskFile.ts",
+      "src/state/slices/docSlice.ts",
+      "src/tests/workspace-profile.integration.test.ts"
+    ],
+    "recommendedFix": "Either collapse hydration into one committed load state or add observability/tests that prove the current two-phase load is visually acceptable."
+  },
+  {
+    "id": "SA050-F007",
+    "dimension": 5,
+    "title": "Central read-model fallback still blocks the 0.6.0 hard cut",
+    "severity": "medium",
+    "confidence": "high",
+    "releaseImpact": "0.6.0-hardcut",
+    "status": "open",
+    "evidence": [
+      "selectors.ts still imports gschemaToDocument",
+      "app/state flows still convert GraphDocument back into GSchemaGraph in product paths"
+    ],
+    "affectedPaths": [
+      "src/core/read-model/selectors.ts",
+      "src/hooks/useGskFile.ts",
+      "src/App.tsx",
+      "src/state/slices/docSlice.ts"
+    ],
+    "recommendedFix": "Remove the legacy fallback only after parity is fixed, then migrate remaining product flows to graph-native helpers."
+  },
+  {
+    "id": "SA050-F008",
+    "dimension": 6,
+    "title": "User-facing mojibake remains in AI review and diagnostics strings",
+    "severity": "medium",
+    "confidence": "high",
+    "releaseImpact": "0.5.0-postship",
+    "status": "open",
+    "evidence": [
+      "review.ts, safety.ts, and analyzer.ts contain corrupted Spanish strings",
+      "issue is visible in UX and exported diagnostic text"
+    ],
+    "affectedPaths": [
+      "src/core/ai/review.ts",
+      "src/core/ai/safety.ts",
+      "src/core/diagnostics/analyzer.ts"
+    ],
+    "recommendedFix": "Normalize affected strings and keep tooling-side mojibake repair logic untouched."
+  }
+]
