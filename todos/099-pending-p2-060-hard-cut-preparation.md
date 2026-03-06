@@ -4,7 +4,7 @@ priority: "p2"
 issue_id: "099"
 title: "060-hard-cut-preparation"
 tags: ["release-0.6.0", "hard-cut", "architecture", "legacy-removal"]
-dependencies: ["096"]
+dependencies: ["096", "100"]
 owner: "codex"
 created_at: "2026-03-06"
 updated_at: "2026-03-06"
@@ -53,6 +53,11 @@ The Super Analysis confirmed that 0.6.0 remains blocked by legacy fallback paths
   - `src/state/slices/docSlice.ts`
   - remaining bridge-style helpers tied to legacy assumptions
 - This work depends on keeping the current blocker-clearing state stable and separated from architecture changes.
+- `100` is now the architecture-analysis umbrella that should run first:
+  - `101` system taxonomy baseline
+  - `102` dependency flow map
+  - `103` format vs engine boundary audit
+  - `104` boundary vs coupling classification
 
 ## Proposed Solutions
 
@@ -75,8 +80,9 @@ Leave this task in `pending` as the architecture handoff point for the 0.6.0 har
 ### Execution Plan
 
 1. Freeze the blocker-clearing bundle first.
-2. Re-open the hard-cut dependency matrix when 0.6.0 planning starts.
-3. Break removal work into graph-native migration tasks only after explicit approval.
+2. Complete `100` and its child analysis tasks to establish architecture baseline and dependency boundaries.
+3. Re-open the hard-cut dependency matrix when 0.6.0 planning starts.
+4. Break removal work into graph-native migration tasks only after explicit approval.
 
 ## User Action Required (Only if unavoidable)
 
@@ -112,3 +118,5 @@ Leave this task in `pending` as the architecture handoff point for the 0.6.0 har
 ## Notes
 
 This task must not move to `ready` until the 0.5.0 closure is accepted and 0.6.0 planning is explicitly opened.
+
+It should also remain behind `100`, because the hard-cut should consume architecture analysis rather than rediscover it mid-migration.

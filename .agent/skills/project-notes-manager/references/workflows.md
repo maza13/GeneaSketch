@@ -78,3 +78,6 @@ Comando:
    - validacion TODO escopada a archivos creados
    - nota se archiva con `archive_reason=promoted`
    - registrar `promoted_todos` + `related_todos`
+   - para notas complejas, usar `## Promotion Blocks` si se desean child TODOs
+   - cada bullet de `## Promotion Blocks` debe ser un bloque logico corto, no una frase larga de acciones redactadas
+   - si no existe `## Promotion Blocks`, la promocion compleja crea solo umbrella

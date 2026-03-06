@@ -1035,7 +1035,7 @@ function buildTodoFromTemplate(payload) {
     status: "pending",
     priority: payload.priority,
     issue_id: payload.issue_id,
-    title: payload.slug,
+    title: payload.title,
     tags: uniqStrings([...(Array.isArray(parsed.meta.tags) ? parsed.meta.tags : []), "notes", `note:${payload.note_id}`]),
     dependencies: uniqStrings(payload.dependencies ?? []),
     owner: "codex",
@@ -1380,6 +1380,88 @@ function actionBullets(record) {
   return bullets.length > 0 ? bullets : ["Implement promoted scope from note context."];
 }
 
+function promotionBlocks(record) {
+  const section = sectionText(record.body, "## Promotion Blocks") ?? "";
+  const bullets = section
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^[-*]\s+/.test(line))
+    .map((line) => line.replace(/^[-*]\s+/, "").trim())
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  return uniqStrings(bullets);
+}
+
+function sanitizePromotionTitle(text) {
+  let out = String(text ?? "");
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
+  out = out.replace(/`([^`]+)`/g, "$1");
+  out = out.replace(/[A-Za-z]:[\\/][^\s)]+/g, " ");
+  out = out.replace(/\bN\d{4}\b/gi, " ");
+  out = out.replace(/\bumbrella\b/gi, " ");
+  out = out.replace(/\bcuando se active\b/gi, " ");
+  out = out.replace(/\bconservar esta nota\b/gi, " ");
+  out = out.replace(/\bverificar en ese momento\b/gi, " ");
+  out = out.replace(/[()[\]{}]/g, " ");
+  out = out.replace(/\s+/g, " ").trim();
+  return out || "promoted task";
+}
+
+function promotionTitles(record) {
+  const blocks = promotionBlocks(record);
+  if (blocks.length >= 2) return blocks.map((block) => sanitizePromotionTitle(block));
+  return [];
+}
+
+function buildPromotionProposal(record) {
+  const actions = actionBullets(record);
+  const complexity = promotionComplexity(record, actions);
+  const childTitles = complexity === "complex" ? promotionTitles(record) : [];
+  const previewIds = nextTodoIds(
+    complexity === "simple"
+      ? 1
+      : childTitles.length >= 2
+        ? childTitles.length + 1
+        : 1
+  );
+  const proposal = [];
+
+  if (complexity === "simple") {
+    const title = sanitizePromotionTitle(record.meta.title);
+    proposal.push({
+      issue_id: previewIds[0],
+      title,
+      slugBase: title,
+      dependencies: uniqStrings(record.meta.related_todos),
+      kind: "simple"
+    });
+    return { complexity, proposal };
+  }
+
+  const [umbrella, ...children] = previewIds;
+  const umbrellaTitle = sanitizePromotionTitle(record.meta.title);
+  proposal.push({
+    issue_id: umbrella,
+    title: umbrellaTitle,
+    slugBase: umbrellaTitle,
+    dependencies: children,
+    kind: "umbrella"
+  });
+
+  for (let i = 0; i < children.length; i += 1) {
+    const title = childTitles[i];
+    proposal.push({
+      issue_id: children[i],
+      title,
+      slugBase: title,
+      dependencies: uniqStrings(record.meta.related_todos),
+      kind: "child"
+    });
+  }
+
+  return { complexity, proposal };
+}
+
 function promotionComplexity(record, actions) {
   if (record.meta.complexity === "complex") return "complex";
   if (record.meta.effort_hint === "l") return "complex";
@@ -1445,34 +1527,7 @@ function cmdPromote(opts) {
   const confirm = opts.confirm === true;
   const priority = oneOf(opts, "priority") ?? record.meta.priority_hint ?? "p2";
   if (!ALLOWED.priority_hint.includes(priority)) fail("--priority must be p1|p2|p3");
-  const actions = actionBullets(record);
-  const complexity = promotionComplexity(record, actions);
-
-  const previewIds = nextTodoIds(complexity === "simple" ? 1 : Math.min(Math.max(actions.length + 1, 3), 5));
-  const proposal = [];
-  if (complexity === "simple") {
-    proposal.push({
-      issue_id: previewIds[0],
-      title: `${record.meta.note_id} ${record.meta.title}`,
-      dependencies: uniqStrings(record.meta.related_todos)
-    });
-  } else {
-    const [umbrella, ...children] = previewIds;
-    proposal.push({
-      issue_id: umbrella,
-      title: `${record.meta.note_id} umbrella ${record.meta.title}`,
-      dependencies: children
-    });
-    const picks = actions.slice(0, Math.max(children.length, 2));
-    for (let i = 0; i < children.length; i += 1) {
-      const action = picks[i] ?? `Execute child scope ${i + 1}`;
-      proposal.push({
-        issue_id: children[i],
-        title: `${record.meta.note_id} ${action}`.slice(0, 96),
-        dependencies: uniqStrings(record.meta.related_todos)
-      });
-    }
-  }
+  const { complexity, proposal } = buildPromotionProposal(record);
 
   if (!execute) {
     console.log(`# Promotion Proposal: ${record.meta.note_id}`);
@@ -1497,8 +1552,8 @@ function cmdPromote(opts) {
   for (let i = 0; i < proposal.length; i += 1) {
     const p = proposal[i];
     const issueId = todoIds[i];
-    const itemTitle = p.title.replace(/\s+/g, " ").trim();
-    const todoSlug = slugify(itemTitle).slice(0, 72);
+    const itemTitle = sanitizePromotionTitle(p.title).replace(/\s+/g, " ").trim();
+    const todoSlug = slugify(sanitizePromotionTitle(p.slugBase ?? itemTitle)).slice(0, 48) || "promoted-task";
     const content = buildTodoFromTemplate({
       issue_id: issueId,
       priority,
@@ -1513,7 +1568,7 @@ function cmdPromote(opts) {
       findings: insight,
       proposed,
       recommended_action:
-        complexity === "complex" && i === 0
+        complexity === "complex" && p.kind === "umbrella"
           ? "Coordinate child TODOs, verify integration, and close umbrella last."
           : "Execute implementation end-to-end and close with automated commit."
     });

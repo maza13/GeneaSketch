@@ -57,6 +57,15 @@ No renombrar por estado; solo cambia frontmatter.
 - `## Proposed Actions`
 - `## Evolution Log`
 
+## Secciones Opcionales Recomendadas
+
+- `## Promotion Blocks`
+
+Uso recomendado:
+- para notas `complex`, definir bloques logicos cortos si se espera promocion a multiples TODOs
+- cada bullet de `## Promotion Blocks` debe ser un titulo humano corto y estable
+- si la nota compleja no define esta seccion, la promocion crea solo umbrella por defecto
+
 ## Registry v2
 
 `notes/index/registry.json` debe incluir:

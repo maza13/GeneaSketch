@@ -71,3 +71,6 @@ Cuando el usuario expresa ideas, dudas o propuestas:
 3. Crea TODOs desde template `file-todos`.
 4. Ejecuta validacion TODO escopada.
 5. Archiva la nota promovida y persiste vinculos `promoted_todos`.
+6. Para notas complejas, la seccion recomendada es `## Promotion Blocks`.
+7. Si una nota compleja define `## Promotion Blocks`, cada bullet se convierte en un child TODO con titulo corto y slug limpio.
+8. Si una nota compleja no define `## Promotion Blocks`, `notes:promote` crea solo la tarea umbrella por defecto.
