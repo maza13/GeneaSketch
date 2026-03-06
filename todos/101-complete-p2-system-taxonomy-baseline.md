@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "101"
 title: "System taxonomy baseline"
@@ -17,10 +17,11 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "standard"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 101: reclose system taxonomy baseline under protocol v2"
+closed_at: "2026-03-06"
 ---
+
 
 # System taxonomy baseline
 
@@ -54,10 +55,10 @@ Produce the baseline system taxonomy that will anchor the dependency and boundar
 
 ## Acceptance Criteria
 
-- [ ] Major systems are enumerated with canonical names.
-- [ ] Aliases and ambiguous legacy labels are documented.
-- [ ] Work log updated.
-- [ ] Traceability linked to note N0011.
+- [x] Major systems are enumerated with canonical names.
+- [x] Aliases and ambiguous legacy labels are documented.
+- [x] Work log updated.
+- [x] Traceability linked to note N0011.
 
 ## Work Log
 
@@ -95,6 +96,45 @@ Produce the baseline system taxonomy that will anchor the dependency and boundar
   - `todos/101-ready-p2-system-taxonomy-baseline.md`
   - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
 
+### 2026-03-06 - Taxonomy baseline reconfirmed under protocol v2
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Revalidated the architecture report section for system taxonomy under the reopened protocol.
+- Confirmed the canonical system list, aliases, and naming assessment are already present and sufficient for closure.
+- Kept the task scoped to taxonomy only and prepared it for formal close.
+
+**Evidence:**
+- Artifacts/paths:
+  - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
+  - `todos/101-ready-p2-system-taxonomy-baseline.md`
+
 ## Notes
 
 This task is reopened strictly and must be re-closed under the current protocol.
+
+### 2026-03-06 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Revalidated and formally closed the system taxonomy baseline under protocol v2.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/101-complete-p2-system-taxonomy-baseline.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 102 (p2).
+- Recommended start: 102 (p2).
