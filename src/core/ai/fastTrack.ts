@@ -19,8 +19,11 @@ export function tryFastTrack(
 
     const normalized = text.toLowerCase().trim();
 
+    const bornVerb = String.raw`(?:naci(?:ó|o)|nace)`;
+    const diedVerb = String.raw`(?:muri(?:ó|o)|falleci(?:ó|o))`;
+
     // Pattern A: Birth Place/Date
-    const birthPlaceMatch = normalized.match(/(?:naci[oÃ³]|nace)\s+en\s+([^,.]+)/i);
+    const birthPlaceMatch = normalized.match(new RegExp(`${bornVerb}\\s+en\\s+([^,.]+)`, "i"));
     if (birthPlaceMatch) {
         const place = birthPlaceMatch[1].trim();
         return createQuickDraft(context, `Actualizar lugar de nacimiento a: ${place}`, {
@@ -29,7 +32,7 @@ export function tryFastTrack(
             patch: { birthPlace: place }
         });
     }
-    const birthDateMatch = normalized.match(/(?:naci[oÃ³]|nace)\s+el\s+(\d{1,2}\s+de\s+\w+\s+de\s+\d{4}|\d{4})/i);
+    const birthDateMatch = normalized.match(new RegExp(`${bornVerb}\\s+el\\s+(\\d{1,2}\\s+de\\s+\\w+\\s+de\\s+\\d{4}|\\d{4})`, "i"));
     if (birthDateMatch) {
         const date = birthDateMatch[1].trim();
         return createQuickDraft(context, `Actualizar fecha de nacimiento a: ${date}`, {
@@ -40,19 +43,19 @@ export function tryFastTrack(
     }
 
     // Pattern B: Death Date/Place
-    const deathDateMatch = normalized.match(/(?:muri[oÃ³]|falleci[oÃ³])\s+el\s+(\d{1,2}\s+de\s+\w+\s+de\s+\d{4}|\d{4})/i);
+    const deathDateMatch = normalized.match(new RegExp(`${diedVerb}\\s+el\\s+(\\d{1,2}\\s+de\\s+\\w+\\s+de\\s+\\d{4}|\\d{4})`, "i"));
     if (deathDateMatch) {
         const date = deathDateMatch[1].trim();
-        return createQuickDraft(context, `Actualizar fecha de defunciÃ³n a: ${date}`, {
+        return createQuickDraft(context, `Actualizar fecha de defunción a: ${date}`, {
             kind: "update_person",
             personId: anchorId,
             patch: { deathDate: date, lifeStatus: "deceased" }
         });
     }
-    const deathPlaceMatch = normalized.match(/(?:muri[oÃ³]|falleci[oÃ³])\s+en\s+([^,.]+)/i);
+    const deathPlaceMatch = normalized.match(new RegExp(`${diedVerb}\\s+en\\s+([^,.]+)`, "i"));
     if (deathPlaceMatch) {
         const place = deathPlaceMatch[1].trim();
-        return createQuickDraft(context, `Actualizar lugar de defunciÃ³n a: ${place}`, {
+        return createQuickDraft(context, `Actualizar lugar de defunción a: ${place}`, {
             kind: "update_person",
             personId: anchorId,
             patch: { deathPlace: place, lifeStatus: "deceased" }
@@ -71,7 +74,7 @@ export function tryFastTrack(
     }
 
     // Pattern C: "es hombre" or "es mujer"
-    if (normalized.includes("es hombre") || normalized.includes("es varÃ³n")) {
+    if (normalized.includes("es hombre") || normalized.includes("es varón") || normalized.includes("es varon")) {
         return createQuickDraft(context, "Cambiar sexo a Masculino", {
             kind: "update_person",
             personId: anchorId,
@@ -98,7 +101,7 @@ function createQuickDraft(
         id: `ft_${Date.now()}`,
         kind: action.kind,
         title,
-        description: `DetecciÃ³n automÃ¡tica (Layer 0): ${title}`,
+        description: `Detección automática (Layer 0): ${title}`,
         risk: "low",
         status: "proposed",
         issues: [],

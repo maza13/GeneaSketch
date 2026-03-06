@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "id": "SA050-F001",
     "dimension": 2,
@@ -6,18 +6,17 @@
     "severity": "high",
     "confidence": "high",
     "releaseImpact": "0.5.0-blocking",
-    "status": "open",
+    "status": "resolved",
     "evidence": [
-      "24 semantic mismatches across 7 fixtures",
-      "canonical_tipico and compat_missing_union_repair are affected",
-      "directProjection.xrefOf falls back to raw uid while GedcomBridge synthesizes stable prefixed IDs"
+      "Parity audit rerun reports 0 semantic mismatches across 7 fixtures",
+      "Direct projection and GedcomBridge now share synthetic XREF generation through src/core/gschema/xref.ts"
     ],
     "affectedPaths": [
       "src/core/read-model/directProjection.ts",
       "src/core/gschema/GedcomBridge.ts",
-      "src/core/read-model/selectors.ts"
+      "src/core/gschema/xref.ts"
     ],
-    "recommendedFix": "Align directProjection ID synthesis with the legacy xref strategy or centralize xref generation in a shared helper, then rerun parity fixtures."
+    "recommendedFix": "Keep synthetic XREF generation centralized and treat parity audit as the gate for future read-model work."
   },
   {
     "id": "SA050-F002",
@@ -26,18 +25,16 @@
     "severity": "high",
     "confidence": "high",
     "releaseImpact": "0.5.0-blocking",
-    "status": "open",
+    "status": "resolved",
     "evidence": [
-      "projection p95 14137.248 ms vs threshold 250 ms",
-      "ttvProxy p95 15248.563 ms",
-      "scenario size 2765 persons / 1023 families"
+      "projection p95 69.328 ms vs threshold 250 ms",
+      "buildDirectDocument() now skips full graph serialization on the normal path"
     ],
     "affectedPaths": [
-      "src/core/read-model/selectors.ts",
       "src/core/read-model/directProjection.ts",
       "src/tests/perf/dense-tree.audit.test.ts"
     ],
-    "recommendedFix": "Profile the direct projection hot path, remove repeated full-graph work, and rerun the dense-tree audit after optimization."
+    "recommendedFix": "Preserve local indexing and avoid reintroducing unconditional full-graph export work in the direct projection path."
   },
   {
     "id": "SA050-F003",
@@ -46,17 +43,17 @@
     "severity": "high",
     "confidence": "high",
     "releaseImpact": "0.5.0-blocking",
-    "status": "open",
+    "status": "resolved",
     "evidence": [
-      "search p95 135.75 ms vs threshold 80 ms",
-      "search warm run improves to 51.754 ms but cold/warm variance remains too high"
+      "search p95 13.535 ms vs threshold 80 ms",
+      "search now uses a cached normalized index per projected document"
     ],
     "affectedPaths": [
       "src/ui/search/searchEngine.ts",
-      "src/core/read-model/selectors.ts",
+      "src/ui/search/searchIndex.ts",
       "src/tests/perf/dense-tree.audit.test.ts"
     ],
-    "recommendedFix": "Cache or pre-index search inputs for large projected documents and rerun the dense-tree audit."
+    "recommendedFix": "Keep search indexing document-scoped and reuse it across queries instead of renormalizing every person per search."
   },
   {
     "id": "SA050-F004",
@@ -65,15 +62,16 @@
     "severity": "high",
     "confidence": "high",
     "releaseImpact": "0.5.0-blocking",
-    "status": "open",
+    "status": "resolved",
     "evidence": [
-      "runtime regexes contain mojibake sequences like naci[oÃ³] and muri[oÃ³]",
-      "issue classified as product-behavior, not cosmetic-only"
+      "Accented-input fastTrack regression suite is green",
+      "fastTrack.ts no longer appears in the mojibake scan"
     ],
     "affectedPaths": [
-      "src/core/ai/fastTrack.ts"
+      "src/core/ai/fastTrack.ts",
+      "src/tests/ai.fast-track-encoding.test.ts"
     ],
-    "recommendedFix": "Normalize literals/regexes to valid UTF-8 Spanish text and add a regression test for accented inputs."
+    "recommendedFix": "Keep accented and plain Spanish variants covered by fast-track regression tests."
   },
   {
     "id": "SA050-F005",
@@ -143,8 +141,8 @@
     "releaseImpact": "0.5.0-postship",
     "status": "open",
     "evidence": [
-      "review.ts, safety.ts, and analyzer.ts contain corrupted Spanish strings",
-      "issue is visible in UX and exported diagnostic text"
+      "review.ts, safety.ts, and analyzer.ts still contain corrupted Spanish strings",
+      "issue is visible in UX and exported diagnostic text, but not in the fast-track runtime path"
     ],
     "affectedPaths": [
       "src/core/ai/review.ts",

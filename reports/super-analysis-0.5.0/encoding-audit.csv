@@ -1,5 +1,4 @@
-path,scope,issue_type,matches,impact,severity,notes
-src/core/ai/fastTrack.ts,active-source,mojibake-literal-and-regex,11,product-behavior,high,"Regex like naci[oÃ³]/muri[oÃ³] degrade accented input matching; strings also display corrupted accents."
+﻿path,scope,issue_type,matches,impact,severity,notes
 src/core/ai/review.ts,active-source,mojibake-user-facing-strings,5,user-visible-text,medium,"Review titles and descriptions contain corrupted accent sequences."
 src/core/ai/safety.ts,active-source,mojibake-user-facing-strings,1,user-visible-text,low,"Single corrupted string in manual-selection warning."
 src/core/diagnostics/analyzer.ts,active-source,mojibake-user-facing-strings,58,user-visible-text,medium,"Diagnostic messages shown to users/reports contain widespread corrupted accents."

@@ -1,6 +1,6 @@
-# Super Analysis 0.5.0 executive summary
+﻿# Super Analysis 0.5.0 executive summary
 
-Release decision: `0.5.0 blocked`
+Release decision: `0.5.0 ready with postship debt`
 
 ## Baseline
 
@@ -8,64 +8,58 @@ Release decision: `0.5.0 blocked`
 - Baseline commit audited: `eb59201`
 - Focused baseline bundle: green
 - AI bundle: green
+- Release-gate rerun after blocker fixes: green
 
 ## Dimension status
 
 | Dimension | Status | Release impact |
 | --- | --- | --- |
 | 1. AI-engine sync | pass | no blocker observed |
-| 2. Read-model parity | fail | `0.5.0-blocking` |
-| 3. Performance and scale | needs-followup | `0.5.0-blocking` |
+| 2. Read-model parity | pass | blocker removed |
+| 3. Performance and scale | pass | blocker removed |
 | 4. UX integrity and interconnection | needs-followup | `0.5.0-postship` |
 | 5. Hard-cut 0.6.0 readiness | pass-with-blockers-identified | `0.6.0-hardcut` |
-| 6. Encoding and text integrity | needs-followup | mixed; includes `0.5.0-blocking` |
+| 6. Encoding and text integrity | needs-followup | `0.5.0-postship` |
 
-## Blocking issues
+## Resolved release blockers
 
-### 1. Direct vs legacy read-model parity is not release-safe yet
+### 1. Direct vs legacy read-model parity
 
 - Source: `dimension-2-read-model-parity`
-- Severity: `high`
-- Confidence: `high`
-- Why blocking:
-  - `24` semantic mismatches across `7` fixtures
-  - failures hit canonical and compat scenarios
-  - root cause is ID synthesis divergence between direct projection and legacy bridge fallback
+- Current state:
+  - `0` semantic mismatches across `7` fixtures
+  - canonical, compat, synthetic, and real sample cases are aligned
+- Root fix:
+  - synthetic XREF generation is now shared between direct projection and the legacy bridge
 
-### 2. Dense-tree projection and search are far outside the stated thresholds
+### 2. Dense-tree projection and search
 
 - Source: `dimension-3-performance`
-- Severity: `high`
-- Confidence: `high`
-- Why blocking:
-  - projection p95 `14137.248 ms` vs threshold `250 ms`
-  - search p95 `135.75 ms` vs threshold `80 ms`
-  - layout is fine, but visible-node stress is not yet representative enough to offset the projection/search failure
+- Current state:
+  - projection p95 `69.328 ms` vs threshold `250 ms`
+  - search p95 `13.535 ms` vs threshold `80 ms`
+  - layout p95 `1.071 ms` vs threshold `450 ms`
+- Root fix:
+  - `buildDirectDocument()` no longer serializes the full graph on the normal path
+  - projection now uses local node/edge indexes instead of repeated graph-wide scans
+  - search now uses a cached normalized index per projected document
 
-### 3. Encoding corruption in `fastTrack.ts` affects runtime matching
+### 3. Encoding corruption in `fastTrack.ts`
 
 - Source: `dimension-6-encoding-and-text-integrity`
-- Severity: `high`
-- Confidence: `high`
-- Why blocking:
-  - mojibake is present inside Spanish matching regexes
-  - accented input such as `nació` / `murió` can be missed by the fast-track path
+- Current state:
+  - accented Spanish inputs are covered by regression tests and pass
+  - `fastTrack.ts` no longer appears in the mojibake scan
+- Root fix:
+  - regexes and visible strings were normalized to UTF-8 and extended to accept accented and plain variants
 
-## Non-blocking but real follow-up
+## Remaining postship debt
 
-- Person workspace does not expose structured claim evidence as a first-class UI surface.
-- Workspace profile hydration remains a two-phase flow with unproven flicker risk.
-- Several user-facing strings in AI review/diagnostics remain mojibake-corrupted.
-- 0.6.0 hard cut is feasible, but only after parity and graph-native boundary work.
-
-## What is safe today
-
-- Hardened AI-engine contracts are not reproducing current failures.
-- Wiki navigation audited paths are green.
-- Workspace profile precedence rules are functionally correct.
-- Encoding risk is concentrated, not repo-wide.
+- Person workspace still flattens structured claim evidence before first-class UI display.
+- Workspace profile hydration remains a two-phase flow with unproven no-flicker behavior.
+- User-facing mojibake remains in `review.ts`, `safety.ts`, and `analyzer.ts`.
+- The 0.6.0 hard cut still requires removing the central legacy fallback and remaining graph/document bridge paths.
 
 ## Recommendation
 
-Do not declare `0.5.0 ready` yet. Fix parity, direct-read-model performance, and `fastTrack` encoding first. After those are corrected, rerun dimensions `091`, `092`, and `095` as the release gate subset.
-
+`0.5.0` is release-eligible if postship debt is accepted explicitly. The blocker set from dimensions `091`, `092`, and `095` has been cleared by code and regression reruns.

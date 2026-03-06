@@ -10,9 +10,11 @@ import { inferCanonicalSurnameFields, normalizePersonSurnames } from "@/core/nam
 import { ensureParentChildUnionLinks } from "@/core/gschema/FamilyNormalization";
 import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { PersonPredicates, UnionPredicates } from "@/core/gschema/predicates";
+import { createXrefResolver, type XrefPrefix } from "@/core/gschema/xref";
 import type {
   GClaim,
   GeoRef,
+  MemberEdge,
   MediaNode,
   NoteNode,
   ParentChildEdge,
@@ -205,21 +207,19 @@ function buildUnionEventsFromClaims(
 
 function collectChildrenForUnionStrict(
   unionUid: string,
-  graph: GSchemaGraph,
-  xrefOf: (uid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
+  members: Array<{ person: PersonNode; edge: MemberEdge }>,
+  parentChildEdgesByUnion: Map<string, ParentChildEdge[]>,
+  parentChildEdgesByChild: Map<string, ParentChildEdge[]>,
+  parentChildEdgesByParent: Map<string, ParentChildEdge[]>,
+  xrefOf: (uid: string, prefix: XrefPrefix) => string
 ): string[] {
-  const members = graph.getMembers(unionUid);
   if (members.length === 0) return [];
 
   const parentUidSet = new Set(members.map((member) => member.person.uid));
   const husbandUid = members.find((member) => member.edge.role === "HUSB")?.person.uid;
   const wifeUid = members.find((member) => member.edge.role === "WIFE")?.person.uid;
-  const parentChildEdges = graph.allEdges().filter((edge): edge is ParentChildEdge => edge.type === "ParentChild");
-
   const explicitChildren = new Set<string>();
-  for (const edge of parentChildEdges) {
-    if (edge.unionUid !== unionUid) continue;
-    if (graph.node(edge.toUid)?.type !== "Person") continue;
+  for (const edge of parentChildEdgesByUnion.get(unionUid) ?? []) {
     explicitChildren.add(edge.toUid);
   }
   if (explicitChildren.size > 0) {
@@ -227,15 +227,17 @@ function collectChildrenForUnionStrict(
   }
 
   const candidateChildren = new Set<string>();
-  for (const edge of parentChildEdges) {
-    if (!parentUidSet.has(edge.fromUid)) continue;
-    if (graph.node(edge.toUid)?.type !== "Person") continue;
-    candidateChildren.add(edge.toUid);
+  for (const parentUid of parentUidSet) {
+    for (const edge of parentChildEdgesByParent.get(parentUid) ?? []) {
+      if (!parentUidSet.has(edge.fromUid)) continue;
+      if (!(parentChildEdgesByChild.get(edge.toUid)?.length)) continue;
+      candidateChildren.add(edge.toUid);
+    }
   }
 
   const accepted = new Set<string>();
   for (const childUid of candidateChildren) {
-    const edgesToChild = parentChildEdges.filter((edge) => edge.toUid === childUid);
+    const edgesToChild = parentChildEdgesByChild.get(childUid) ?? [];
     const memberEdgesToChild = edgesToChild.filter((edge) => parentUidSet.has(edge.fromUid));
     if (memberEdgesToChild.length === 0) continue;
 
@@ -262,15 +264,13 @@ function collectChildrenForUnionStrict(
 
 function collectFamcLinksForUnion(
   unionUid: string,
-  graph: GSchemaGraph,
-  xrefOf: (uid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
+  parentChildEdgesByUnion: Map<string, ParentChildEdge[]>,
+  xrefOf: (uid: string, prefix: XrefPrefix) => string
 ): Array<{ personId: string; familyId: string; pedi: "BIRTH" | "ADOPTED" | "FOSTER" | "SEALING" | "UNKNOWN"; quality: "0" | "1" | "2" | "3"; reference?: string }> {
   const familyId = xrefOf(unionUid, "F");
   const byChild = new Map<string, ParentChildEdge[]>();
-  const parentChildEdges = graph.allEdges().filter((edge): edge is ParentChildEdge => edge.type === "ParentChild");
 
-  for (const edge of parentChildEdges) {
-    if (edge.unionUid !== unionUid) continue;
+  for (const edge of parentChildEdgesByUnion.get(unionUid) ?? []) {
     if (!byChild.has(edge.toUid)) byChild.set(edge.toUid, []);
     byChild.get(edge.toUid)!.push(edge);
   }
@@ -301,28 +301,77 @@ export function buildDirectDocument(
   graphInput: GSchemaGraph,
   targetVersion: "5.5.1" | "7.0.x" = "7.0.x"
 ): GraphProjectionDocument {
-  const exportData = graphInput.toData();
-  const repair = ensureParentChildUnionLinks(exportData);
-  const graph = repair.repairedEdges > 0
-    ? GSchemaGraph.fromData(exportData, graphInput.getJournal())
-    : graphInput;
+  const inputEdges = graphInput.allEdges();
+  const needsRepair = inputEdges.some((edge) => edge.type === "ParentChild" && !edge.unionUid);
+  let graph = graphInput;
+  if (needsRepair) {
+    const exportData = graphInput.toData();
+    const repair = ensureParentChildUnionLinks(exportData);
+    if (repair.repairedEdges > 0) {
+      graph = GSchemaGraph.fromData(exportData, graphInput.getJournal());
+    }
+  }
 
   const persons: Record<string, GraphPerson> = {};
   const families: Record<string, GraphFamily> = {};
   const sources: Record<string, SourceRecord> = {};
   const notes: Record<string, NoteRecord> = {};
   const media: Record<string, Media> = {};
+  const allNodes = graph.allNodes();
+  const allEdges = graph.allEdges();
+  const nodeByUid = new Map(allNodes.map((node) => [node.uid, node] as const));
 
-  const uidToXref = new Map<string, string>();
-  for (const node of graph.allNodes()) {
-    if (node.xref) uidToXref.set(node.uid, node.xref);
+  const xrefResolver = createXrefResolver(
+    allNodes
+      .filter((node) => !!node.xref)
+      .map((node) => [node.uid, node.xref!] as [string, string])
+  );
+
+  function xrefOf(nodeUid: string, prefix: XrefPrefix): string {
+    return xrefResolver.xrefOf(nodeUid, prefix);
   }
 
-  function xrefOf(nodeUid: string, _prefix: "I" | "F" | "S" | "N" | "M"): string {
-    if (uidToXref.has(nodeUid)) return uidToXref.get(nodeUid)!;
-    // Native GSchema fallback for UI stability when GEDCOM xref is absent.
-    uidToXref.set(nodeUid, nodeUid);
-    return nodeUid;
+  const sourceNodes: SourceNode[] = [];
+  const noteNodes: NoteNode[] = [];
+  const mediaNodes: MediaNode[] = [];
+  const personNodes: PersonNode[] = [];
+  const unionNodes: UnionNode[] = [];
+  const parentChildEdges: ParentChildEdge[] = [];
+  const parentChildEdgesByUnion = new Map<string, ParentChildEdge[]>();
+  const parentChildEdgesByChild = new Map<string, ParentChildEdge[]>();
+  const parentChildEdgesByParent = new Map<string, ParentChildEdge[]>();
+  const membersByUnion = new Map<string, Array<{ person: PersonNode; edge: MemberEdge }>>();
+
+  for (const node of allNodes) {
+    if (node.type === "Source") sourceNodes.push(node as SourceNode);
+    else if (node.type === "Note") noteNodes.push(node as NoteNode);
+    else if (node.type === "Media") mediaNodes.push(node as MediaNode);
+    else if (node.type === "Person") personNodes.push(node as PersonNode);
+    else if (node.type === "Union") unionNodes.push(node as UnionNode);
+  }
+
+  for (const edge of allEdges) {
+    if (edge.type === "ParentChild") {
+      parentChildEdges.push(edge);
+
+      if (edge.unionUid) {
+        if (!parentChildEdgesByUnion.has(edge.unionUid)) parentChildEdgesByUnion.set(edge.unionUid, []);
+        parentChildEdgesByUnion.get(edge.unionUid)!.push(edge);
+      }
+
+      if (!parentChildEdgesByChild.has(edge.toUid)) parentChildEdgesByChild.set(edge.toUid, []);
+      parentChildEdgesByChild.get(edge.toUid)!.push(edge);
+
+      if (!parentChildEdgesByParent.has(edge.fromUid)) parentChildEdgesByParent.set(edge.fromUid, []);
+      parentChildEdgesByParent.get(edge.fromUid)!.push(edge);
+      continue;
+    }
+
+    if (edge.type !== "Member") continue;
+    const person = nodeByUid.get(edge.fromUid);
+    if (!person || person.type !== "Person") continue;
+    if (!membersByUnion.has(edge.toUid)) membersByUnion.set(edge.toUid, []);
+    membersByUnion.get(edge.toUid)!.push({ person: person as PersonNode, edge });
   }
 
   function getValue<T>(nodeUid: string, predicate: string): T | null {
@@ -344,20 +393,17 @@ export function buildDirectDocument(
     return extractPlaceRaw(value);
   }
 
-  for (const node of graph.allNodes().filter((item) => item.type === "Source")) {
-    const source = node as SourceNode;
+  for (const source of sourceNodes) {
     const xref = xrefOf(source.uid, "S");
     sources[xref] = { id: xref, title: source.title };
   }
 
-  for (const node of graph.allNodes().filter((item) => item.type === "Note")) {
-    const note = node as NoteNode;
+  for (const note of noteNodes) {
     const xref = xrefOf(note.uid, "N");
     notes[xref] = { id: xref, text: note.text };
   }
 
-  for (const node of graph.allNodes().filter((item) => item.type === "Media")) {
-    const item = node as MediaNode;
+  for (const item of mediaNodes) {
     const xref = xrefOf(item.uid, "M");
     media[xref] = {
       id: xref,
@@ -368,8 +414,7 @@ export function buildDirectDocument(
     };
   }
 
-  for (const node of graph.allNodes().filter((item) => item.type === "Person")) {
-    const personNode = node as PersonNode;
+  for (const personNode of personNodes) {
     const xref = xrefOf(personNode.uid, "I");
 
     const given = getStringValue(personNode.uid, PersonPredicates.NAME_GIVEN)?.trim();
@@ -433,9 +478,13 @@ export function buildDirectDocument(
     };
 
     if (targetVersion === "5.5.1") {
-      const claimsByPredicate = graph.toData().claims[personNode.uid] ?? {};
+      const claimsByPredicate = new Map(
+        graph
+          .getPredicates(personNode.uid)
+          .map((predicate) => [predicate, graph.getClaims(personNode.uid, predicate)] as const)
+      );
       const conflictMarkers: string[] = [];
-      for (const [predicate, claims] of Object.entries(claimsByPredicate)) {
+      for (const [predicate, claims] of claimsByPredicate.entries()) {
         for (const claim of claims) {
           if (claim.lifecycle === "retracted" || claim.isPreferred) continue;
           conflictMarkers.push(`_GSK_CONFLICT: GSK_CONFLICT|v1|${predicate}|${JSON.stringify(claim)}`);
@@ -449,10 +498,9 @@ export function buildDirectDocument(
     }
   }
 
-  for (const node of graph.allNodes().filter((item) => item.type === "Union")) {
-    const unionNode = node as UnionNode;
+  for (const unionNode of unionNodes) {
     const xref = xrefOf(unionNode.uid, "F");
-    const members = graph.getMembers(unionNode.uid);
+    const members = membersByUnion.get(unionNode.uid) ?? [];
 
     const husband = members.find((member) => member.edge.role === "HUSB")
       || members.find((member) => member.edge.role === "PART" && (member.person as PersonNode).sex === "M")
@@ -465,8 +513,15 @@ export function buildDirectDocument(
     const husbandXref = husband ? xrefOf(husband.person.uid, "I") : undefined;
     const wifeXref = wife ? xrefOf(wife.person.uid, "I") : undefined;
 
-    const childrenXrefs = collectChildrenForUnionStrict(unionNode.uid, graph, xrefOf);
-    const familyChildLinks = collectFamcLinksForUnion(unionNode.uid, graph, xrefOf);
+    const childrenXrefs = collectChildrenForUnionStrict(
+      unionNode.uid,
+      members,
+      parentChildEdgesByUnion,
+      parentChildEdgesByChild,
+      parentChildEdgesByParent,
+      xrefOf
+    );
+    const familyChildLinks = collectFamcLinksForUnion(unionNode.uid, parentChildEdgesByUnion, xrefOf);
     const projectedEvents = safeJsonParse<GeneaEvent[]>(getStringValue(unionNode.uid, UnionPredicates.EXT_EVENTS_FULL));
     const projectedNoteRefs = safeJsonParse<string[]>(getStringValue(unionNode.uid, UnionPredicates.EXT_NOTES_REFS));
     const projectedInlineNotes = safeJsonParse<string[]>(getStringValue(unionNode.uid, UnionPredicates.EXT_NOTES_RAWTAGS));
@@ -549,7 +604,7 @@ export function buildDirectDocument(
 
   const finalXrefToUid: Record<string, string> = {};
   const finalUidToXref: Record<string, string> = {};
-  for (const [uid, xref] of uidToXref.entries()) {
+  for (const [uid, xref] of xrefResolver.snapshot().entries()) {
     finalXrefToUid[xref] = uid;
     finalUidToXref[uid] = xref;
   }

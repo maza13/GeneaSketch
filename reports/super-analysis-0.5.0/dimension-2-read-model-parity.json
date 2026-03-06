@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-06T05:25:17.063Z",
+  "generatedAt": "2026-03-06T07:04:45.214Z",
   "fixtureCount": 7,
-  "semanticMismatchCount": 24,
+  "semanticMismatchCount": 0,
   "fixtures": [
     {
       "id": "canonical_basico",
@@ -15,64 +15,7 @@
       "category": "canonical",
       "persons": 3,
       "families": 1,
-      "mismatches": [
-        {
-          "area": "persons",
-          "path": "[0].fams[0]",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        },
-        {
-          "area": "persons",
-          "path": "[1].fams[0]",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        },
-        {
-          "area": "persons",
-          "path": "[2].famc[0]",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        },
-        {
-          "area": "families",
-          "path": "[0].id",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        },
-        {
-          "area": "timeline",
-          "path": "families[0].id",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        },
-        {
-          "area": "timeline",
-          "path": "persons[0].fams[0]",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        },
-        {
-          "area": "timeline",
-          "path": "persons[1].fams[0]",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        },
-        {
-          "area": "timeline",
-          "path": "persons[2].famc[0]",
-          "classification": "semantic",
-          "legacyValue": "FU1",
-          "directValue": "u-1"
-        }
-      ]
+      "mismatches": []
     },
     {
       "id": "canonical_edgecases",
@@ -100,120 +43,7 @@
       "category": "compat",
       "persons": 2,
       "families": 1,
-      "mismatches": [
-        {
-          "area": "persons",
-          "path": "[0].famc[0]",
-          "classification": "semantic",
-          "legacyValue": "FUNION:SY",
-          "directValue": "union:synthetic:p-child:p-father"
-        },
-        {
-          "area": "persons",
-          "path": "[0].id",
-          "classification": "semantic",
-          "legacyValue": "IPCHILD",
-          "directValue": "p-child"
-        },
-        {
-          "area": "persons",
-          "path": "[1].fams[0]",
-          "classification": "semantic",
-          "legacyValue": "FUNION:SY",
-          "directValue": "union:synthetic:p-child:p-father"
-        },
-        {
-          "area": "persons",
-          "path": "[1].id",
-          "classification": "semantic",
-          "legacyValue": "IPFATHER",
-          "directValue": "p-father"
-        },
-        {
-          "area": "families",
-          "path": "[0].childrenIds[0]",
-          "classification": "semantic",
-          "legacyValue": "IPCHILD",
-          "directValue": "p-child"
-        },
-        {
-          "area": "families",
-          "path": "[0].husbandId",
-          "classification": "semantic",
-          "legacyValue": "IPFATHER",
-          "directValue": "p-father"
-        },
-        {
-          "area": "families",
-          "path": "[0].id",
-          "classification": "semantic",
-          "legacyValue": "FUNION:SY",
-          "directValue": "union:synthetic:p-child:p-father"
-        },
-        {
-          "area": "search",
-          "path": "[0].id",
-          "classification": "semantic",
-          "legacyValue": "IPCHILD",
-          "directValue": "p-child"
-        },
-        {
-          "area": "search",
-          "path": "[1].id",
-          "classification": "semantic",
-          "legacyValue": "IPFATHER",
-          "directValue": "p-father"
-        },
-        {
-          "area": "timeline",
-          "path": "families[0].childrenIds[0]",
-          "classification": "semantic",
-          "legacyValue": "IPCHILD",
-          "directValue": "p-child"
-        },
-        {
-          "area": "timeline",
-          "path": "families[0].husbandId",
-          "classification": "semantic",
-          "legacyValue": "IPFATHER",
-          "directValue": "p-father"
-        },
-        {
-          "area": "timeline",
-          "path": "families[0].id",
-          "classification": "semantic",
-          "legacyValue": "FUNION:SY",
-          "directValue": "union:synthetic:p-child:p-father"
-        },
-        {
-          "area": "timeline",
-          "path": "persons[0].famc[0]",
-          "classification": "semantic",
-          "legacyValue": "FUNION:SY",
-          "directValue": "union:synthetic:p-child:p-father"
-        },
-        {
-          "area": "timeline",
-          "path": "persons[0].id",
-          "classification": "semantic",
-          "legacyValue": "IPCHILD",
-          "directValue": "p-child"
-        },
-        {
-          "area": "timeline",
-          "path": "persons[1].fams[0]",
-          "classification": "semantic",
-          "legacyValue": "FUNION:SY",
-          "directValue": "union:synthetic:p-child:p-father"
-        },
-        {
-          "area": "timeline",
-          "path": "persons[1].id",
-          "classification": "semantic",
-          "legacyValue": "IPFATHER",
-          "directValue": "p-father"
-        }
-      ]
+      "mismatches": []
     },
     {
       "id": "real_sample_nunez_mendoza",

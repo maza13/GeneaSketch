@@ -53,6 +53,7 @@ import {
     UnionPredicates,
     gedcomTagToPredicate,
 } from "./predicates";
+import { createXrefResolver, type XrefPrefix } from "./xref";
 
 // ─────────────────────────────────────────────
 // UID helpers
@@ -900,21 +901,18 @@ export function gschemaToDocument(
     const media: Record<string, Media> = {};
 
     // Build reverse UID→xref map from the graph nodes' xref fields
-    const uidToXref = new Map<string, string>();
-    for (const node of graph.allNodes()) {
-        if (node.xref) uidToXref.set(node.uid, node.xref);
-    }
+    const xrefResolver = createXrefResolver(
+        graph.allNodes()
+            .filter((node) => !!node.xref)
+            .map((node) => [node.uid, node.xref!] as [string, string])
+    );
 
     /**
      * Get the XREF for a node UID, generating a stable one if not imported from GEDCOM.
      * This ensures exported files are always valid GEDCOM.
      */
-    function xrefOf(nodeUid: string, prefix: "I" | "F" | "S" | "N" | "M"): string {
-        if (uidToXref.has(nodeUid)) return uidToXref.get(nodeUid)!;
-        const short = nodeUid.slice(0, 8).toUpperCase().replace(/-/g, "");
-        const xref = `${prefix}${short}`;
-        uidToXref.set(nodeUid, xref);
-        return xref;
+    function xrefOf(nodeUid: string, prefix: XrefPrefix): string {
+        return xrefResolver.xrefOf(nodeUid, prefix);
     }
 
     function getValue<T>(nodeUid: string, predicate: string): T | null {
@@ -1175,7 +1173,7 @@ export function gschemaToDocument(
 
     const finalXrefToUid: Record<string, string> = {};
     const finalUidToXref: Record<string, string> = {};
-    for (const [uid, xref] of uidToXref.entries()) {
+    for (const [uid, xref] of xrefResolver.snapshot().entries()) {
         finalXrefToUid[xref] = uid;
         finalUidToXref[uid] = xref;
     }

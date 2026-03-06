@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-06T05:57:39.214Z",
+  "generatedAt": "2026-03-06T07:04:47.214Z",
   "scenario": {
     "seed": "super-analysis-050-dense-tree",
     "depth": 10,
@@ -18,112 +18,111 @@
   "results": {
     "projection": {
       "samplesMs": [
-        10198.806,
-        14137.248,
-        13267.057
+        69.875,
+        58.891,
+        57.847
       ],
-      "p50Ms": 13267.057,
-      "p95Ms": 14137.248,
-      "maxMs": 14137.248,
-      "minMs": 10198.806,
-      "meanMs": 12534.37,
+      "p50Ms": 58.891,
+      "p95Ms": 69.875,
+      "maxMs": 69.875,
+      "minMs": 57.847,
+      "meanMs": 62.204,
       "runs": [
         {
           "label": "cold",
-          "durationMs": 10198.806
+          "durationMs": 69.875
         },
         {
           "label": "warm-1",
-          "durationMs": 14137.248
+          "durationMs": 58.891
         },
         {
           "label": "warm-2",
-          "durationMs": 13267.057
+          "durationMs": 57.847
         }
       ]
     },
     "ttvProxy": {
       "samplesMs": [
-        15248.563,
-        14530.523,
-        15003.817
+        500.441,
+        478.625,
+        476.883
       ],
-      "p50Ms": 15003.817,
-      "p95Ms": 15248.563,
-      "maxMs": 15248.563,
-      "minMs": 14530.523,
-      "meanMs": 14927.634,
+      "p50Ms": 478.625,
+      "p95Ms": 500.441,
+      "maxMs": 500.441,
+      "minMs": 476.883,
+      "meanMs": 485.316,
       "runs": [
         {
           "label": "cold",
-          "durationMs": 15248.563
+          "durationMs": 500.441
         },
         {
           "label": "warm-1",
-          "durationMs": 14530.523
+          "durationMs": 478.625
         },
         {
           "label": "warm-2",
-          "durationMs": 15003.817
+          "durationMs": 476.883
         }
       ]
     },
     "layout": {
       "samplesMs": [
-        3.922,
-        3.272,
-        1.132
+        1.038,
+        0.947,
+        0.923
       ],
-      "p50Ms": 3.272,
-      "p95Ms": 3.922,
-      "maxMs": 3.922,
-      "minMs": 1.132,
-      "meanMs": 2.775,
+      "p50Ms": 0.947,
+      "p95Ms": 1.038,
+      "maxMs": 1.038,
+      "minMs": 0.923,
+      "meanMs": 0.969,
       "runs": [
         {
           "label": "cold",
-          "durationMs": 3.922
+          "durationMs": 1.038
         },
         {
           "label": "warm-1",
-          "durationMs": 3.272
+          "durationMs": 0.947
         },
         {
           "label": "warm-2",
-          "durationMs": 1.132
+          "durationMs": 0.923
         }
       ]
     },
     "search": {
       "samplesMs": [
-        135.75,
-        95.828,
-        51.754
+        20.181,
+        3.143,
+        3.515
       ],
-      "p50Ms": 95.828,
-      "p95Ms": 135.75,
-      "maxMs": 135.75,
-      "minMs": 51.754,
-      "meanMs": 94.444,
+      "p50Ms": 3.515,
+      "p95Ms": 20.181,
+      "maxMs": 20.181,
+      "minMs": 3.143,
+      "meanMs": 8.946,
       "runs": [
         {
           "label": "cold",
-          "durationMs": 135.75
+          "durationMs": 20.181
         },
         {
           "label": "warm-1",
-          "durationMs": 95.828
+          "durationMs": 3.143
         },
         {
           "label": "warm-2",
-          "durationMs": 51.754
+          "durationMs": 3.515
         }
       ]
     }
   },
-  "classification": "needs-followup",
+  "classification": "pass",
   "rationale": [
-    "projection p95 14137.248ms exceeds threshold 250ms",
-    "search p95 135.75ms exceeds threshold 80ms"
+    "All measured p95 values are within first-pass thresholds for the generated dense scenario."
   ]
 }

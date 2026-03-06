@@ -1,59 +1,34 @@
-# Super Analysis 0.5.0 fix plan
+﻿# Super Analysis 0.5.0 fix plan
 
-Release target after audit: `0.5.0 blocked`
+Release target after blocker implementation: `0.5.0 ready with postship debt`
 
-## Fix order
+## Completed blocker batch
 
-### Batch 1. Release blockers
+### 1. Parity fix for direct projection IDs
 
-#### 1. Parity fix for direct projection IDs
+- Status: `done`
+- Result:
+  - direct projection and legacy bridge now share synthetic XREF generation
+  - parity audit rerun is green with `0` semantic mismatches
 
-- Goal:
-  - eliminate semantic ID drift between direct and legacy projections
-- Primary files:
-  - `src/core/read-model/directProjection.ts`
-  - `src/core/gschema/GedcomBridge.ts`
-  - `src/core/read-model/selectors.ts`
-- Implementation notes:
-  - extract or share the xref synthesis strategy
-  - preserve stable prefixed IDs when native `xref` is absent
-  - rerun `src/tests/read-model.parity.audit.test.ts`
-- Exit gate:
-  - `0` semantic mismatches in the current parity corpus
+### 2. Dense-tree projection and search optimization
 
-#### 2. Dense-tree projection and search optimization
+- Status: `done`
+- Result:
+  - projection p95 is under threshold
+  - search p95 is under threshold
+  - dense-tree audit classification is now `pass`
 
-- Goal:
-  - bring direct projection and search under release thresholds or re-baseline with defensible evidence
-- Primary files:
-  - `src/core/read-model/directProjection.ts`
-  - `src/core/read-model/selectors.ts`
-  - `src/ui/search/searchEngine.ts`
-  - `src/tests/perf/dense-tree.audit.test.ts`
-- Implementation notes:
-  - profile repeated full-graph work
-  - avoid rebuilding expensive structures unnecessarily
-  - improve search indexing/caching for large projections
-  - keep the dense-tree scenario reproducible
-- Exit gate:
-  - projection and search either meet thresholds or are re-baselined with explicit justification and stable variance
+### 3. Normalize mojibake in `fastTrack.ts`
 
-#### 3. Normalize mojibake in `fastTrack.ts`
+- Status: `done`
+- Result:
+  - accented Spanish matching is covered and green
+  - runtime blocker removed from dimension 6
 
-- Goal:
-  - restore correct accented Spanish matching in runtime AI fast-track parsing
-- Primary files:
-  - `src/core/ai/fastTrack.ts`
-  - related tests to add under `src/tests/`
-- Implementation notes:
-  - fix literals and regex character classes
-  - add regression coverage for accented inputs like `nació`, `murió`, `falleció`, `varón`
-- Exit gate:
-  - accented input path is covered by tests and passes
+## Remaining follow-up
 
-### Batch 2. Release-safe cleanup after blockers
-
-#### 4. Normalize user-facing mojibake in AI review and diagnostics
+### 4. Normalize user-facing mojibake in AI review and diagnostics
 
 - Primary files:
   - `src/core/ai/review.ts`
@@ -62,7 +37,7 @@ Release target after audit: `0.5.0 blocked`
 - Exit gate:
   - visible Spanish strings render correctly
 
-#### 5. Decide person-claims evidence UX scope
+### 5. Decide person-claims evidence UX scope
 
 - Primary files:
   - `src/ui/PersonWorkspacePanel.tsx`
@@ -72,7 +47,7 @@ Release target after audit: `0.5.0 blocked`
   - either explicitly defer first-class claim evidence UI to `0.6.0`
   - or implement a limited 0.5.x claim evidence surface
 
-#### 6. Reduce hydration flicker risk or instrument it
+### 6. Reduce hydration flicker risk or instrument it
 
 - Primary files:
   - `src/hooks/useGskFile.ts`
@@ -80,19 +55,17 @@ Release target after audit: `0.5.0 blocked`
 - Exit gate:
   - one-phase hydration or testable evidence that the current flow is visually acceptable
 
-### Batch 3. 0.6.0 hard-cut preparation
-
-#### 7. Remove legacy fallback after parity is green
+### 7. Remove legacy fallback after release
 
 - Primary files:
   - `src/core/read-model/selectors.ts`
   - `src/hooks/useGskFile.ts`
   - `src/App.tsx`
   - `src/state/slices/docSlice.ts`
-- Dependency:
-  - blocked on Batch 1 item 1
+- Release impact:
+  - `0.6.0-hardcut`
 
-#### 8. Extract neutral utilities from `GedcomBridge`
+### 8. Extract neutral utilities from `GedcomBridge`
 
 - Primary files:
   - `src/core/gschema/GraphMutations.ts`
@@ -100,10 +73,8 @@ Release target after audit: `0.5.0 blocked`
 
 ## Recommended execution sequence
 
-1. Fix parity
-2. Fix `fastTrack` encoding
-3. Optimize projection/search
-4. Rerun release-gate subset: `091`, `092`, `095`
-5. If green, reassess release decision
-6. Then do UX cleanup and 0.6.0 hard-cut prep
-
+1. Ship or tag the blocker-clearing bundle.
+2. Clean remaining mojibake in review/diagnostics strings.
+3. Decide whether claim evidence UI is deferred or scoped into 0.5.x.
+4. Instrument or simplify hydration to retire the flicker question.
+5. Resume the 0.6.0 hard-cut migration after release.

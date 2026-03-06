@@ -1,24 +1,15 @@
-{
+﻿{
   "dimension": 6,
   "title": "encoding-and-text-integrity",
   "status": "needs-followup",
   "bomFilesDetected": 0,
-  "activeSourceFindings": 4,
+  "activeSourceFindings": 3,
   "activeToolingFindings": 1,
   "activeDocsFindings": 0,
   "historicalNoiseFindings": 22,
   "findings": [
     {
       "id": "D6-F1",
-      "path": "src/core/ai/fastTrack.ts",
-      "severity": "high",
-      "confidence": "high",
-      "releaseImpact": "0.5.0-blocking",
-      "issueType": "mojibake-literal-and-regex",
-      "matches": 11
-    },
-    {
-      "id": "D6-F2",
       "path": "src/core/ai/review.ts",
       "severity": "medium",
       "confidence": "high",
@@ -27,7 +18,7 @@
       "matches": 5
     },
     {
-      "id": "D6-F3",
+      "id": "D6-F2",
       "path": "src/core/ai/safety.ts",
       "severity": "low",
       "confidence": "high",
@@ -36,7 +27,7 @@
       "matches": 1
     },
     {
-      "id": "D6-F4",
+      "id": "D6-F3",
       "path": "src/core/diagnostics/analyzer.ts",
       "severity": "medium",
       "confidence": "high",
@@ -45,7 +36,7 @@
       "matches": 58
     },
     {
-      "id": "D6-F5",
+      "id": "D6-F4",
       "path": "tools/notes/cli.mjs",
       "severity": "low",
       "confidence": "high",

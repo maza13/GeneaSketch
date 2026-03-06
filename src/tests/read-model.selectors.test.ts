@@ -127,18 +127,18 @@ describe("read-model selectors", () => {
     expect(Object.keys(legacyDoc?.persons || {}).length).toBe(Object.keys(directDoc?.persons || {}).length);
   });
 
-  it("uses uid as stable fallback id when xref is missing in direct projection", () => {
+  it("uses shared synthetic xref fallback when xref is missing in direct projection", () => {
     const graph = GSchemaGraph.create();
     graph.addPersonNode({ uid: "p-no-xref", type: "Person", sex: "F", isLiving: true });
 
     setReadModelMode("direct");
     const persons = selectPersons(graph);
-    const person = persons.find((entry) => entry.id === "p-no-xref");
+    const person = persons.find((entry) => entry.id === "IPNOXRE");
     const doc = projectGraphDocument(graph);
 
     expect(person).toBeDefined();
-    expect(doc?.uidToXref?.["p-no-xref"]).toBe("p-no-xref");
-    expect(doc?.xrefToUid?.["p-no-xref"]).toBe("p-no-xref");
+    expect(doc?.uidToXref?.["p-no-xref"]).toBe("IPNOXRE");
+    expect(doc?.xrefToUid?.["IPNOXRE"]).toBe("p-no-xref");
   });
 });
 

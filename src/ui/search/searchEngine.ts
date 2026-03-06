@@ -7,6 +7,7 @@ import {
   type SearchSexFilter,
   type SearchSurnameFilter
 } from "./searchQueryParser";
+import { buildSearchIndex } from "./searchIndex";
 
 export type SearchSortField = "id" | "name" | "surname";
 export type SearchSortDirection = "asc" | "desc";
@@ -41,42 +42,18 @@ function personLabel(person: Person): string {
 
 function searchByName(document: GraphDocument, target: string): Person[] {
   if (!target) return [];
-  return Object.values(document.persons).filter((person) => {
-    const label = normalizeSearchText(personLabel(person));
-    const birthPlace = normalizeSearchText(person.birthPlace ?? "");
-    const deathPlace = normalizeSearchText(person.deathPlace ?? "");
-    const birthDate = normalizeSearchText(person.birthDate ?? "");
-    const deathDate = normalizeSearchText(person.deathDate ?? "");
-    return (
-      label.includes(target) ||
-      normalizeSearchText(person.id).includes(target) ||
-      birthPlace.includes(target) ||
-      deathPlace.includes(target) ||
-      birthDate.includes(target) ||
-      deathDate.includes(target)
-    );
-  });
-}
-
-function scoreFreeQuery(person: Person, target: string): number {
-  if (!target) return 0;
-  const id = normalizeSearchText(person.id);
-  const name = normalizeSearchText(person.name);
-  const surname = normalizeSearchText(person.surname ?? "");
-  const full = normalizeSearchText(personLabel(person));
-  const birthPlace = normalizeSearchText(person.birthPlace ?? "");
-  const deathPlace = normalizeSearchText(person.deathPlace ?? "");
-
-  if (id === target || full === target) return 100;
-  if (name === target || surname === target) return 95;
-  if (birthPlace === target || deathPlace === target) return 90;
-  if (full.startsWith(target)) return 85;
-  if (name.startsWith(target) || surname.startsWith(target)) return 80;
-  if (birthPlace.startsWith(target) || deathPlace.startsWith(target)) return 75;
-  if (full.includes(target)) return 70;
-  if (id.includes(target)) return 60;
-  if (birthPlace.includes(target) || deathPlace.includes(target)) return 50;
-  return 0;
+  return buildSearchIndex(document).rows
+    .filter((row) => {
+      return (
+        row.fullNorm.includes(target) ||
+        row.idNorm.includes(target) ||
+        row.birthPlaceNorm.includes(target) ||
+        row.deathPlaceNorm.includes(target) ||
+        row.birthDateNorm.includes(target) ||
+        row.deathDateNorm.includes(target)
+      );
+    })
+    .map((row) => row.person);
 }
 
 function mapPersonToResult(person: Person, subtitle?: string, rank = 0): SearchResult {
@@ -145,9 +122,33 @@ export function buildSearchResults(
   }
 
   const matched = searchByName(document, parsed.target);
+  const index = buildSearchIndex(document);
   if (parsed.mode === "free") {
     rows = matched
-      .map((person) => mapPersonToResult(person, undefined, scoreFreeQuery(person, parsed.target)))
+      .map((person) => {
+        const row = index.rowByPersonId.get(person.id);
+        if (!row) return mapPersonToResult(person, undefined, 0);
+
+        const id = row.idNorm;
+        const name = row.nameNorm;
+        const surname = row.surnameNorm;
+        const full = row.fullNorm;
+        const birthPlace = row.birthPlaceNorm;
+        const deathPlace = row.deathPlaceNorm;
+
+        let rank = 0;
+        if (id === parsed.target || full === parsed.target) rank = 100;
+        else if (name === parsed.target || surname === parsed.target) rank = 95;
+        else if (birthPlace === parsed.target || deathPlace === parsed.target) rank = 90;
+        else if (full.startsWith(parsed.target)) rank = 85;
+        else if (name.startsWith(parsed.target) || surname.startsWith(parsed.target)) rank = 80;
+        else if (birthPlace.startsWith(parsed.target) || deathPlace.startsWith(parsed.target)) rank = 75;
+        else if (full.includes(parsed.target)) rank = 70;
+        else if (id.includes(parsed.target)) rank = 60;
+        else if (birthPlace.includes(parsed.target) || deathPlace.includes(parsed.target)) rank = 50;
+
+        return mapPersonToResult(person, undefined, rank);
+      })
       .filter((row) => row.rank > 0);
     return sortResults(applyFilters(rows, document, activeFilters), sortField, sortDirection);
   }
