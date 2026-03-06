@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "105"
 title: "postship runtime text integrity cleanup"
@@ -17,10 +17,11 @@ risk_level: "medium"
 estimated_effort: "s"
 complexity: "standard"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 105: clean remaining runtime text integrity issues"
+closed_at: "2026-03-06"
 ---
+
 
 
 # Postship runtime text integrity cleanup
@@ -61,9 +62,9 @@ Fix the remaining runtime mojibake and rerun the encoding scan subset before clo
 
 ## Acceptance Criteria
 
-- [ ] Remaining runtime mojibake is removed from the targeted files.
-- [ ] Verification rerun is captured in the work log.
-- [ ] Work log updated.
+- [x] Remaining runtime mojibake is removed from the targeted files.
+- [x] Verification rerun is captured in the work log.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -82,6 +83,51 @@ Fix the remaining runtime mojibake and rerun the encoding scan subset before clo
 - Artifacts/paths:
   - `todos/105-pending-p2-postship-runtime-text-integrity-cleanup.md`
 
+### 2026-03-06 - Runtime text integrity cleanup completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Normalized remaining mojibake strings in `review.ts`, `safety.ts`, and `analyzer.ts`.
+- Verified that the targeted files no longer contain the mojibake patterns tracked by the postship audit.
+- Re-ran the focused diagnostics and AI safety tests after the cleanup.
+
+**Evidence:**
+- Command: `rg -n "Ã|â|ΓÇ|�" src/core/ai/review.ts src/core/ai/safety.ts src/core/diagnostics/analyzer.ts`
+- Result: no matches
+- Command: `npx vitest run src/tests/diagnostics/analyzer.test.ts src/tests/ai.safety-wizard.test.ts`
+- Result: 2 files, 4 tests passed
+- Artifacts/paths:
+  - `src/core/ai/review.ts`
+  - `src/core/ai/safety.ts`
+  - `src/core/diagnostics/analyzer.ts`
+  - `todos/105-ready-p2-postship-runtime-text-integrity-cleanup.md`
+
 ## Notes
 
 Run this child first when `098` is opened.
+
+### 2026-03-06 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Removed remaining runtime mojibake from review, safety, and analyzer, and reran focused verification.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/105-complete-p2-postship-runtime-text-integrity-cleanup.md
+
+**Next Recommendation (generated at closure):**
+- An umbrella now includes this completed task in its child chain: 098 (p2).
+- Recommended next step: brief/prepare umbrella 098.
