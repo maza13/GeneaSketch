@@ -1,0 +1,108 @@
+﻿{
+  "dimension": 5,
+  "title": "Hard-cut 0.6.0 readiness",
+  "status": "pass-with-blockers-identified",
+  "summary": "Legacy dependency risk is concentrated in the central read-model fallback and a small set of UI/state bridges.",
+  "blockers": [
+    {
+      "id": "hardcut-blocker-selectors-legacy-fallback",
+      "path": "src/core/read-model/selectors.ts",
+      "issue": "central fallback still imports gschemaToDocument",
+      "linkedFollowUps": ["091", "048"],
+      "priority": "p1"
+    },
+    {
+      "id": "hardcut-blocker-app-state-document-bridge",
+      "path": "src/App.tsx; src/hooks/useGskFile.ts; src/state/slices/docSlice.ts",
+      "issue": "product flows still convert GraphDocument back into GSchemaGraph via documentToGSchema",
+      "linkedFollowUps": ["048"],
+      "priority": "p1"
+    },
+    {
+      "id": "hardcut-blocker-graphmutations-bridge-utility",
+      "path": "src/core/gschema/GraphMutations.ts",
+      "issue": "utility coupling to parseGedDate from GedcomBridge",
+      "linkedFollowUps": ["048"],
+      "priority": "p2"
+    }
+  ],
+  "matrix": [
+    {
+      "path": "src/core/read-model/selectors.ts",
+      "dependency": "gschemaToDocument",
+      "classification": "removable-debt-hardcut-blocker",
+      "canReplaceNow": true,
+      "replacement": "buildDirectDocument only after parity fix",
+      "priority": "p1",
+      "releaseImpact": "0.6.0-hardcut"
+    },
+    {
+      "path": "src/hooks/useGskFile.ts",
+      "dependency": "documentToGSchema, gschemaToDocument",
+      "classification": "mixed-boundary",
+      "canReplaceNow": "partial",
+      "replacement": "keep file-format conversion, remove product-flow loops where possible",
+      "priority": "p1",
+      "releaseImpact": "0.6.0-hardcut"
+    },
+    {
+      "path": "src/App.tsx",
+      "dependency": "documentToGSchema",
+      "classification": "temporary-ui-bridge",
+      "canReplaceNow": true,
+      "replacement": "graph-native load/mutation helpers",
+      "priority": "p2",
+      "releaseImpact": "0.6.0-hardcut"
+    },
+    {
+      "path": "src/state/slices/docSlice.ts",
+      "dependency": "documentToGSchema",
+      "classification": "temporary-state-bridge",
+      "canReplaceNow": true,
+      "replacement": "graph-native creation/update flows",
+      "priority": "p1",
+      "releaseImpact": "0.6.0-hardcut"
+    },
+    {
+      "path": "src/ui/MockToolsPanel.tsx",
+      "dependency": "documentToGSchema",
+      "classification": "removable-tooling-debt",
+      "canReplaceNow": true,
+      "replacement": "mock graph builder",
+      "priority": "p3",
+      "releaseImpact": "0.5.x-postship"
+    },
+    {
+      "path": "src/core/gschema/LegacyMigrator.ts",
+      "dependency": "documentToGSchema, gschemaToDocument",
+      "classification": "legitimate-migration-boundary",
+      "canReplaceNow": false,
+      "replacement": "policy decision during 0.6.0 migration planning",
+      "priority": "p2",
+      "releaseImpact": "keep-explicit"
+    },
+    {
+      "path": "src/core/gschema/GraphMutations.ts",
+      "dependency": "parseGedDate from GedcomBridge",
+      "classification": "removable-utility-coupling",
+      "canReplaceNow": true,
+      "replacement": "extract neutral date parsing utility",
+      "priority": "p2",
+      "releaseImpact": "0.6.0-hardcut"
+    },
+    {
+      "path": "src/core/gschema/index.ts",
+      "dependency": "re-export GedcomBridge",
+      "classification": "public-boundary-review",
+      "canReplaceNow": "maybe-later",
+      "replacement": "narrow exports if import/export-only policy is adopted",
+      "priority": "p3",
+      "releaseImpact": "policy-decision"
+    }
+  ],
+  "recommendation": [
+    "Refine TODO 048 into staged execution rather than single-wave deletion.",
+    "Treat TODO 091 parity finding as the precondition for removing selectors legacy fallback.",
+    "Separate legitimate import/export boundaries from product-flow document bridges."
+  ]
+}
