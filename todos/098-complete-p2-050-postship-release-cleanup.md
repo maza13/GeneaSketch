@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "umbrella"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "098"
 title: "0.5.x postship release cleanup"
@@ -17,10 +17,11 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 098: complete 0.5.x postship cleanup umbrella"
+closed_at: "2026-03-06"
 ---
+
 
 
 # 0.5.x postship release cleanup
@@ -114,10 +115,10 @@ Use this umbrella as the orchestration entry point for postship cleanup. Start i
 
 ## Acceptance Criteria
 
-- [ ] Postship debt is split into ordered child tasks.
-- [ ] Related context for encoding and UX is captured explicitly.
-- [ ] No child task is executed automatically when the umbrella is started.
-- [ ] Work log updated.
+- [x] Postship debt is split into ordered child tasks.
+- [x] Related context for encoding and UX is captured explicitly.
+- [x] No child task is executed automatically when the umbrella is started.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -163,3 +164,46 @@ This umbrella must remain pending until postship work is explicitly opened.
 - Hard dependencies complete: 096
 - Activated: 105, 106, 107
 - Blocked: none
+
+### 2026-03-06 - Postship cleanup umbrella completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Confirmed all ordered children completed under protocol v2: 105, 106, and 107.
+- Preserved the release-scope boundary: this umbrella stayed non-blocking and postship-only.
+- Closed the cleanup track after converting each residual concern into either code cleanup or explicit product/architecture decisions.
+
+**Evidence:**
+- Child tasks:
+  - `todos/105-complete-p2-postship-runtime-text-integrity-cleanup.md`
+  - `todos/106-complete-p2-postship-evidence-ux-followup.md`
+  - `todos/107-complete-p2-postship-hydration-flicker-instrumentation.md`
+- Supporting reports:
+  - `reports/super-analysis-0.5.0/dimension-4-ux-integrity.md`
+  - `reports/super-analysis-0.5.0/dimension-6-encoding-and-text-integrity.md`
+
+### 2026-03-06 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Closed the postship cleanup umbrella after completing runtime text cleanup, documenting the evidence UX follow-up decision, and retiring the hydration flicker item as non-reproduced.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/098-complete-p2-050-postship-release-cleanup.md
+
+**Next Recommendation (generated at closure):**
+- No direct dependent task found.
+- Recommended next unblocked task: 018 (p2).
