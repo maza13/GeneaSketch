@@ -42,7 +42,7 @@ function describeAction(doc: GraphDocument, action: AiResolvedAction): { title: 
     const relationMap: Record<string, string> = { child: "hijo/a", spouse: "pareja", parent: "padre/madre" };
     const relName = relationMap[action.relationType] || action.relationType;
     return {
-      title: "Crear relaciÃ³n",
+      title: "Crear relación",
       description: `Vincular a ${right} como ${relName} de ${left}.`
     };
   }
@@ -50,8 +50,8 @@ function describeAction(doc: GraphDocument, action: AiResolvedAction): { title: 
     const left = getPersonName(action.personId) || action.personQuery || "?";
     const right = getPersonName(action.relatedPersonId) || action.relatedPersonQuery || "?";
     return {
-      title: "Quitar relaciÃ³n",
-      description: `Remover vÃ­nculo de ${action.relationType} entre ${left} y ${right}.`
+      title: "Quitar relación",
+      description: `Remover vínculo de ${action.relationType} entre ${left} y ${right}.`
     };
   }
   if (action.kind === "update_family") {
@@ -71,7 +71,7 @@ function collectActionIssues(doc: GraphDocument, action: AiResolvedAction): stri
   if (action.kind === "update_person") {
     const resolved = resolvePersonId(doc, action.personId, action.matchQuery);
     if (!resolved.id) issues.push("No se pudo resolver persona objetivo.");
-    if (resolved.candidates.length > 1 && !resolved.id) issues.push("Hay homÃ³nimos potenciales.");
+    if (resolved.candidates.length > 1 && !resolved.id) issues.push("Hay homónimos potenciales.");
   }
   if (action.kind === "delete_person") {
     const resolved = resolvePersonId(doc, action.personId, action.matchQuery);
@@ -86,7 +86,7 @@ function collectActionIssues(doc: GraphDocument, action: AiResolvedAction): stri
   if (action.kind === "delete_relation") {
     const left = resolvePersonId(doc, action.personId, action.personQuery);
     const right = resolvePersonId(doc, action.relatedPersonId, action.relatedPersonQuery);
-    if (!left.id || !right.id) issues.push("No se pudieron resolver ambos extremos de la relaciÃ³n.");
+    if (!left.id || !right.id) issues.push("No se pudieron resolver ambos extremos de la relación.");
   }
   if (action.kind === "delete_family") {
     if (!action.familyId && !action.familyQuery) issues.push("No hay identificador de familia para delete.");

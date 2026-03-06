@@ -132,7 +132,7 @@ export function normalizeActionsWithSafety(doc: GraphDocument, actions: AiResolv
         return;
       }
       if (match.level === "ambiguous_match") {
-        block(annotations, index, `create_person ambiguo para "${query}". Requiere selecciÃ³n manual.`);
+        block(annotations, index, `create_person ambiguo para "${query}". Requiere selección manual.`);
       }
       normalized.push(action);
       return;
