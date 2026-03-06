@@ -1,10 +1,14 @@
 ---
+protocol_version: 2
+task_type: leaf
 status: pending
 priority: p2
 issue_id: "XXX"
 title: "short-action-title"
 tags: []
 dependencies: []
+child_tasks: []
+related_tasks: []
 owner: null
 created_at: "YYYY-MM-DD"
 updated_at: "YYYY-MM-DD"
@@ -70,6 +74,30 @@ Describe the chosen path and the execution steps. Required for `standard` and `c
 1. Step 1
 2. Step 2
 3. Step 3
+
+## Orchestration Guide
+
+Required for `task_type: umbrella`. Leave this section absent or empty for `leaf` tasks.
+
+### Hard Dependencies
+
+- List hard blockers from `dependencies`.
+
+### Child Execution Order
+
+1. Child ID and rationale
+2. Child ID and rationale
+
+### Related Context
+
+- `NNN:precedent` why it matters
+- `NNN:parallel` why it matters
+- `NNN:followup` why it matters
+- `NNN:context` why it matters
+
+### Exit Rule
+
+- State exactly when this umbrella may be closed.
 
 ## User Action Required (Only if unavoidable)
 

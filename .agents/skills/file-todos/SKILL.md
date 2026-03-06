@@ -15,6 +15,7 @@ Default behavior:
 - Execute each TODO from start to finish.
 - Do not leave partial work unless blocked by something external.
 - Only request user intervention when strictly unavoidable.
+- For `protocol_version: 2` + `task_type: umbrella`, "start" means `todo:brief` and then `todo:prepare`, not child execution.
 
 ## Core Principles
 
@@ -53,6 +54,12 @@ Recommended frontmatter fields:
 - `complexity` (`simple` | `standard` | `complex`)
 - `auto_closure`, `commit_confirmed`, `commit_message`, `closed_at`
 
+Protocol v2 fields:
+- `protocol_version` (`2`)
+- `task_type` (`leaf` | `umbrella`)
+- `child_tasks` (ordered child execution chain for umbrellas)
+- `related_tasks` (`NNN:precedent|parallel|followup|context`)
+
 Required sections (base):
 - `## Problem Statement`
 - `## Acceptance Criteria`
@@ -62,6 +69,7 @@ Recommended sections:
 - `## Findings`
 - `## Proposed Solutions`
 - `## Recommended Action`
+- `## Orchestration Guide` (required for v2 umbrellas)
 
 ## Adaptive Complexity Mode
 
@@ -85,6 +93,17 @@ When a TODO is being executed:
 2. Keep status progression aligned with real execution state.
 3. Update Work Log during execution, not afterward.
 4. Close task automatically with commit using `todo:close`.
+
+## Umbrella Protocol (V2)
+
+When a task uses `protocol_version: 2` and `task_type: umbrella`:
+
+1. Run `npm run todo:brief -- --todo <id>` before mutating state.
+2. Summarize hard dependencies, child order, related tasks, blockers, and the recommended next child.
+3. If the user asked to start/open the umbrella, run `npm run todo:prepare -- --todo <id>`.
+4. `todo:prepare` may move eligible child tasks from `pending` to `ready`.
+5. Do not execute child tasks automatically.
+6. Do not close the umbrella until all child tasks are complete and acceptance criteria are checked.
 
 ## User Intervention Protocol (Explicit Only)
 
@@ -128,6 +147,13 @@ For full historical audit:
 Validation rejects TODOs that break base contract (naming, identity/status sync,
 core sections, dependency integrity, and cycle rules) for the selected scope.
 
+For `protocol_version: 2`, validation also rejects:
+- unchecked acceptance criteria on `complete` tasks
+- invalid `task_type`
+- invalid `related_tasks`
+- umbrella tasks without `child_tasks`
+- umbrella tasks without `## Orchestration Guide`
+
 ## Automatic Close and Commit
 
 Close tasks with automation:
@@ -144,6 +170,11 @@ Behavior of `todo:close`:
 - creates commit automatically
 - prints commit hash and message
 
+For `protocol_version: 2`, `todo:close` must refuse closure when:
+- any acceptance checkbox is unchecked
+- an umbrella still has incomplete child tasks
+- an umbrella still has incomplete hard dependencies
+
 ## Common Workflows
 
 ### Create
@@ -159,6 +190,7 @@ Behavior of `todo:close`:
 1. Review `pending` tasks.
 2. Move approved tasks to `ready`.
 3. Keep blockers explicit.
+4. For v2 umbrellas, prefer `todo:prepare` instead of manual status-only edits.
 
 ### Execute
 
@@ -166,6 +198,13 @@ Behavior of `todo:close`:
 2. Update Work Log with evidence.
 3. Run `todo:validate` (scoped) on modified TODO files.
 4. Run `todo:close` to complete + commit + final recommendation.
+
+### Start an Umbrella
+
+1. Run `todo:brief`.
+2. Confirm hard dependencies, child order, related context, and blockers.
+3. Run `todo:prepare` to open the umbrella and activate eligible children.
+4. Execute child tasks only when the user explicitly asks for them.
 
 ### Promote from Notes
 
@@ -187,6 +226,8 @@ When asked for status/recommendations, provide:
 
 - Validate scoped: `npm run todo:validate -- --todo 073`
 - Validate full backlog: `npm run todo:validate:all`
+- Brief umbrella: `npm run todo:brief -- --todo 099`
+- Prepare umbrella: `npm run todo:prepare -- --todo 099`
 - Close + commit: `npm run todo:close -- --todo 073 --files package.json,tools/todos/validate.mjs,todos/073-complete-...`
 
 ## Key Distinctions

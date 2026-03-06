@@ -1,10 +1,14 @@
-﻿---
+---
+protocol_version: 2
+task_type: "umbrella"
 status: "pending"
 priority: "p2"
 issue_id: "099"
-title: "060-hard-cut-preparation"
+title: "0.6.0 hard-cut preparation"
 tags: ["release-0.6.0", "hard-cut", "architecture", "legacy-removal"]
 dependencies: ["096", "100"]
+child_tasks: ["108", "109", "110"]
+related_tasks: ["097:precedent", "048:followup"]
 owner: "codex"
 created_at: "2026-03-06"
 updated_at: "2026-03-06"
@@ -20,29 +24,29 @@ closed_at: null
 
 # 0.6.0 hard-cut preparation
 
-Track the architectural work required for the 0.6.0 hard cut without enabling it during the current release-closing phase.
+Coordinate the architecture preparation work required before the 0.6.0 hard cut is intentionally opened.
 
 ## Problem Statement
 
-The Super Analysis confirmed that 0.6.0 remains blocked by legacy fallback paths and product flows that still bridge between `GraphDocument` and `GSchemaGraph`. That work should be planned explicitly, but it must stay outside the current 0.5.0 closure.
+The Super Analysis confirmed that 0.6.0 remains blocked by legacy fallback paths and bridge-style product flows. This umbrella exists to turn that future work into an ordered preparation chain instead of allowing the migration to restart discovery mid-cut.
 
 ### Context
 
 - Current behavior:
   - 0.5.0 blocker work is complete.
-  - The central fallback and graph/document bridge paths are still present.
+  - `100` already established the system taxonomy and architecture boundary baseline.
 - Expected behavior:
-  - 0.6.0 prep is documented, sequenced, and intentionally left pending.
+  - 0.6.0 preparation should expose the next analysis/migration order without activating the cut itself.
 - Where this appears:
   - `reports/super-analysis-0.5.0/fix-plan.md`
-  - `reports/super-analysis-0.5.0/findings.json`
+  - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
 
 ### Why This Matters
 
 - Impact:
-  - Prevents the 0.6.0 migration from being improvised later.
+  - Prevents the hard cut from collapsing taxonomy, boundary analysis, and migration implementation into one phase.
 - Cost of not doing it:
-  - Future architecture work may restart discovery from zero or leak into 0.5.x scope.
+  - Legacy removal risks becoming improvisational and unsafe.
 
 ## Findings
 
@@ -51,38 +55,56 @@ The Super Analysis confirmed that 0.6.0 remains blocked by legacy fallback paths
   - `src/hooks/useGskFile.ts`
   - `src/App.tsx`
   - `src/state/slices/docSlice.ts`
-  - remaining bridge-style helpers tied to legacy assumptions
-- This work depends on keeping the current blocker-clearing state stable and separated from architecture changes.
-- `100` is now the architecture-analysis umbrella that should run first:
-  - `101` system taxonomy baseline
-  - `102` dependency flow map
-  - `103` format vs engine boundary audit
-  - `104` boundary vs coupling classification
+- `100` and its child analyses supply the architecture baseline that this umbrella must consume.
+- `097` clarified the distinction between `Visual Engine` and `App Shell`, which is a prerequisite for the hard-cut framing.
+- `048` remains the eventual execution umbrella for the hard-cut itself and should stay downstream.
 
 ## Proposed Solutions
 
 ### Option 1 (Recommended)
 
 - Approach:
-  - Keep one pending umbrella for 0.6.0 hard-cut prep and split it into child tasks only when architecture work is intentionally started.
+  - Keep one protocol v2 umbrella that sequences selectors hard-cut scoping, bridge boundary audit, and graph-native rollout planning before `048`.
 - Pros:
-  - Preserves clean release scope.
-  - Makes future migration sequencing easier.
+  - Forces architecture prep to happen before implementation pressure.
+  - Makes the order explicit for both agents and users.
 - Cons:
-  - Requires a later planning pass before execution.
+  - Adds planning structure ahead of execution.
 - Effort: L
 - Risk: Medium
 
 ## Recommended Action
 
-Leave this task in `pending` as the architecture handoff point for the 0.6.0 hard cut.
+Use this umbrella as the 0.6.0 preparation entry point. Start with `todo:brief` and `todo:prepare`, then execute child tasks only by explicit request.
 
 ### Execution Plan
 
-1. Freeze the blocker-clearing bundle first.
-2. Complete `100` and its child analysis tasks to establish architecture baseline and dependency boundaries.
-3. Re-open the hard-cut dependency matrix when 0.6.0 planning starts.
-4. Break removal work into graph-native migration tasks only after explicit approval.
+1. Reuse `100` as the architecture baseline; do not repeat that discovery work.
+2. Scope the selector/read-model cut first.
+3. Audit the remaining product bridge boundaries second.
+4. Define graph-native rollout sequencing before handing off to `048`.
+
+## Orchestration Guide
+
+### Hard Dependencies
+
+- `096` must stay complete because it contains the release packet and hard-cut findings.
+- `100` must stay complete because this umbrella depends on its architecture baseline rather than rediscovering it.
+
+### Child Execution Order
+
+1. `108` - define the selector/read-model hard-cut migration boundary.
+2. `109` - audit remaining product bridges and classify which are transitional versus deletion candidates.
+3. `110` - convert the analysis into a graph-native rollout sequence ready to hand off to `048`.
+
+### Related Context
+
+- `097:precedent` - formalized the Visual Engine vs App Shell distinction that this hard-cut planning depends on.
+- `048:followup` - remains the eventual execution umbrella after this preparation chain is complete.
+
+### Exit Rule
+
+- Close this umbrella only after `108`, `109`, and `110` are complete and `048` can consume the resulting prep without reopening discovery.
 
 ## User Action Required (Only if unavoidable)
 
@@ -92,31 +114,32 @@ Leave this task in `pending` as the architecture handoff point for the 0.6.0 har
 
 ## Acceptance Criteria
 
-- [ ] 0.6.0 hard-cut work is tracked in one pending task.
-- [ ] No hard-cut work is marked `ready` yet.
-- [ ] Scope is limited to legacy-removal and graph-native migration planning.
+- [ ] 0.6.0 prep is split into ordered child tasks.
+- [ ] The precedent and follow-up tasks are called out explicitly.
+- [ ] Starting the umbrella does not execute any child task automatically.
+- [ ] Work log updated.
 
 ## Work Log
 
-### 2026-03-06 - Task created as architecture placeholder
+### 2026-03-06 - Migrated to umbrella protocol v2
 
 **By:** Codex
 
 **Status Transition:**
-- from: not-tracked
+- from: pending
 - to: pending
 
 **Actions:**
-- Created a dedicated pending task for the 0.6.0 hard-cut preparation track.
-- Kept this work explicitly outside the current 0.5.0 closure.
+- Converted this placeholder into a protocol v2 umbrella.
+- Added ordered child tasks, hard dependencies, and explicit related context.
 
 **Evidence:**
 - Artifacts/paths:
   - `todos/099-pending-p2-060-hard-cut-preparation.md`
-  - `reports/super-analysis-0.5.0/fix-plan.md`
+  - `todos/108-pending-p2-hard-cut-read-model-selector-boundary.md`
+  - `todos/109-pending-p2-hard-cut-product-bridge-boundary-audit.md`
+  - `todos/110-pending-p2-hard-cut-graph-native-rollout-sequencing.md`
 
 ## Notes
 
-This task must not move to `ready` until the 0.5.0 closure is accepted and 0.6.0 planning is explicitly opened.
-
-It should also remain behind `100`, because the hard-cut should consume architecture analysis rather than rediscover it mid-migration.
+This umbrella stays pending until 0.6.0 preparation is intentionally opened.

@@ -12,6 +12,8 @@
         "plan:dtree-v3:validate": "node tools/dtree-v3/validate-todo-chain.mjs",
         "todo:validate": "node tools/todos/validate.mjs",
         "todo:validate:all": "node tools/todos/validate.mjs --all",
+        "todo:brief": "node tools/todos/brief.mjs",
+        "todo:prepare": "node tools/todos/prepare.mjs",
         "todo:close": "node tools/todos/close.mjs",
         "check:gschema:internals": "node tools/gschema/check-internals.mjs",
         "notes:validate": "node tools/notes/cli.mjs validate",

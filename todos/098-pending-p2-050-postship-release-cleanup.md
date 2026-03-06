@@ -1,17 +1,21 @@
-﻿---
+---
+protocol_version: 2
+task_type: "umbrella"
 status: "pending"
 priority: "p2"
 issue_id: "098"
-title: "050-postship-release-cleanup"
+title: "0.5.x postship release cleanup"
 tags: ["release-0.5.x", "postship", "ux", "text-integrity"]
 dependencies: ["096"]
+child_tasks: ["105", "106", "107"]
+related_tasks: ["093:context", "095:precedent"]
 owner: "codex"
 created_at: "2026-03-06"
 updated_at: "2026-03-06"
 target_date: null
 risk_level: "medium"
 estimated_effort: "m"
-complexity: "standard"
+complexity: "complex"
 auto_closure: true
 commit_confirmed: false
 commit_message: null
@@ -20,19 +24,19 @@ closed_at: null
 
 # 0.5.x postship release cleanup
 
-Capture the non-blocking release debt that should be handled after the 0.5.0 blocker-clearing bundle, without activating that work yet.
+Coordinate the non-blocking cleanup work that should happen after the 0.5.0 blocker-clearing bundle, without opening execution now.
 
 ## Problem Statement
 
-The blocker set for 0.5.0 is now cleared, but several follow-up items remain open in UX polish and text integrity. Those items should stay visible and structured without being pulled into the release-closing commit or marked as ready prematurely.
+The blocker set for 0.5.0 is cleared, but several follow-up items remain open in text integrity, evidence UX, and hydration polish. This umbrella exists so the next phase has an explicit order instead of re-discovering the cleanup scope later.
 
 ### Context
 
 - Current behavior:
   - 0.5.0 is now release-eligible with explicit postship debt.
-  - Remaining issues are documented in the updated Super Analysis packet.
+  - The remaining work is non-blocking and must stay out of the blocker-clearing bundle.
 - Expected behavior:
-  - Postship items are tracked in one place and remain pending until intentionally scheduled.
+  - The postship cleanup track shows the recommended order, supporting context, and next child to activate when the phase is intentionally opened.
 - Where this appears:
   - `reports/super-analysis-0.5.0/executive-summary.md`
   - `reports/super-analysis-0.5.0/findings.json`
@@ -40,43 +44,66 @@ The blocker set for 0.5.0 is now cleared, but several follow-up items remain ope
 ### Why This Matters
 
 - Impact:
-  - Keeps postship work visible without contaminating the blocker-clearing phase.
+  - Preserves release-scope discipline while keeping follow-up work visible.
 - Cost of not doing it:
-  - Follow-up cleanup can get lost or accidentally mixed into unrelated work.
+  - Postship cleanup will drift or get mixed with later architecture work.
 
 ## Findings
 
-- Current postship debt includes:
+- Remaining postship debt includes:
   - mojibake in `src/core/ai/review.ts`
   - mojibake in `src/core/ai/safety.ts`
   - mojibake in `src/core/diagnostics/analyzer.ts`
-  - unresolved decision on first-class claim evidence UX
-  - hydration flicker risk still not instrumented or retired
-- None of these items blocks the current 0.5.0 release packet.
+  - unresolved first-class evidence UX decision
+  - workspace hydration flicker risk not yet instrumented
+- `095` already established the text-integrity audit baseline.
+- `093` already established the UX/interconnection baseline for evidence and hydration risk.
 
 ## Proposed Solutions
 
 ### Option 1 (Recommended)
 
 - Approach:
-  - Keep one pending umbrella for the postship cleanup batch and activate it only after the current phase is committed and frozen.
+  - Keep one umbrella in `pending` with three ordered children: text integrity, evidence UX follow-up, and hydration flicker instrumentation.
 - Pros:
-  - Clear separation between blocker work and cleanup work.
-  - Easier release-scope discipline.
+  - Makes the future cleanup phase predictable.
+  - Separates postship quality work from release blockers and 0.6.0 architecture work.
 - Cons:
-  - Requires intentional later triage.
+  - Adds explicit backlog structure now.
 - Effort: M
 - Risk: Low
 
 ## Recommended Action
 
-Leave this task in `pending` as the entry point for 0.5.x postship cleanup.
+Use this umbrella as the orchestration entry point for postship cleanup. Start it with `todo:brief` and `todo:prepare`, then execute child tasks only when explicitly approved.
 
 ### Execution Plan
 
-1. Reconfirm the release packet remains unchanged after the blocker-clearing commit.
-2. Split the work into executable child tasks only when postship scheduling is approved.
-3. Prioritize text-integrity cleanup before broader UX refinement.
+1. Reconfirm the release packet remains frozen after blocker-clearing work.
+2. Start with the text-integrity child, because it is the narrowest and least coupled cleanup.
+3. Continue with the evidence UX follow-up after text integrity is stable.
+4. Finish with hydration flicker instrumentation and verification.
+
+## Orchestration Guide
+
+### Hard Dependencies
+
+- `096` must remain complete and unchanged because this umbrella consumes the final 0.5.0 release packet.
+
+### Child Execution Order
+
+1. `105` - clean the remaining runtime mojibake so user-visible text and AI surfaces are stable first.
+2. `106` - revisit evidence UX after text integrity is clean and the read model terminology is stable.
+3. `107` - instrument and retire the hydration flicker risk after the UI debt is narrowed.
+
+### Related Context
+
+- `095:precedent` - provides the encoding audit that identified the runtime files still affected.
+- `093:context` - provides the UX baseline for evidence and hydration concerns.
+
+### Exit Rule
+
+- Close this umbrella only after `105`, `106`, and `107` are complete and the postship scope remains explicitly non-blocking to release history.
 
 ## User Action Required (Only if unavoidable)
 
@@ -86,29 +113,32 @@ Leave this task in `pending` as the entry point for 0.5.x postship cleanup.
 
 ## Acceptance Criteria
 
-- [ ] Postship debt remains tracked in one pending task.
-- [ ] No postship cleanup work is marked `ready` yet.
-- [ ] Scope is limited to non-blocking 0.5.x follow-up work.
+- [ ] Postship debt is split into ordered child tasks.
+- [ ] Related context for encoding and UX is captured explicitly.
+- [ ] No child task is executed automatically when the umbrella is started.
+- [ ] Work log updated.
 
 ## Work Log
 
-### 2026-03-06 - Task created as postship placeholder
+### 2026-03-06 - Migrated to umbrella protocol v2
 
 **By:** Codex
 
 **Status Transition:**
-- from: not-tracked
+- from: pending
 - to: pending
 
 **Actions:**
-- Created a dedicated pending task for non-blocking 0.5.x follow-up work.
-- Kept this track separate from the blocker-clearing implementation commit.
+- Converted this task from a placeholder into a protocol v2 umbrella.
+- Declared explicit child order and related context for the postship cleanup phase.
 
 **Evidence:**
 - Artifacts/paths:
   - `todos/098-pending-p2-050-postship-release-cleanup.md`
-  - `reports/super-analysis-0.5.0/executive-summary.md`
+  - `todos/105-pending-p2-postship-runtime-text-integrity-cleanup.md`
+  - `todos/106-pending-p2-postship-evidence-ux-followup.md`
+  - `todos/107-pending-p2-postship-hydration-flicker-instrumentation.md`
 
 ## Notes
 
-This task must not move to `ready` until postship work is explicitly approved.
+This umbrella must remain pending until postship work is explicitly opened.

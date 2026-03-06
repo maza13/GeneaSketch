@@ -1032,12 +1032,16 @@ function buildTodoFromTemplate(payload) {
   if (parsed.error) fail(`cannot parse file-todos template: ${parsed.error}`);
   const meta = {
     ...parsed.meta,
+    protocol_version: 2,
+    task_type: payload.task_type ?? "leaf",
     status: "pending",
     priority: payload.priority,
     issue_id: payload.issue_id,
     title: payload.title,
     tags: uniqStrings([...(Array.isArray(parsed.meta.tags) ? parsed.meta.tags : []), "notes", `note:${payload.note_id}`]),
     dependencies: uniqStrings(payload.dependencies ?? []),
+    child_tasks: uniqStrings(payload.child_tasks ?? []),
+    related_tasks: uniqStrings(payload.related_tasks ?? []),
     owner: "codex",
     created_at: today(),
     updated_at: today(),
@@ -1055,6 +1059,36 @@ function buildTodoFromTemplate(payload) {
   body = replaceSectionPrefix(body, "Findings", payload.findings || "No findings captured yet.");
   body = replaceSectionPrefix(body, "Proposed Solutions", payload.proposed || "- Execute according to promoted note context.");
   body = replaceSectionPrefix(body, "Recommended Action", payload.recommended_action);
+  if (payload.task_type === "umbrella") {
+    body = replaceSectionPrefix(
+      body,
+      "Orchestration Guide",
+      payload.orchestration ||
+        [
+          "### Hard Dependencies",
+          "",
+          payload.dependencies.length > 0
+            ? payload.dependencies.map((dep) => `- ${dep}: must be complete before preparing this umbrella.`).join("\n")
+            : "- none",
+          "",
+          "### Child Execution Order",
+          "",
+          payload.child_tasks.length > 0
+            ? payload.child_tasks.map((id, index) => `${index + 1}. ${id} - execute in declared order.`).join("\n")
+            : "- define child tasks before execution",
+          "",
+          "### Related Context",
+          "",
+          payload.related_tasks.length > 0
+            ? payload.related_tasks.map((rel) => `- ${rel}`).join("\n")
+            : "- none",
+          "",
+          "### Exit Rule",
+          "",
+          "- Close this umbrella only after all child tasks are complete and their outputs are cross-checked."
+        ].join("\n")
+    );
+  }
   body = replaceSectionPrefix(
     body,
     "Acceptance Criteria",
@@ -1444,7 +1478,9 @@ function buildPromotionProposal(record) {
     issue_id: umbrella,
     title: umbrellaTitle,
     slugBase: umbrellaTitle,
-    dependencies: children,
+    dependencies: uniqStrings(record.meta.related_todos),
+    child_tasks: children,
+    related_tasks: [],
     kind: "umbrella"
   });
 
@@ -1455,6 +1491,8 @@ function buildPromotionProposal(record) {
       title,
       slugBase: title,
       dependencies: uniqStrings(record.meta.related_todos),
+      child_tasks: [],
+      related_tasks: [],
       kind: "child"
     });
   }
@@ -1560,17 +1598,20 @@ function cmdPromote(opts) {
       slug: todoSlug,
       note_id: record.meta.note_id,
       dependencies: p.dependencies,
+      child_tasks: p.child_tasks ?? [],
+      related_tasks: p.related_tasks ?? [],
       risk_level: riskFromConfidence(record.meta.confidence),
       effort: record.meta.effort_hint,
       complexity: complexity === "complex" ? "complex" : "simple",
       title: itemTitle,
+      task_type: p.kind === "umbrella" ? "umbrella" : "leaf",
       problem: context,
       findings: insight,
       proposed,
       recommended_action:
-        complexity === "complex" && p.kind === "umbrella"
-          ? "Coordinate child TODOs, verify integration, and close umbrella last."
-          : "Execute implementation end-to-end and close with automated commit."
+      complexity === "complex" && p.kind === "umbrella"
+        ? "Start with todo:brief and todo:prepare, then execute child tasks only by explicit request."
+        : "Execute implementation end-to-end and close with automated commit."
     });
     const filePath = path.resolve(TODOS_DIR, `${issueId}-pending-${priority}-${todoSlug}.md`);
     fs.writeFileSync(filePath, content, "utf8");
