@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "umbrella"
-status: "pending"
+status: "ready"
 priority: "p2"
 issue_id: "098"
 title: "0.5.x postship release cleanup"
@@ -21,6 +21,7 @@ commit_confirmed: false
 commit_message: null
 closed_at: null
 ---
+
 
 # 0.5.x postship release cleanup
 
@@ -142,3 +143,23 @@ Use this umbrella as the orchestration entry point for postship cleanup. Start i
 ## Notes
 
 This umbrella must remain pending until postship work is explicitly opened.
+
+### 2026-03-06 - Umbrella prepared via todo:prepare
+
+**By:** Codex
+
+**Status Transition:**
+- from: pending
+- to: ready
+
+**Actions:**
+- Reviewed hard dependencies before opening the umbrella.
+- Confirmed child execution order: 105, 106, 107.
+- Considered related context: 093:context, 095:precedent.
+- Activated eligible child tasks: 105, 106, 107.
+- Left blocked child tasks pending: none.
+
+**Evidence:**
+- Hard dependencies complete: 096
+- Activated: 105, 106, 107
+- Blocked: none

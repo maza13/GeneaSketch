@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "ready"
 priority: "p2"
 issue_id: "106"
 title: "postship evidence UX followup"
@@ -21,6 +21,7 @@ commit_confirmed: false
 commit_message: null
 closed_at: null
 ---
+
 
 # Postship evidence UX followup
 
