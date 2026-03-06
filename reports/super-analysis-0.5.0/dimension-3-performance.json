@@ -1,0 +1,129 @@
+{
+  "generatedAt": "2026-03-06T05:57:39.214Z",
+  "scenario": {
+    "seed": "super-analysis-050-dense-tree",
+    "depth": 10,
+    "avgChildren": 2,
+    "endogamyFactor": 0.15,
+    "persons": 2765,
+    "families": 1023,
+    "visibleNodes": 24,
+    "visibleEdges": 16
+  },
+  "thresholds": {
+    "projectionP95Ms": 250,
+    "layoutP95Ms": 450,
+    "searchQueryP95Ms": 80
+  },
+  "results": {
+    "projection": {
+      "samplesMs": [
+        10198.806,
+        14137.248,
+        13267.057
+      ],
+      "p50Ms": 13267.057,
+      "p95Ms": 14137.248,
+      "maxMs": 14137.248,
+      "minMs": 10198.806,
+      "meanMs": 12534.37,
+      "runs": [
+        {
+          "label": "cold",
+          "durationMs": 10198.806
+        },
+        {
+          "label": "warm-1",
+          "durationMs": 14137.248
+        },
+        {
+          "label": "warm-2",
+          "durationMs": 13267.057
+        }
+      ]
+    },
+    "ttvProxy": {
+      "samplesMs": [
+        15248.563,
+        14530.523,
+        15003.817
+      ],
+      "p50Ms": 15003.817,
+      "p95Ms": 15248.563,
+      "maxMs": 15248.563,
+      "minMs": 14530.523,
+      "meanMs": 14927.634,
+      "runs": [
+        {
+          "label": "cold",
+          "durationMs": 15248.563
+        },
+        {
+          "label": "warm-1",
+          "durationMs": 14530.523
+        },
+        {
+          "label": "warm-2",
+          "durationMs": 15003.817
+        }
+      ]
+    },
+    "layout": {
+      "samplesMs": [
+        3.922,
+        3.272,
+        1.132
+      ],
+      "p50Ms": 3.272,
+      "p95Ms": 3.922,
+      "maxMs": 3.922,
+      "minMs": 1.132,
+      "meanMs": 2.775,
+      "runs": [
+        {
+          "label": "cold",
+          "durationMs": 3.922
+        },
+        {
+          "label": "warm-1",
+          "durationMs": 3.272
+        },
+        {
+          "label": "warm-2",
+          "durationMs": 1.132
+        }
+      ]
+    },
+    "search": {
+      "samplesMs": [
+        135.75,
+        95.828,
+        51.754
+      ],
+      "p50Ms": 95.828,
+      "p95Ms": 135.75,
+      "maxMs": 135.75,
+      "minMs": 51.754,
+      "meanMs": 94.444,
+      "runs": [
+        {
+          "label": "cold",
+          "durationMs": 135.75
+        },
+        {
+          "label": "warm-1",
+          "durationMs": 95.828
+        },
+        {
+          "label": "warm-2",
+          "durationMs": 51.754
+        }
+      ]
+    }
+  },
+  "classification": "needs-followup",
+  "rationale": [
+    "projection p95 14137.248ms exceeds threshold 250ms",
+    "search p95 135.75ms exceeds threshold 80ms"
+  ]
+}
