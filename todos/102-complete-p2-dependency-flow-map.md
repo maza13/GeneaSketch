@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "102"
 title: "Dependency flow map"
@@ -17,10 +17,11 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "standard"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 102: reclose dependency flow map under protocol v2"
+closed_at: "2026-03-06"
 ---
+
 
 # Dependency flow map
 
@@ -54,10 +55,10 @@ Derive the explicit dependency flow map from the current architecture and docume
 
 ## Acceptance Criteria
 
-- [ ] Main system-to-system flow is documented.
-- [ ] Each edge includes dependency type or role.
-- [ ] Work log updated.
-- [ ] Traceability linked to note N0011.
+- [x] Main system-to-system flow is documented.
+- [x] Each edge includes dependency type or role.
+- [x] Work log updated.
+- [x] Traceability linked to note N0011.
 
 ## Work Log
 
@@ -95,6 +96,45 @@ Derive the explicit dependency flow map from the current architecture and docume
   - `todos/102-ready-p2-dependency-flow-map.md`
   - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
 
+### 2026-03-06 - Dependency flow map reconfirmed under protocol v2
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Revalidated the architecture report section for dependency flow under the reopened protocol.
+- Confirmed that the main runtime flow and edge-role observations are explicitly documented.
+- Preserved the dependency on `101` so this task only closes after the taxonomy baseline is formally clean again.
+
+**Evidence:**
+- Artifacts/paths:
+  - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
+  - `todos/102-ready-p2-dependency-flow-map.md`
+
 ## Notes
 
 This task is reopened strictly and should be re-closed only after `101` is cleanly complete again.
+
+### 2026-03-06 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Revalidated and formally closed the dependency flow map under protocol v2.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/102-complete-p2-dependency-flow-map.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 103 (p2).
+- Recommended start: 103 (p2).
