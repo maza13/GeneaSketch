@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "104"
 title: "Boundary vs coupling classification"
@@ -17,10 +17,11 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "standard"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 104: reclose boundary vs coupling classification under protocol v2"
+closed_at: "2026-03-06"
 ---
+
 
 # Boundary vs coupling classification
 
@@ -52,10 +53,10 @@ Turn the architecture map into a classification that can guide future refactors 
 
 ## Acceptance Criteria
 
-- [ ] Relevant dependencies are classified by architectural quality.
-- [ ] Transitional bridges are distinguished from stable boundaries.
-- [ ] Work log updated.
-- [ ] Traceability linked to note N0011.
+- [x] Relevant dependencies are classified by architectural quality.
+- [x] Transitional bridges are distinguished from stable boundaries.
+- [x] Work log updated.
+- [x] Traceability linked to note N0011.
 
 ## Work Log
 
@@ -93,6 +94,45 @@ Turn the architecture map into a classification that can guide future refactors 
   - `todos/104-ready-p2-boundary-vs-coupling-classification.md`
   - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
 
+### 2026-03-06 - Boundary classification reconfirmed under protocol v2
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Revalidated the architecture report section for boundary versus coupling classification under the reopened protocol.
+- Confirmed the classification table already distinguishes legitimate boundaries, transitional bridges, and technical-debt hotspots.
+- Preserved the explicit follow-up context to `099` so the handoff remains visible after closure.
+
+**Evidence:**
+- Artifacts/paths:
+  - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
+  - `todos/104-ready-p2-boundary-vs-coupling-classification.md`
+
 ## Notes
 
 This task is reopened strictly and should be re-closed only after `101`, `102`, and `103` are cleanly complete again.
+
+### 2026-03-06 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Revalidated and formally closed the boundary-vs-coupling classification under protocol v2.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/104-complete-p2-boundary-vs-coupling-classification.md
+
+**Next Recommendation (generated at closure):**
+- An umbrella now includes this completed task in its child chain: 100 (p2).
+- Recommended next step: brief/prepare umbrella 100.
