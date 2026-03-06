@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "103"
 title: "Format vs engine boundary audit"
@@ -17,10 +17,11 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "standard"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 103: reclose format vs engine boundary audit under protocol v2"
+closed_at: "2026-03-06"
 ---
+
 
 # Format vs engine boundary audit
 
@@ -53,10 +54,10 @@ Document the real format-vs-engine boundary and identify where the current desig
 
 ## Acceptance Criteria
 
-- [ ] Format responsibilities and engine responsibilities are separated explicitly.
-- [ ] Leakage points or mixed responsibilities are identified.
-- [ ] Work log updated.
-- [ ] Traceability linked to note N0011.
+- [x] Format responsibilities and engine responsibilities are separated explicitly.
+- [x] Leakage points or mixed responsibilities are identified.
+- [x] Work log updated.
+- [x] Traceability linked to note N0011.
 
 ## Work Log
 
@@ -94,6 +95,45 @@ Document the real format-vs-engine boundary and identify where the current desig
   - `todos/103-ready-p2-format-vs-engine-boundary-audit.md`
   - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
 
+### 2026-03-06 - Format vs engine boundary reconfirmed under protocol v2
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Revalidated the architecture report section for format vs engine separation under the reopened protocol.
+- Confirmed the report already distinguishes package responsibilities, engine semantics, and specific leakage points.
+- Preserved the task dependency order so this closure remains downstream of the clean taxonomy and dependency-flow closures.
+
+**Evidence:**
+- Artifacts/paths:
+  - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
+  - `todos/103-ready-p2-format-vs-engine-boundary-audit.md`
+
 ## Notes
 
 This task is reopened strictly and should be re-closed only after `101` and `102` are cleanly complete again.
+
+### 2026-03-06 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Revalidated and formally closed the format-vs-engine boundary audit under protocol v2.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/103-complete-p2-format-vs-engine-boundary-audit.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 104 (p2).
+- Recommended start: 104 (p2).
