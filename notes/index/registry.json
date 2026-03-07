@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-07T22:12:16.735Z",
+  "generated_at": "2026-03-07T22:12:20.322Z",
   "total_entries": 16,
   "by_id": {
     "N0001": {
@@ -461,12 +461,12 @@
       "file": "notes/entries/N0014-idea-registrar-como-notaidea-futura-la-necesidad-de-mantener-un-mapa-arquitectonico-vivo-y-acc.md",
       "title": "Mapa arquitectonico vivo por etapas para la separacion guiada",
       "kind": "idea",
-      "phase": "active",
+      "phase": "archived",
       "complexity": "complex",
       "connectivity": "interconnected",
       "horizon": "far",
-      "active_state": "candidate",
-      "archive_reason": null,
+      "active_state": null,
+      "archive_reason": "obsolete",
       "source_type": "auto_inferred",
       "tags": [
         "architecture",
@@ -487,7 +487,7 @@
       "confidence": "high",
       "created_at": "2026-03-07",
       "updated_at": "2026-03-07",
-      "last_reviewed_at": null,
+      "last_reviewed_at": "2026-03-07",
       "review_after": null
     },
     "N0015": {
@@ -601,7 +601,6 @@
       "N0005",
       "N0006",
       "N0010",
-      "N0014",
       "N0015",
       "N0016"
     ],
@@ -611,7 +610,8 @@
       "N0009",
       "N0011",
       "N0012",
-      "N0013"
+      "N0013",
+      "N0014"
     ]
   },
   "by_tag": {
@@ -1010,7 +1010,7 @@
       "relevance_score": 70,
       "confidence": "high",
       "horizon": "far",
-      "last_reviewed_at": null,
+      "last_reviewed_at": "2026-03-07",
       "review_after": null
     },
     "N0015": {

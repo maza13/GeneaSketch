@@ -1,9 +1,9 @@
 ---
 note_id: "N0014"
 kind: "idea"
-phase: "active"
-active_state: "candidate"
-archive_reason: null
+phase: "archived"
+active_state: null
+archive_reason: "obsolete"
 complexity: "complex"
 connectivity: "interconnected"
 horizon: "far"
@@ -21,9 +21,10 @@ priority_hint: "p2"
 effort_hint: "m"
 created_at: "2026-03-07"
 updated_at: "2026-03-07"
-last_reviewed_at: null
+last_reviewed_at: "2026-03-07"
 review_after: null
 ---
+
 
 # Mapa arquitectonico vivo por etapas para la separacion guiada
 
@@ -84,3 +85,8 @@ Eso permitiria:
 - Se agrego el mapa base inicial como referencia historica y de trazabilidad.
 - La nota ahora define tres vistas complementarias: origen, estado actual por fase y objetivo.
 - Se hizo explicito que el plan debe poder comparar avance real contra el punto de partida y contra la arquitectura deseada.
+
+### 2026-03-07 - Entry archived
+
+- Archive reason: obsolete
+- Summary: archived by notes:archive
