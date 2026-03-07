@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "complete"
 priority: "p2"
 issue_id: "112"
 title: "Guided hard-cut secondary plan"
@@ -17,10 +17,12 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 112: produce guided hard-cut secondary plan"
+closed_at: "2026-03-07"
 ---
+
+
 
 # Guided hard-cut secondary plan
 
@@ -89,10 +91,10 @@ Create `reports/architecture-separation-diagnosis/guided-hard-cut-plan.md` as th
 
 ## Acceptance Criteria
 
-- [ ] `guided-hard-cut-plan.md` exists under `reports/architecture-separation-diagnosis/`.
-- [ ] The plan includes phases, gates, dependencies, target systems, frozen systems, and readiness signals.
-- [ ] The output is a secondary plan, not a generic backlog or executable child chain.
-- [ ] Work log updated.
+- [x] `guided-hard-cut-plan.md` exists under `reports/architecture-separation-diagnosis/`.
+- [x] The plan includes phases, gates, dependencies, target systems, frozen systems, and readiness signals.
+- [x] The output is a secondary plan, not a generic backlog or executable child chain.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -114,6 +116,46 @@ Create `reports/architecture-separation-diagnosis/guided-hard-cut-plan.md` as th
   - `todos/111-pending-p2-separation-sequence-options.md`
   - `todos/099-pending-p2-post-baseline-architecture-followup.md`
 
+### 2026-03-07 - Guided hard-cut secondary plan completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Produced the guided hard-cut secondary plan under `reports/architecture-separation-diagnosis/`.
+- Converted the selected sequence from `111` into explicit phases, dependencies, exit gates, freezes, rollback concept, and execution-opening signals.
+- Kept the output strategic and diagnostic rather than turning it into a new TODO chain.
+
+**Evidence:**
+- Artifacts/paths:
+  - `reports/architecture-separation-diagnosis/guided-hard-cut-plan.md`
+  - `reports/architecture-separation-diagnosis/separation-options.md`
+  - `todos/112-ready-p2-guided-hard-cut-secondary-plan.md`
+
 ## Notes
 
 This task is the plan handoff point. It should not generate executable tasks on its own.
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Produced the guided hard-cut secondary plan with explicit phases, gates, freezes, dependencies, and readiness signals for a later execution phase.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/112-complete-p2-guided-hard-cut-secondary-plan.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 113 (p2).
+- Recommended start: 113 (p2).
