@@ -5,7 +5,6 @@ import { useAppStore } from "@/state/store";
 import type { PendingRelationType } from "@/types/domain";
 import type { ColorThemeConfig, NodeInteraction, PersonEditorState } from "@/types/editor";
 import { createGlobalShortcutHandler, type ShortcutActions } from "@/utils/globalShortcuts";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import { useFileLoadRuntime } from "@/hooks/useFileLoadRuntime";
 import { useGskFile } from "@/hooks/useGskFile";
@@ -103,7 +102,7 @@ export function App() {
 
     // -- Actions (Stable Functions) ------------------------------------------
     const actions = useAppStore(useShallow(state => ({
-        loadGraph: state.loadGraph,
+        applyProjectedDocument: state.applyProjectedDocument,
         createNewTreeDoc: state.createNewTreeDoc,
         setSelectedPerson: state.setSelectedPerson,
         updatePersonById: state.updatePersonById,
@@ -150,7 +149,7 @@ export function App() {
     })));
 
     const {
-        loadGraph,
+        applyProjectedDocument,
         createNewTreeDoc,
         setSelectedPerson,
         updatePersonById,
@@ -281,10 +280,7 @@ export function App() {
         undoAiBatch
     } = useAiAssistant({
         document,
-        applyDiagnosticDocument: (doc) => {
-            const gedVersion = doc.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-            loadGraph({ graph: documentToGSchema(doc, gedVersion).graph, source: "merge" });
-        },
+        applyDocumentChange: (doc, source) => applyProjectedDocument(doc, source),
         setStatus
     });
 
@@ -484,7 +480,7 @@ export function App() {
                     : scenario === "pedigree_collapse"
                         ? generator.generatePedigreeCollapse()
                         : generator.generateEndogamy(12, 5);
-        loadGraph({ graph: documentToGSchema(nextDoc, "7.0.x").graph, source: "mock" });
+        applyProjectedDocument(nextDoc, "mock");
         setStatus(`Árbol de prueba generado (${scenario})`);
     }
 
@@ -753,7 +749,7 @@ export function App() {
                 />
             </PanelErrorBoundary>
 
-            {showDiagnostics ? <DiagnosticPanel document={document} parseErrors={parseErrors} parseWarnings={parseWarnings} onApplyDocument={(doc) => { const gedVersion = doc.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1"; loadGraph({ graph: documentToGSchema(doc, gedVersion).graph, source: "merge" }); }} onClose={() => setShowDiagnostics(false)} onSelectPerson={(personId) => { setSelectedPerson(personId); setShowDiagnostics(false); }} onSelectFamily={(familyId) => { const family = document?.families[familyId]; const candidate = family?.husbandId || family?.wifeId || family?.childrenIds[0]; if (candidate) setSelectedPerson(candidate); setShowDiagnostics(false); }} /> : null}
+            {showDiagnostics ? <DiagnosticPanel document={document} parseErrors={parseErrors} parseWarnings={parseWarnings} onApplyDocument={(doc) => applyProjectedDocument(doc, "merge")} onClose={() => setShowDiagnostics(false)} onSelectPerson={(personId) => { setSelectedPerson(personId); setShowDiagnostics(false); }} onSelectFamily={(familyId) => { const family = document?.families[familyId]; const candidate = family?.husbandId || family?.wifeId || family?.childrenIds[0]; if (candidate) setSelectedPerson(candidate); setShowDiagnostics(false); }} /> : null}
             {showPersonStatsPersonId && document ? <PersonStatsPanel document={document} personId={showPersonStatsPersonId} onClose={() => setShowPersonStatsPersonId(null)} /> : null}
             {showGlobalStatsPanel && document ? <GlobalStatsPanel document={document} visiblePersonIds={visiblePersonIds} onClose={() => setShowGlobalStatsPanel(false)} /> : null}
 

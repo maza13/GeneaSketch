@@ -12,7 +12,7 @@ import type {
     VisualConfig
 } from "@/types/domain";
 import type { GSchemaGraph } from "@/core/gschema";
-import type { GraphPayload, ReadModelMode, RecentPayloadV2 } from "@/core/read-model/types";
+import type { GraphDocument, GraphPayload, GraphSource, ReadModelMode, RecentPayloadV2 } from "@/core/read-model/types";
 
 export type RightStackState = {
     detailsMode: "expanded" | "compact";
@@ -36,6 +36,7 @@ export interface DocSlice {
 
     // Core state loader
     loadGraph: (payload: GraphPayload) => void;
+    applyProjectedDocument: (document: GraphDocument, source: GraphSource) => void;
     createNewTreeDoc: () => void;
 
     // Mutations

@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
-import type { GraphDocument } from "@/core/read-model/types";
+import type { GraphDocument, GraphSource } from "@/core/read-model/types";
 import type { AiInputContext } from "@/types/ai";
 
 export type AiAssistantParams = {
     document: GraphDocument | null;
-    applyDiagnosticDocument: (doc: GraphDocument) => void;
+    applyDocumentChange: (doc: GraphDocument, source: GraphSource) => void;
     setStatus: (msg: string) => void;
 };
 
@@ -28,16 +28,16 @@ export function useAiAssistant(p: AiAssistantParams) {
 
     const applyAiBatch = useCallback((nextDoc: GraphDocument, summary: string) => {
         if (p.document) setAiUndoSnapshot(structuredClone(p.document));
-        p.applyDiagnosticDocument(nextDoc);
+        p.applyDocumentChange(nextDoc, "ai");
         p.setStatus(summary);
-    }, [p.document, p.applyDiagnosticDocument, p.setStatus]);
+    }, [p.document, p.applyDocumentChange, p.setStatus]);
 
     const undoAiBatch = useCallback(() => {
         if (!aiUndoSnapshot) return;
-        p.applyDiagnosticDocument(aiUndoSnapshot);
+        p.applyDocumentChange(aiUndoSnapshot, "ai");
         setAiUndoSnapshot(null);
         p.setStatus("Lote IA revertido.");
-    }, [aiUndoSnapshot, p.applyDiagnosticDocument, p.setStatus]);
+    }, [aiUndoSnapshot, p.applyDocumentChange, p.setStatus]);
 
     return {
         showAiAssistantModal,

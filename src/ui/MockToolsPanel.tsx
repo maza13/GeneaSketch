@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/state/store';
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
 
 import { MockTreeGenerator, GeneratorConfig } from '@/core/testing/mockGenerator';
 
 export const MockToolsPanel: React.FC = () => {
-    const loadGraph = useAppStore(state => state.loadGraph);
+    const applyProjectedDocument = useAppStore(state => state.applyProjectedDocument);
 
 
     const [config, setConfig] = useState<GeneratorConfig>({
@@ -18,7 +17,7 @@ export const MockToolsPanel: React.FC = () => {
     const handleGenerate = () => {
         const generator = new MockTreeGenerator();
         const doc = generator.generate(config);
-        loadGraph({ graph: documentToGSchema(doc, "7.0.x").graph, source: "mock" });
+        applyProjectedDocument(doc, "mock");
     };
 
     return (

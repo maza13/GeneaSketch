@@ -40,7 +40,7 @@ export type GraphTimelineInput = {
   families: GraphFamily[];
 };
 
-export type GraphSource = "ged" | "gsk" | "session" | "merge" | "mock";
+export type GraphSource = "ai" | "ged" | "gsk" | "session" | "merge" | "mock";
 
 export type GraphPayload = {
   graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null;

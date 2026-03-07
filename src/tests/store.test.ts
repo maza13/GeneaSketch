@@ -205,6 +205,18 @@ beforeEach(() => {
 });
 
 describe("store explicit id actions", () => {
+  it("applyProjectedDocument loads a whole projected document through the narrower store surface", () => {
+    const doc = buildDocWithTwoPersons();
+
+    useAppStore.getState().applyProjectedDocument(doc, "ai");
+
+    const state = useAppStore.getState();
+    const projected = state.gschemaGraph ? projectGraphDocument(state.gschemaGraph) : null;
+    expect(projected?.persons["@I1@"]?.name).toBe("Root");
+    expect(projected?.persons["@I2@"]?.name).toBe("Anchor");
+    expect(state.selectedPersonId).toBe("@I1@");
+  });
+
   it("updatePersonById updates the target person even when not selected", () => {
     const doc = buildDocWithTwoPersons();
     loadDoc(doc);

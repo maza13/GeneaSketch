@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
 import type { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { GraphDocument, GraphSource, ReadModelMode } from "@/core/read-model/types";
@@ -60,6 +59,7 @@ export function resolveProfileHydration(
 
 export function useFileLoadRuntime(clearMergeFocus: () => void): FileLoadRuntime {
   const loadGraph = useAppStore((state) => state.loadGraph);
+  const applyProjectedDocument = useAppStore((state) => state.applyProjectedDocument);
   const clearMergeDraft = useAppStore((state) => state.clearMergeDraft);
 
   const applyLoadedPayload = useCallback(
@@ -88,13 +88,11 @@ export function useFileLoadRuntime(clearMergeFocus: () => void): FileLoadRuntime
 
   const applyMergedDocument = useCallback(
     (nextDoc: GraphDocument) => {
-      const gedVersion = nextDoc.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-      const nextGraph = documentToGSchema(nextDoc, gedVersion).graph;
-      loadGraph({ graph: nextGraph, source: "merge" });
+      applyProjectedDocument(nextDoc, "merge");
       clearMergeDraft();
       clearMergeFocus();
     },
-    [clearMergeDraft, clearMergeFocus, loadGraph],
+    [applyProjectedDocument, clearMergeDraft, clearMergeFocus],
   );
 
   return useMemo(

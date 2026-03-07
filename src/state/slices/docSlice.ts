@@ -17,11 +17,15 @@ export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, ge
     expandedGraph: { nodes: [], edges: [] },
 
     loadGraph: (payload) => set((state) => buildLoadedGraphState(state, payload.graph)),
+    applyProjectedDocument: (document, source) => {
+        const gedVersion = document.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
+        const graph = documentToGSchema(document, gedVersion).graph;
+        get().loadGraph({ graph, source });
+    },
 
     createNewTreeDoc: () => {
         const newDoc = GeneaEngine.createNewTree();
-        const graph = documentToGSchema(newDoc, "7.0.x").graph;
-        get().loadGraph({ graph, source: "mock" });
+        get().applyProjectedDocument(newDoc, "mock");
     },
 
     updatePersonById: (personId, patch) => set((state) => runGraphMutation(state, (graph) => {
