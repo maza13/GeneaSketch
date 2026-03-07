@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "umbrella"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "099"
 title: "Architecture separation diagnosis and guided hard-cut planning"
@@ -17,10 +17,11 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 099: complete architecture separation diagnosis umbrella"
+closed_at: "2026-03-07"
 ---
+
 
 
 
@@ -135,11 +136,11 @@ Open a second-layer architecture diagnosis under this umbrella. The child chain 
 
 ## Acceptance Criteria
 
-- [ ] `099` is converted into a v2 architecture umbrella with child tasks `108` through `113`.
-- [ ] The chain explicitly treats `100` as baseline and does not reopen the baseline taxonomy work.
-- [ ] The required outputs include master map, coupling audit, hotspot classification, diagnosis, and guided hard-cut secondary plan.
-- [ ] The final packet is defined to live under `reports/architecture-separation-diagnosis/`.
-- [ ] Work log updated.
+- [x] `099` is converted into a v2 architecture umbrella with child tasks `108` through `113`.
+- [x] The chain explicitly treats `100` as baseline and does not reopen the baseline taxonomy work.
+- [x] The required outputs include master map, coupling audit, hotspot classification, diagnosis, and guided hard-cut secondary plan.
+- [x] The final packet is defined to live under `reports/architecture-separation-diagnosis/`.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -309,3 +310,53 @@ This umbrella is diagnostic by design. It must not be used to start runtime refa
 - Hard dependencies complete: 100
 - Activated: 113
 - Blocked: none
+
+### 2026-03-07 - Diagnosis chain completed and umbrella ready to close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Verified child tasks `108` through `113` completed in dependency order.
+- Confirmed the final packet exists under `reports/architecture-separation-diagnosis/`.
+- Confirmed the chain closed with a final readiness verdict, machine-readable findings, and a guided hard-cut secondary plan.
+
+**Evidence:**
+- Artifacts/paths:
+  - `todos/108-complete-p2-master-system-map.md`
+  - `todos/109-complete-p2-runtime-boundary-and-coupling-audit.md`
+  - `todos/110-complete-p2-hotspot-risk-classification.md`
+  - `todos/111-complete-p2-separation-sequence-options.md`
+  - `todos/112-complete-p2-guided-hard-cut-secondary-plan.md`
+  - `todos/113-complete-p2-final-diagnosis-packet.md`
+  - `reports/architecture-separation-diagnosis/master-system-map.md`
+  - `reports/architecture-separation-diagnosis/boundary-audit.md`
+  - `reports/architecture-separation-diagnosis/hotspots.json`
+  - `reports/architecture-separation-diagnosis/separation-options.md`
+  - `reports/architecture-separation-diagnosis/guided-hard-cut-plan.md`
+  - `reports/architecture-separation-diagnosis/executive-summary.md`
+  - `reports/architecture-separation-diagnosis/findings.json`
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Verified the full architecture diagnosis chain, confirmed all required artifacts and final verdicts exist, and closed the umbrella as the evidence-of-record for future separation work.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/099-complete-p2-post-baseline-architecture-followup.md
+
+**Next Recommendation (generated at closure):**
+- No direct dependent task found.
+- Recommended next unblocked task: 018 (p2).
