@@ -65,5 +65,6 @@ The following changed in `Phase 4`:
 
 - `App.tsx` is now closer to a composition root after moving shell interaction state, modal routing, node interaction handlers, and keyboard shortcuts into dedicated shell hooks
 - residual shell debt still exists, but it is now centered on render composition density rather than inline orchestration logic
-- `viewSlice.ts` still recomputes expanded graph on many view changes and remains a likely next refinement area
+- `viewSlice.ts` now routes the main expanded-graph refresh path through `viewStateTransitions.ts`, reducing repeated reprojection boilerplate across view mutations
+- residual view debt still exists, but it is now concentrated in policy decisions about when view changes should refresh, not in duplicated recomputation code
 - compatibility projection still exists for audit/tooling purposes, but no longer distorts the mainline read boundary

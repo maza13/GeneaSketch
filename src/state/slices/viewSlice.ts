@@ -3,6 +3,7 @@ import { AppState, ViewSlice } from "../types";
 import { ensureExpanded } from "../helpers/graphHelpers";
 import { withFocusHistory } from "../helpers/sessionHelpers";
 import { projectGraphDocument } from "@/core/read-model/selectors";
+import { withExpandedGraphForView } from "../helpers/viewStateTransitions";
 import { UiEngine } from "@/core/engine/UiEngine";
 import { createDefaultDtreeConfig } from "@/core/dtree/dtreeConfig";
 import type { ActiveOverlay } from "@/types/domain";
@@ -38,28 +39,19 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
     setFocusFamilyId: (familyId) => set((state) => {
         if (!state.viewConfig) return {};
         const viewConfig = { ...state.viewConfig, focusFamilyId: familyId };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     setMode: (mode) => set((state) => {
         if (!state.viewConfig) return {};
         const viewConfig = { ...state.viewConfig, mode };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     setPreset: (preset) => set((state) => {
         if (!state.viewConfig) return {};
         const viewConfig = { ...state.viewConfig, preset };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     setDepth: (kind, depth) => set((state) => {
@@ -75,10 +67,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
             ...state.viewConfig,
             depth: nextDepth
         };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     setInclude: (key, value) => set((state) => {
@@ -87,10 +76,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
             ...state.viewConfig,
             showSpouses: value
         };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     setRightPanelView: (view) => set((state) => {
@@ -283,10 +269,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
             ...state.viewConfig,
             dtree: { ...(state.viewConfig.dtree || defaultDtree()), isVertical }
         };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     setDTreeLayoutEngine: (engine) => set((state) => {
@@ -295,10 +278,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
             ...state.viewConfig,
             dtree: { ...(state.viewConfig.dtree || defaultDtree()), layoutEngine: engine }
         };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     toggleDTreeNodeCollapse: (nodeId) => set((state) => {
@@ -310,10 +290,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
             ...state.viewConfig,
             dtree: { ...(state.viewConfig.dtree || defaultDtree()), collapsedNodeIds: Array.from(collapsed) }
         };
-        return {
-            viewConfig,
-            expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig)
-        } as Partial<AppState>;
+        return withExpandedGraphForView(state, viewConfig);
     }),
 
     setOverlay: (overlay) => set((state) => {
