@@ -1,0 +1,62 @@
+[
+  {
+    "id": "hotspot-001",
+    "title": "App root orchestration overload",
+    "systems": ["App Shell", "State Manager", "Visual Engine", "AI Assistant", "GSK Package IO", "Workspace Profile"],
+    "anchors": ["src/App.tsx"],
+    "classification": "technical_debt",
+    "severity": "high",
+    "risk": "high",
+    "refactor_cost": "high",
+    "why_it_matters": "The root app coordinates shell composition, store actions, projection use, file workflows, AI application, profile persistence, and canvas interactions in one place. That concentration makes future separation brittle and raises regression risk whenever one runtime concern changes.",
+    "recommended_direction": "Extract orchestration seams around file flows, AI application, shell wiring, and profile persistence so App.tsx stops acting as the central integration knot."
+  },
+  {
+    "id": "hotspot-002",
+    "title": "State manager, engine, and projection knot",
+    "systems": ["State Manager", "GSchema Engine", "Read Model"],
+    "anchors": ["src/state/slices/docSlice.ts", "src/state/store.ts", "src/core/read-model/selectors.ts"],
+    "classification": "technical_debt",
+    "severity": "high",
+    "risk": "high",
+    "refactor_cost": "high",
+    "why_it_matters": "The store does not just coordinate state; it also routes graph mutations, triggers reprojection, and refreshes expanded graph state. This creates a three-way dependency knot that will resist separation unless mutation and read-side refresh responsibilities are narrowed.",
+    "recommended_direction": "Move toward a thinner state coordination layer with clearer mutation and projection boundaries, reducing graph writes and projection refresh logic inside the slices."
+  },
+  {
+    "id": "hotspot-003",
+    "title": "File loading, hydration, and profile application mixed in one hook",
+    "systems": ["GSK Package IO", "Workspace Profile", "State Manager", "Read Model", "App Shell"],
+    "anchors": ["src/hooks/useGskFile.ts", "src/io/fileIOService.ts", "src/io/workspaceProfileService.ts"],
+    "classification": "technical_debt",
+    "severity": "high",
+    "risk": "high",
+    "refactor_cost": "medium",
+    "why_it_matters": "useGskFile mixes import/export, graph load, read-model projection refresh, local profile hydration, merge preparation, recent files, and status management. That makes the persistence boundary bleed into runtime orchestration.",
+    "recommended_direction": "Split pure IO/package handling from post-load runtime hydration and shell-facing orchestration so package boundaries remain persistence-focused."
+  },
+  {
+    "id": "hotspot-004",
+    "title": "AI document reapplication bridge is heavier than the desired future mutation surface",
+    "systems": ["AI Assistant", "Read Model", "GSchema Engine", "State Manager"],
+    "anchors": ["src/hooks/useAiAssistant.ts", "src/App.tsx", "src/core/gschema/GedcomBridge.ts", "src/state/slices/docSlice.ts"],
+    "classification": "transitional_bridge",
+    "severity": "medium",
+    "risk": "high",
+    "refactor_cost": "medium",
+    "why_it_matters": "AI flows currently reason over projected documents and re-enter the runtime through document conversion and graph reload patterns. That is valid for now, but it will become an expensive bridge if AI becomes a frequent write path.",
+    "recommended_direction": "Preserve the read-model contract for AI reasoning while moving the write path toward a narrower, auditable application surface closer to the engine."
+  },
+  {
+    "id": "hotspot-005",
+    "title": "Legacy projection fallback remains inside the central read-model boundary",
+    "systems": ["Read Model", "GSchema Engine", "GEDCOM IO"],
+    "anchors": ["src/core/read-model/selectors.ts", "src/core/read-model/directProjection.ts", "src/core/gschema/GedcomBridge.ts"],
+    "classification": "technical_debt",
+    "severity": "medium",
+    "risk": "medium",
+    "refactor_cost": "medium",
+    "why_it_matters": "The read-model boundary is real, but selectors still route through a direct-versus-legacy switch. As long as that fallback remains in the central projection entrypoint, architecture cleanup will keep inheriting compatibility ambiguity.",
+    "recommended_direction": "Retire or isolate legacy fallback behavior behind a narrower compatibility boundary so the main read-model entrypoint becomes singular and explicit."
+  }
+]

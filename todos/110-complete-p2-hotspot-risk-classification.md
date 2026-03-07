@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "complete"
 priority: "p2"
 issue_id: "110"
 title: "Hotspot risk classification"
@@ -17,10 +17,12 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 110: produce architecture hotspot risk classification"
+closed_at: "2026-03-07"
 ---
+
+
 
 # Hotspot risk classification
 
@@ -90,10 +92,10 @@ Create `reports/architecture-separation-diagnosis/hotspots.json` and use it to i
 
 ## Acceptance Criteria
 
-- [ ] `hotspots.json` exists under `reports/architecture-separation-diagnosis/`.
-- [ ] Each hotspot includes anchors, systems, severity, risk, refactor cost, and recommended direction.
-- [ ] The top structural hotspots are clearly identifiable from the output.
-- [ ] Work log updated.
+- [x] `hotspots.json` exists under `reports/architecture-separation-diagnosis/`.
+- [x] Each hotspot includes anchors, systems, severity, risk, refactor cost, and recommended direction.
+- [x] The top structural hotspots are clearly identifiable from the output.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -115,6 +117,46 @@ Create `reports/architecture-separation-diagnosis/hotspots.json` and use it to i
   - `todos/109-pending-p2-runtime-boundary-and-coupling-audit.md`
   - `todos/099-pending-p2-post-baseline-architecture-followup.md`
 
+### 2026-03-07 - Hotspot classification completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Produced `hotspots.json` as the machine-readable hotspot inventory for the architecture diagnosis chain.
+- Ranked the main structural hotspots by severity, risk, and refactor cost.
+- Prepared the handoff from hotspot inventory to separation-sequence design in `111`.
+
+**Evidence:**
+- Artifacts/paths:
+  - `reports/architecture-separation-diagnosis/hotspots.json`
+  - `reports/architecture-separation-diagnosis/boundary-audit.md`
+  - `todos/110-ready-p2-hotspot-risk-classification.md`
+
 ## Notes
 
 This task should classify and rank hotspots, not select the final separation sequence. That choice belongs in `111`.
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Produced the machine-readable hotspot inventory, ranked the main structural hotspots, and prepared the sequence-design handoff for task 111.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/110-complete-p2-hotspot-risk-classification.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 111 (p2).
+- Recommended start: 111 (p2).
