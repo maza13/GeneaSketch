@@ -2,6 +2,27 @@
 
 Todos los cambios notables de GeneaSketch se documentan aqui.
 
+## 6 de marzo de 2026 - 0.4.5 (Beta GSchema, Foundation Close, Desktop)
+
+### Para usuarios (resumen rapido)
+- Mayor estabilidad y consistencia del motor genealogico bajo el modelo directo.
+- Mejor respuesta del arbol y del buscador en escenarios densos.
+- Base arquitectonica y nomenclatura mas claras para separar motor, visualizacion y shell.
+
+### Detalle tecnico
+- Cierre del Super Analisis 0.5.0 con fixes de paridad `direct` vs `legacy`, normalizacion de `fastTrack` y optimizacion de performance densa.
+- Cierre del cleanup postship inmediato: integridad de texto runtime, decision explicita sobre UX de evidencia y retiro del riesgo de flicker no reproducido.
+- Consolidacion de taxonomia e interconexiones del proyecto (`097`, `100`-`104`) y endurecimiento del protocolo V2 de TODOs y de la promocion de notas a tareas.
+
+### Known Issues
+- La superficie first-class para claims/citations/evidence sigue diferida y documentada como deuda posterior.
+- El follow-up arquitectonico posterior (`099`) permanece intencionalmente fuera de este checkpoint.
+
+### Compatibilidad
+- Desktop (Tauri) Windows.
+- Canal visible: beta.
+- Codename: gschema.
+
 ## 4 de marzo de 2026 - Nota de arquitectura (Cierre DTree V3 065-072)
 
 ### Para usuarios (resumen rapido)

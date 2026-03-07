@@ -613,7 +613,7 @@ export function App() {
                         sourceCount={document ? Object.keys(document.sources ?? {}).length : null}
                         engineMode={viewConfig ? "DTree V3" : null}
                         isSaved={false}
-                        appVersion="0.4.4"
+                        appVersion="0.4.5"
                     />
                 }
                 leftPanel={

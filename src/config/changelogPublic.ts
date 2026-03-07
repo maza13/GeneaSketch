@@ -6,6 +6,24 @@ export type PublicChangelogEntry = {
 
 export const PUBLIC_CHANGELOG: PublicChangelogEntry[] = [
   {
+    "heading": "6 de marzo de 2026 - 0.4.5 (Beta GSchema, Foundation Close, Desktop)",
+    "technicalVersion": "0.4.5",
+    "userChanges": [
+      "Mayor estabilidad y consistencia del motor genealogico bajo el modelo directo.",
+      "Mejor respuesta del arbol y del buscador en escenarios densos.",
+      "Base arquitectonica y nomenclatura mas claras para separar motor, visualizacion y shell."
+    ]
+  },
+  {
+    "heading": "4 de marzo de 2026 - Nota de arquitectura (Cierre DTree V3 065-072)",
+    "technicalVersion": null,
+    "userChanges": [
+      "El render genealogico queda consolidado en la ruta V3.",
+      "Se elimina la ruta de contingencia V2 para reducir complejidad operativa.",
+      "La app mantiene apertura de datos legacy con migracion tolerante en segundo plano."
+    ]
+  },
+  {
     "heading": "3 de marzo de 2026 - 0.4.4 (Beta GSchema, Desktop)",
     "technicalVersion": "0.4.4",
     "userChanges": [
