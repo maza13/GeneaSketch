@@ -10,6 +10,7 @@ export function buildPersonWorkspaceViewModel(
   if (!document || !personId) return null;
   const person = document.persons[personId];
   if (!person) return null;
+  const documentView = document;
 
   return {
     personId,
