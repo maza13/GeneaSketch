@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "complete"
 priority: "p2"
 issue_id: "109"
 title: "Runtime boundary and coupling audit"
@@ -17,10 +17,12 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 109: produce runtime boundary and coupling audit"
+closed_at: "2026-03-07"
 ---
+
+
 
 # Runtime boundary and coupling audit
 
@@ -92,10 +94,10 @@ Create `reports/architecture-separation-diagnosis/boundary-audit.md` as the auth
 
 ## Acceptance Criteria
 
-- [ ] `boundary-audit.md` exists under `reports/architecture-separation-diagnosis/`.
-- [ ] The audit uses explicit source/target systems and concrete file anchors.
-- [ ] Each relationship includes dependency type, legitimacy, and removal difficulty.
-- [ ] Work log updated.
+- [x] `boundary-audit.md` exists under `reports/architecture-separation-diagnosis/`.
+- [x] The audit uses explicit source/target systems and concrete file anchors.
+- [x] Each relationship includes dependency type, legitimacy, and removal difficulty.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -117,6 +119,46 @@ Create `reports/architecture-separation-diagnosis/boundary-audit.md` as the auth
   - `todos/108-pending-p2-master-system-map.md`
   - `todos/099-pending-p2-post-baseline-architecture-followup.md`
 
+### 2026-03-07 - Runtime boundary audit completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Produced the runtime boundary and coupling audit under `reports/architecture-separation-diagnosis/`.
+- Classified the current system-to-system edges as legitimate boundaries, transitional bridges, or technical debt/coupling.
+- Added an explicit escalation list for the downstream hotspot classification task `110`.
+
+**Evidence:**
+- Artifacts/paths:
+  - `reports/architecture-separation-diagnosis/boundary-audit.md`
+  - `reports/architecture-separation-diagnosis/master-system-map.md`
+  - `todos/109-ready-p2-runtime-boundary-and-coupling-audit.md`
+
 ## Notes
 
 This task should not yet prioritize remediation. Prioritization belongs in `110`.
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Produced the runtime boundary and coupling audit, classified the current system edges, and prepared the hotspot handoff for task 110.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/109-complete-p2-runtime-boundary-and-coupling-audit.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 110 (p2).
+- Recommended start: 110 (p2).
