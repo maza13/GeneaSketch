@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-07T02:42:07.699Z",
-  "total_entries": 14,
+  "generated_at": "2026-03-07T02:54:21.019Z",
+  "total_entries": 15,
   "by_id": {
     "N0001": {
       "file": "notes/entries/N0001-idea-integracion-con-apis-genealogicas-familysearchwikitree.md",
@@ -478,6 +478,31 @@
       "updated_at": "2026-03-07",
       "last_reviewed_at": null,
       "review_after": null
+    },
+    "N0015": {
+      "file": "notes/entries/N0015-note-registrar-una-nota-de-seguimiento-para-retomar-mas-adelante-el-plan-derivado-del-diagnosti.md",
+      "title": "Registrar una nota de seguimiento para retomar mas adelante el plan derivado del diagnosti",
+      "kind": "note",
+      "phase": "active",
+      "complexity": "complex",
+      "connectivity": "isolated",
+      "horizon": "mid",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "auto_inferred",
+      "tags": [
+        "ai",
+        "ux"
+      ],
+      "related_notes": [],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 70,
+      "confidence": "high",
+      "created_at": "2026-03-07",
+      "updated_at": "2026-03-07",
+      "last_reviewed_at": null,
+      "review_after": null
     }
   },
   "by_kind": {
@@ -497,7 +522,8 @@
       "N0008",
       "N0009",
       "N0012",
-      "N0013"
+      "N0013",
+      "N0015"
     ]
   },
   "by_phase": {
@@ -511,7 +537,8 @@
       "N0010",
       "N0012",
       "N0013",
-      "N0014"
+      "N0014",
+      "N0015"
     ],
     "archived": [
       "N0007",
@@ -555,7 +582,8 @@
       "N0010",
       "N0012",
       "N0013",
-      "N0014"
+      "N0014",
+      "N0015"
     ],
     "automation": [
       "N0004"
@@ -637,14 +665,16 @@
       "N0011"
     ],
     "ux": [
-      "N0014"
+      "N0014",
+      "N0015"
     ]
   },
   "by_connectivity": {
     "isolated": [
       "N0012",
       "N0013",
-      "N0014"
+      "N0014",
+      "N0015"
     ],
     "interconnected": [
       "N0001",
@@ -677,7 +707,8 @@
       "N0009",
       "N0010",
       "N0011",
-      "N0014"
+      "N0014",
+      "N0015"
     ]
   },
   "graph": {
@@ -753,7 +784,8 @@
       ],
       "N0012": [],
       "N0013": [],
-      "N0014": []
+      "N0014": [],
+      "N0015": []
     }
   },
   "signals": {
@@ -854,6 +886,13 @@
       "horizon": "far",
       "last_reviewed_at": null,
       "review_after": null
+    },
+    "N0015": {
+      "relevance_score": 70,
+      "confidence": "high",
+      "horizon": "mid",
+      "last_reviewed_at": null,
+      "review_after": null
     }
   },
   "promotion_state": {
@@ -933,6 +972,10 @@
       "promoted_todos": []
     },
     "N0014": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0015": {
       "is_promoted": false,
       "promoted_todos": []
     }
