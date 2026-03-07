@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-07T06:34:18.897Z",
+  "generated_at": "2026-03-07T22:11:50.204Z",
   "total_entries": 16,
   "by_id": {
     "N0001": {
@@ -409,12 +409,12 @@
       "file": "notes/entries/N0012-note-bug-del-sistema-todo-todoclose-no-siempre-commitea-todos-los-archivos-creados-o-modifica.md",
       "title": "Bug del sistema TODO: todo:close no siempre commitea todos los archivos creados o modifica",
       "kind": "note",
-      "phase": "active",
+      "phase": "archived",
       "complexity": "simple",
       "connectivity": "isolated",
       "horizon": "mid",
-      "active_state": "candidate",
-      "archive_reason": null,
+      "active_state": null,
+      "archive_reason": "obsolete",
       "source_type": "auto_inferred",
       "tags": [
         "ai"
@@ -426,7 +426,7 @@
       "confidence": "high",
       "created_at": "2026-03-07",
       "updated_at": "2026-03-07",
-      "last_reviewed_at": null,
+      "last_reviewed_at": "2026-03-07",
       "review_after": null
     },
     "N0013": {
@@ -494,12 +494,12 @@
       "file": "notes/entries/N0015-note-registrar-una-nota-de-seguimiento-para-retomar-mas-adelante-el-plan-derivado-del-diagnosti.md",
       "title": "Retomar el plan de separacion considerando posibles implicaciones futuras",
       "kind": "note",
-      "phase": "active",
+      "phase": "archived",
       "complexity": "complex",
       "connectivity": "interconnected",
       "horizon": "mid",
-      "active_state": "candidate",
-      "archive_reason": null,
+      "active_state": null,
+      "archive_reason": "obsolete",
       "source_type": "auto_inferred",
       "tags": [
         "architecture",
@@ -527,7 +527,7 @@
       "confidence": "high",
       "created_at": "2026-03-07",
       "updated_at": "2026-03-07",
-      "last_reviewed_at": null,
+      "last_reviewed_at": "2026-03-07",
       "review_after": null
     },
     "N0016": {
@@ -601,9 +601,7 @@
       "N0005",
       "N0006",
       "N0010",
-      "N0012",
       "N0014",
-      "N0015",
       "N0016"
     ],
     "archived": [
@@ -611,7 +609,9 @@
       "N0008",
       "N0009",
       "N0011",
-      "N0013"
+      "N0012",
+      "N0013",
+      "N0015"
     ]
   },
   "by_tag": {
@@ -996,7 +996,7 @@
       "relevance_score": 70,
       "confidence": "high",
       "horizon": "mid",
-      "last_reviewed_at": null,
+      "last_reviewed_at": "2026-03-07",
       "review_after": null
     },
     "N0013": {
@@ -1017,7 +1017,7 @@
       "relevance_score": 90,
       "confidence": "high",
       "horizon": "mid",
-      "last_reviewed_at": null,
+      "last_reviewed_at": "2026-03-07",
       "review_after": null
     },
     "N0016": {

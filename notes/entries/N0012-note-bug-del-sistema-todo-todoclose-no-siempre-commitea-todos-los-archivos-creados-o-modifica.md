@@ -1,9 +1,9 @@
 ---
 note_id: "N0012"
 kind: "note"
-phase: "active"
-active_state: "candidate"
-archive_reason: null
+phase: "archived"
+active_state: null
+archive_reason: "obsolete"
 complexity: "simple"
 connectivity: "isolated"
 horizon: "mid"
@@ -21,9 +21,10 @@ priority_hint: "p2"
 effort_hint: "m"
 created_at: "2026-03-07"
 updated_at: "2026-03-07"
-last_reviewed_at: null
+last_reviewed_at: "2026-03-07"
 review_after: null
 ---
+
 
 # Bug del sistema TODO: todo:close no siempre commitea todos los archivos creados o modifica
 
@@ -45,3 +46,8 @@ Capture the key idea/findings.
 
 - Source type: auto_inferred
 - Source context: conversation intent capture
+
+### 2026-03-07 - Entry archived
+
+- Archive reason: obsolete
+- Summary: archived by notes:archive

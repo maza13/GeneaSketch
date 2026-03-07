@@ -1,9 +1,9 @@
 ---
 note_id: "N0015"
 kind: "note"
-phase: "active"
-active_state: "candidate"
-archive_reason: null
+phase: "archived"
+active_state: null
+archive_reason: "obsolete"
 complexity: "complex"
 connectivity: "interconnected"
 horizon: "mid"
@@ -21,9 +21,10 @@ priority_hint: "p2"
 effort_hint: "m"
 created_at: "2026-03-07"
 updated_at: "2026-03-07"
-last_reviewed_at: null
+last_reviewed_at: "2026-03-07"
 review_after: null
 ---
+
 
 # Retomar el plan de separacion considerando posibles implicaciones futuras
 
@@ -71,3 +72,8 @@ La clave es distinguir entre:
 - Se aclaro que la nota existe para retomar despues el plan ya referenciado.
 - Las ideas futuras quedaron redefinidas como consideraciones a evaluar, no como requisitos aprobados del plan.
 - Se hizo explicita la necesidad de decidir despues si cada escenario influye, no influye o debe mantenerse fuera de alcance.
+
+### 2026-03-07 - Entry archived
+
+- Archive reason: obsolete
+- Summary: archived by notes:archive
