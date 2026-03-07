@@ -1,9 +1,11 @@
+import { lazy, Suspense } from "react";
 import type { ShellFeaturesFacade, ShellWorkspaceFacade } from "@/app-shell/facade/types";
-import { ImportReviewPanel } from "@/ui/ImportReviewPanel";
 import { MergeReviewErrorBoundary } from "@/ui/MergeReviewErrorBoundary";
-import { PersonDetailPanel } from "@/ui/PersonDetailPanel";
-import { PersonWorkspacePanel } from "@/ui/PersonWorkspacePanel";
-import { PersonWorkspacePanelV3 } from "@/ui/PersonWorkspacePanelV3";
+
+const ImportReviewPanel = lazy(() => import("@/ui/ImportReviewPanel").then((module) => ({ default: module.ImportReviewPanel })));
+const PersonDetailPanel = lazy(() => import("@/ui/PersonDetailPanel").then((module) => ({ default: module.PersonDetailPanel })));
+const PersonWorkspacePanel = lazy(() => import("@/ui/PersonWorkspacePanel").then((module) => ({ default: module.PersonWorkspacePanel })));
+const PersonWorkspacePanelV3 = lazy(() => import("@/ui/PersonWorkspacePanelV3").then((module) => ({ default: module.PersonWorkspacePanelV3 })));
 
 type Props = {
   workspace: Pick<ShellWorkspaceFacade, "hiddenInputs" | "pdfExport" | "importReview">;
@@ -78,29 +80,33 @@ export function ShellWorkspaceOverlays({
         </div>
       ) : null}
 
-      {workspace.importReview.open
-      && workspace.importReview.viewModel.baseDocument
-      && workspace.importReview.viewModel.incomingDocument ? (
-        <MergeReviewErrorBoundary onClearDraft={workspace.importReview.onClearDraft} onClose={workspace.importReview.onClose}>
-          <ImportReviewPanel
-            viewModel={workspace.importReview.viewModel}
-            onDraftChange={workspace.importReview.onDraftChange}
-            onFocusChange={workspace.importReview.onFocusChange}
-            onApply={workspace.importReview.onApply}
-            onClose={workspace.importReview.onClose}
-          />
-        </MergeReviewErrorBoundary>
-      ) : null}
+      <Suspense fallback={null}>
+        {workspace.importReview.open
+        && workspace.importReview.viewModel.baseDocument
+        && workspace.importReview.viewModel.incomingDocument ? (
+          <MergeReviewErrorBoundary onClearDraft={workspace.importReview.onClearDraft} onClose={workspace.importReview.onClose}>
+            <ImportReviewPanel
+              viewModel={workspace.importReview.viewModel}
+              onDraftChange={workspace.importReview.onDraftChange}
+              onFocusChange={workspace.importReview.onFocusChange}
+              onApply={workspace.importReview.onApply}
+              onClose={workspace.importReview.onClose}
+            />
+          </MergeReviewErrorBoundary>
+        ) : null}
 
-      <PersonDetailPanel viewModel={personEditor.viewModel} commands={personEditor.commands} />
+        {personEditor.viewModel.editorState ? (
+          <PersonDetailPanel viewModel={personEditor.viewModel} commands={personEditor.commands} />
+        ) : null}
 
-      {personWorkspaceV3.open && personWorkspaceV3.viewModel ? (
-        <PersonWorkspacePanelV3 viewModel={personWorkspaceV3.viewModel} commands={personWorkspaceV3.commands} />
-      ) : null}
+        {personWorkspaceV3.open && personWorkspaceV3.viewModel ? (
+          <PersonWorkspacePanelV3 viewModel={personWorkspaceV3.viewModel} commands={personWorkspaceV3.commands} />
+        ) : null}
 
-      {personWorkspace.open && personWorkspace.viewModel ? (
-        <PersonWorkspacePanel viewModel={personWorkspace.viewModel} commands={personWorkspace.commands} />
-      ) : null}
+        {personWorkspace.open && personWorkspace.viewModel ? (
+          <PersonWorkspacePanel viewModel={personWorkspace.viewModel} commands={personWorkspace.commands} />
+        ) : null}
+      </Suspense>
     </>
   );
 }

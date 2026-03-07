@@ -1,6 +1,8 @@
+import { lazy, Suspense } from "react";
 import type { ShellFeaturesFacade, ShellWorkspaceFacade } from "@/app-shell/facade/types";
-import { MockToolsPanel } from "@/ui/MockToolsPanel";
-import { DTreeViewV3 } from "@/views/DTreeViewV3";
+
+const MockToolsPanel = lazy(() => import("@/ui/MockToolsPanel").then((module) => ({ default: module.MockToolsPanel })));
+const DTreeViewV3 = lazy(() => import("@/views/DTreeViewV3").then((module) => ({ default: module.DTreeViewV3 })));
 
 type Props = {
   workspace: Pick<ShellWorkspaceFacade, "restoreBanner" | "exportWarningsBanner" | "banners">;
@@ -69,27 +71,31 @@ export function ShellCanvasStage({ workspace, canvas }: Props) {
 
       {canvas.documentView ? null : <div className="empty-state">Crea un arbol nuevo o abre un archivo .gsk o .ged.</div>}
       {canvas.modeBadge ? <div className="mode-badge">{canvas.modeBadge}</div> : null}
-      {canvas.showMockTools ? (
-        <div style={MOCK_TOOLS_STYLE}>
-          <MockToolsPanel />
-        </div>
-      ) : null}
+      <Suspense fallback={null}>
+        {canvas.showMockTools ? (
+          <div style={MOCK_TOOLS_STYLE}>
+            <MockToolsPanel />
+          </div>
+        ) : null}
+      </Suspense>
 
-      <DTreeViewV3
-        graph={canvas.graph}
-        document={canvas.documentView}
-        fitNonce={canvas.fitNonce}
-        onNodeClick={canvas.commands.onNodeClick}
-        onNodeContextMenu={canvas.commands.onNodeContextMenu}
-        focusPersonId={canvas.focusPersonId}
-        focusFamilyId={canvas.focusFamilyId}
-        selectedPersonId={canvas.selectedPersonId}
-        colorTheme={canvas.colorTheme}
-        dtreeConfig={canvas.dtreeConfig}
-        onBgClick={canvas.commands.onBgClick}
-        onBgDoubleClick={canvas.commands.onBgDoubleClick}
-        onSvgReady={canvas.commands.onSvgReady}
-      />
+      <Suspense fallback={<div className="empty-state">Cargando lienzo...</div>}>
+        <DTreeViewV3
+          graph={canvas.graph}
+          document={canvas.documentView}
+          fitNonce={canvas.fitNonce}
+          onNodeClick={canvas.commands.onNodeClick}
+          onNodeContextMenu={canvas.commands.onNodeContextMenu}
+          focusPersonId={canvas.focusPersonId}
+          focusFamilyId={canvas.focusFamilyId}
+          selectedPersonId={canvas.selectedPersonId}
+          colorTheme={canvas.colorTheme}
+          dtreeConfig={canvas.dtreeConfig}
+          onBgClick={canvas.commands.onBgClick}
+          onBgDoubleClick={canvas.commands.onBgDoubleClick}
+          onSvgReady={canvas.commands.onSvgReady}
+        />
+      </Suspense>
     </>
   );
 }

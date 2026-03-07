@@ -31,6 +31,7 @@ import type { ColorThemeConfig } from "@/types/editor";
 import { canonicalizeJson } from "./canonicalJson";
 import type { GskImportMode } from "./errorCatalog";
 import { ERROR_CATALOG, ERROR_CODES, isGskModeEntry } from "./errorCatalog";
+import { computeSha256FromBytes, computeSha256FromString } from "@/core/crypto/sha256";
 
 export interface GskPackageMeta {
     viewConfig?: ViewConfig;
@@ -1049,18 +1050,3 @@ function guessMimeFromFileName(fileName: string): string {
     return mimes[ext ?? ""] ?? "application/octet-stream";
 }
 
-async function computeSha256FromString(payload: string): Promise<string> {
-    const bytes = new TextEncoder().encode(payload);
-    return computeSha256FromBytes(bytes);
-}
-
-async function computeSha256FromBytes(bytes: Uint8Array): Promise<string> {
-    const webCrypto = (globalThis as { crypto?: { subtle?: SubtleCrypto } }).crypto;
-    if (webCrypto?.subtle) {
-        const digest = await webCrypto.subtle.digest("SHA-256", bytes.buffer as ArrayBuffer);
-        const hex = Array.from(new Uint8Array(digest as ArrayBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
-        return `sha256:${hex}`;
-    }
-    const { createHash } = await import("node:crypto");
-    return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-}

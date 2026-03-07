@@ -1,9 +1,9 @@
 ﻿import { parseGedcomAnyVersion } from "@/core/gedcom/parser";
 import { serializeGedcom } from "@/core/gedcom/serializer";
 import type { GedExportVersion, GedExportWarning, GedParseError, GeneaDocument, ImportWarning, SourceGedVersion } from "@/types/domain";
-import { importGskPackage, exportGskPackage, type GskImportResult, type GskExportOptions } from "@/core/gschema/GskPackage";
+import type { GskImportResult, GskExportOptions } from "@/core/gschema/GskPackage";
 
-export type { GskImportResult };
+export type { GskImportResult } from "@/core/gschema/GskPackage";
 
 export type ImportResult = {
   document: GeneaDocument | null;
@@ -27,6 +27,7 @@ export class FileIOService {
    * Import a .gsk package.
    */
   static async importGsk(file: File | Blob | ArrayBuffer | Uint8Array): Promise<GskImportResult> {
+    const { importGskPackage } = await import("@/core/gschema/GskPackage");
     return importGskPackage(file, { strict: true });
   }
 
@@ -51,6 +52,7 @@ export class FileIOService {
     graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph,
     options?: GskExportOptions
   ): Promise<Blob> {
+    const { exportGskPackage } = await import("@/core/gschema/GskPackage");
     return exportGskPackage(graph, options);
   }
 }

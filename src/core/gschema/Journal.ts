@@ -6,6 +6,7 @@ import type { GSchemaOperation } from "./types";
 import { GSchemaGraph } from "./GSchemaGraph";
 import { isKnownEdgeType } from "./EdgeNormalization";
 import { canonicalizeJson } from "./canonicalJson";
+import { computeSha256FromBytes } from "@/core/crypto/sha256";
 
 /** Serialize a list of operations to JSONL (one JSON object per line). */
 export function serializeJournalToJsonl(ops: readonly GSchemaOperation[]): string {
@@ -52,16 +53,7 @@ export function reindexJournal(ops: GSchemaOperation[]): GSchemaOperation[] {
 export async function computeJournalHash(ops: readonly GSchemaOperation[]): Promise<string> {
     const payload = serializeJournalToJsonl(ops);
     const bytes = new TextEncoder().encode(payload);
-    const webCrypto = (globalThis as { crypto?: { subtle?: SubtleCrypto } }).crypto;
-    if (webCrypto?.subtle) {
-        const digest = await webCrypto.subtle.digest("SHA-256", bytes);
-        const hex = Array.from(new Uint8Array(digest))
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-        return `sha256:${hex}`;
-    }
-    const { createHash } = await import("node:crypto");
-    return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+    return computeSha256FromBytes(bytes);
 }
 
 export interface JournalApplyReport {

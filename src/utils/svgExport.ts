@@ -1,5 +1,3 @@
-import { jsPDF } from "jspdf";
-
 type RasterFormat = "png" | "jpg";
 
 type PdfPaperSize = "LETTER" | "LEGAL" | "TABLOID" | "A0" | "A1" | "A2" | "A3" | "A4" | "A5" | "CUSTOM";
@@ -101,6 +99,7 @@ export async function exportSvgAsRaster(
 export async function exportSvgAsPdf(svg: SVGSVGElement, background: string, options: PdfExportOptions): Promise<Blob> {
   const canvas = await renderSvgToCanvas(svg, background, Math.max(0.25, options.scale));
   const raster = canvas.toDataURL("image/png");
+  const { jsPDF } = await import("jspdf");
 
   const orientation = options.orientation === "LANDSCAPE" ? "l" : "p";
   const format = options.paperSize === "CUSTOM"
@@ -132,4 +131,3 @@ export async function exportSvgAsPdf(svg: SVGSVGElement, background: string, opt
   pdf.addImage(raster, "PNG", x, y, imgWidth, imgHeight, undefined, "FAST");
   return pdf.output("blob");
 }
-
