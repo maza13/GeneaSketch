@@ -7,13 +7,14 @@ import type { ColorThemeConfig, NodeInteraction, PersonEditorState } from "@/typ
 import { createGlobalShortcutHandler, type ShortcutActions } from "@/utils/globalShortcuts";
 import { documentToGSchema } from "@/core/gschema/GedcomBridge";
 import { projectGraphDocument } from "@/core/read-model/selectors";
+import { useFileLoadRuntime } from "@/hooks/useFileLoadRuntime";
 import { useGskFile } from "@/hooks/useGskFile";
-import { WorkspaceProfileService } from "@/io/workspaceProfileService";
 import { useMenuConfig } from "@/hooks/useMenuConfig";
 import { useNodeActions } from "@/hooks/useNodeActions";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
 import { resolveNodeClickRouting } from "@/core/dtree/nodeClickRouting";
 import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
+import { useWorkspacePersistenceEffects } from "@/hooks/useWorkspacePersistenceEffects";
 
 import { DTreeViewV3 } from "@/views/DTreeViewV3";
 import { DiagnosticPanel } from "@/views/DiagnosticPanel";
@@ -42,7 +43,6 @@ import { AiSettingsModal } from "@/ui/ai/AiSettingsModal";
 import { FamilySearchPanel } from "@/ui/external/FamilySearchPanel";
 import { AppShell } from "@/ui/shell/AppShell";
 import { WikiPanel } from "@/ui/WikiPanel";
-import { WORKSPACE_PROFILE_SCHEMA_VERSION } from "@/types/workspaceProfile";
 
 
 const THEME = {
@@ -239,6 +239,7 @@ export function App() {
     const [branchAnchorId, setBranchAnchorId] = useState<string | null>(null);
     const [picker, setPicker] = useState<PickerState | null>(null);
     const [pendingKinshipSourceId, setPendingKinshipSourceId] = useState<string | null>(null);
+    const fileLoadRuntime = useFileLoadRuntime(clearMergeFocusOverlay);
 
     const {
         status,
@@ -258,7 +259,7 @@ export function App() {
         exportPdfNow,
         openRecentItem,
         handleMergeApply
-    } = useGskFile(graphSvgRef, colorTheme, clearMergeFocusOverlay);
+    } = useGskFile(graphSvgRef, colorTheme, fileLoadRuntime);
 
     const [personDetailModal, setPersonDetailModal] = useState<PersonEditorState>(null);
     const [workspacePersonId, setWorkspacePersonId] = useState<string | null>(null);
@@ -311,39 +312,18 @@ export function App() {
     const timelineOpen = viewConfig?.timelinePanelOpen ?? false;
     const { detailsMode, timelineMode } = viewConfig?.rightStack || { detailsMode: "expanded", timelineMode: "compact" };
 
-    useEffect(() => {
-        if (!document) return;
-        const timer = setTimeout(() => {
-            void saveAutosessionNow();
-        }, 1500);
-        return () => clearTimeout(timer);
-    }, [document, viewConfig, visualConfig, aiSettings, saveAutosessionNow, leftCollapsed, rightCollapsed]);
-
-    useEffect(() => {
-        if (!gschemaGraph?.graphId || !viewConfig) return;
-        const timer = setTimeout(() => {
-            const sanitizedViewConfig = viewConfig.dtree
-                ? {
-                    ...viewConfig,
-                    dtree: {
-                        ...viewConfig.dtree,
-                        overlays: (viewConfig.dtree.overlays || []).filter((overlay) => overlay.type !== "merge_focus")
-                    }
-                }
-                : viewConfig;
-            void WorkspaceProfileService.save({
-                profileSchemaVersion: WORKSPACE_PROFILE_SCHEMA_VERSION,
-                graphId: gschemaGraph.graphId,
-                viewConfig: sanitizedViewConfig,
-                visualConfig,
-                readModelMode,
-                colorTheme,
-                updatedAt: new Date().toISOString(),
-                source: "local-autosave"
-            });
-        }, 1200);
-        return () => clearTimeout(timer);
-    }, [gschemaGraph?.graphId, viewConfig, visualConfig, readModelMode, colorTheme]);
+    useWorkspacePersistenceEffects({
+        document,
+        viewConfig,
+        visualConfig,
+        aiSettings,
+        leftCollapsed,
+        rightCollapsed,
+        saveAutosessionNow,
+        graphId: gschemaGraph?.graphId,
+        readModelMode,
+        colorTheme
+    });
 
     useEffect(() => {
         checkRestoreAvailability();

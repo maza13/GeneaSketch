@@ -1,26 +1,17 @@
 ﻿import { useState, useCallback } from "react";
-import { useAppStore, ensureExpanded, type AppState } from "@/state/store";
+import { useAppStore, type AppState } from "@/state/store";
 import { useShallow } from "zustand/react/shallow";
 import { FileIOService } from "@/io/fileIOService";
-import { WorkspaceProfileService } from "@/io/workspaceProfileService";
 import { gschemaToDocument, documentToGSchema } from "@/core/gschema/GedcomBridge";
 import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { extractSubTree, type ExtractDirection } from "@/core/edit/generators";
 import { downloadBlob } from "@/utils/download";
 import { exportSvgAsPdf, exportSvgAsRaster } from "@/utils/svgExport";
-import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
-import type {
-  RecentPayloadV2,
-  SourceGedVersion,
-  GedExportVersion,
-  ViewConfig,
-  VisualConfig,
-} from "@/types/domain";
+import type { RecentPayloadV2, SourceGedVersion, GedExportVersion } from "@/types/domain";
 import type { GraphDocument, GraphSource } from "@/core/read-model/types";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { ColorThemeConfig } from "@/types/editor";
-import type { WorkspaceProfileV2 } from "@/types/workspaceProfile";
-import type { ReadModelMode } from "@/core/read-model/types";
+import type { FileLoadRuntime, LegacyGskMeta } from "@/hooks/useFileLoadRuntime";
 
 export type PdfExportState = {
   scope: "viewport" | "full";
@@ -31,34 +22,6 @@ export type PdfExportState = {
   customWidth: number;
   customHeight: number;
 };
-
-type LegacyGskMeta = { viewConfig?: ViewConfig; visualConfig?: VisualConfig; colorTheme?: ColorThemeConfig } | null | undefined;
-
-function normalizeHydratedViewConfig(viewConfig: ViewConfig | null | undefined): ViewConfig | null {
-  if (!viewConfig) return viewConfig ?? null;
-  const normalizedDtree = normalizeDtreeConfig(viewConfig.dtree);
-  return {
-    ...viewConfig,
-    dtree: normalizedDtree
-  };
-}
-
-export function resolveProfileHydration(
-  state: AppState,
-  profile?: Pick<WorkspaceProfileV2, "viewConfig" | "visualConfig" | "colorTheme" | "readModelMode"> | null,
-  gskMeta?: LegacyGskMeta,
-): { nextViewConfig: ViewConfig | null; nextVisualConfig: VisualConfig; nextReadModelMode: ReadModelMode; nextTheme?: ColorThemeConfig } {
-  const nextViewConfig = profile?.viewConfig ?? gskMeta?.viewConfig ?? state.viewConfig;
-  const nextVisualConfig = profile?.visualConfig ?? gskMeta?.visualConfig ?? state.visualConfig;
-  const nextReadModelMode = profile?.readModelMode ?? state.readModelMode;
-  const nextTheme = profile?.colorTheme ?? gskMeta?.colorTheme;
-  return {
-    nextViewConfig: normalizeHydratedViewConfig(nextViewConfig),
-    nextVisualConfig,
-    nextReadModelMode,
-    nextTheme
-  };
-}
 
 export function hasMeaningfulTree(graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null): boolean {
   if (!graph) return false;
@@ -132,7 +95,7 @@ function projectOrNull(graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph
 export function useGskFile(
   graphSvgRef: React.RefObject<SVGSVGElement | null>,
   colorTheme: ColorThemeConfig,
-  clearMergeFocus: () => void,
+  runtime: FileLoadRuntime,
 ) {
   const [status, setStatus] = useState("Listo");
   const [exportWarnings, setExportWarnings] = useState<string[]>([]);
@@ -149,45 +112,13 @@ export function useGskFile(
 
   const gschemaGraph = useAppStore((state) => state.gschemaGraph);
 
-  const { loadGraph, setParseErrors, setParseWarnings, addRecentFile, clearMergeDraft, openRecentFile } = useAppStore(
+  const { setParseErrors, setParseWarnings, addRecentFile, openRecentFile } = useAppStore(
     useShallow((state: AppState) => ({
-      loadGraph: state.loadGraph,
       setParseErrors: state.setParseErrors,
       setParseWarnings: state.setParseWarnings,
       addRecentFile: state.addRecentFile,
-      clearMergeDraft: state.clearMergeDraft,
       openRecentFile: state.openRecentFile,
     })),
-  );
-
-  const applyLoadedPayload = useCallback(
-    async (
-      graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null,
-      source: GraphSource,
-      fileName: string,
-      sourceVersion: SourceGedVersion,
-      gskMeta?: LegacyGskMeta,
-    ) => {
-      loadGraph({ graph, source });
-
-      const graphId = useAppStore.getState().gschemaGraph?.graphId ?? "";
-      const profile = graphId ? await WorkspaceProfileService.load(graphId) : null;
-      if (profile || gskMeta?.viewConfig || gskMeta?.visualConfig) {
-        const nextHydration = resolveProfileHydration(useAppStore.getState(), profile, gskMeta);
-        useAppStore.setState((state) => {
-          const tempDoc = projectOrNull(state.gschemaGraph);
-          return {
-            viewConfig: nextHydration.nextViewConfig,
-            visualConfig: nextHydration.nextVisualConfig,
-            expandedGraph: tempDoc ? ensureExpanded(tempDoc, nextHydration.nextViewConfig) : state.expandedGraph,
-          };
-        });
-        useAppStore.getState().setReadModelMode(nextHydration.nextReadModelMode);
-      }
-      setStatus(`Cargado: ${fileName} (${sourceVersion})`);
-      return profile?.colorTheme ?? gskMeta?.colorTheme;
-    },
-    [loadGraph],
   );
 
   const parseInputFile = useCallback(
@@ -199,7 +130,7 @@ export function useGskFile(
       errors: Array<{ line: number; entity?: string; message: string }>;
       warnings: Array<{ code: string; message: string }>;
       sourceVersion?: SourceGedVersion;
-      gskMeta?: { viewConfig?: ViewConfig; visualConfig?: VisualConfig; colorTheme?: ColorThemeConfig } | null;
+      gskMeta?: LegacyGskMeta;
     } | null> => {
       const lower = file.name.toLowerCase();
       if (lower.endsWith(".ged")) {
@@ -261,13 +192,12 @@ export function useGskFile(
         }
 
         setParseErrors([]);
-        const loadedTheme = await applyLoadedPayload(
-          parsed.graph,
-          parsed.source,
-          file.name,
-          parsed.sourceVersion ?? "unknown",
-          parsed.gskMeta || null,
-        );
+        const loadedTheme = await runtime.applyLoadedPayload({
+          graph: parsed.graph,
+          source: parsed.source,
+          gskMeta: parsed.gskMeta || null,
+        });
+        setStatus(`Cargado: ${file.name} (${parsed.sourceVersion ?? "unknown"})`);
         if (loadedTheme && onColorThemeLoad) {
           onColorThemeLoad(loadedTheme);
         }
@@ -286,7 +216,7 @@ export function useGskFile(
         setStatus(`Error crítico: ${message}`);
       }
     },
-    [gschemaGraph, parseInputFile, setParseErrors, setParseWarnings, applyLoadedPayload, addRecentFile],
+    [gschemaGraph, parseInputFile, setParseErrors, setParseWarnings, runtime, addRecentFile],
   );
 
   const importForMerge = useCallback(
@@ -432,12 +362,10 @@ export function useGskFile(
 
       if (opened.entry.kind === "open") {
         void (async () => {
-          const loadedTheme = await applyLoadedPayload(
-            recentGraph,
-            inferSourceByFileName(opened.entry.name),
-            opened.entry.name,
-            opened.payload.sourceVersion,
-          );
+          const loadedTheme = await runtime.applyLoadedPayload({
+            graph: recentGraph,
+            source: inferSourceByFileName(opened.entry.name),
+          });
           if (loadedTheme && onColorThemeLoad) {
             onColorThemeLoad(loadedTheme);
           }
@@ -448,12 +376,10 @@ export function useGskFile(
 
       if (!gschemaGraph || !hasMeaningfulTree(gschemaGraph)) {
         void (async () => {
-          const loadedTheme = await applyLoadedPayload(
-            recentGraph,
-            inferSourceByFileName(opened.entry.name),
-            opened.entry.name,
-            opened.payload.sourceVersion,
-          );
+          const loadedTheme = await runtime.applyLoadedPayload({
+            graph: recentGraph,
+            source: inferSourceByFileName(opened.entry.name),
+          });
           if (loadedTheme && onColorThemeLoad) {
             onColorThemeLoad(loadedTheme);
           }
@@ -470,20 +396,16 @@ export function useGskFile(
       setImportIncomingDoc(incomingDoc);
       setStatus(`Importado reciente: ${opened.entry.name}`);
     },
-    [gschemaGraph, openRecentFile, applyLoadedPayload],
+    [gschemaGraph, openRecentFile, runtime],
   );
 
   const handleMergeApply = useCallback(
     (nextDoc: GraphDocument, stats: { addedPersons: number; updatedPersons: number; addedFamilies: number }) => {
-      const gedVersion = nextDoc.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-      const nextGraph = documentToGSchema(nextDoc, gedVersion).graph;
-      loadGraph({ graph: nextGraph, source: "merge" });
-      clearMergeDraft();
-      clearMergeFocus();
+      runtime.applyMergedDocument(nextDoc);
       setImportIncomingDoc(null);
       setStatus(`Fusión completada: +${stats.addedPersons} personas, ${stats.updatedPersons} actualizadas y +${stats.addedFamilies} familias.`);
     },
-    [loadGraph, clearMergeDraft, clearMergeFocus],
+    [runtime],
   );
 
   return {

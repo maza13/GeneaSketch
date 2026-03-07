@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { UiEngine } from "@/core/engine/UiEngine";
-import { resolveProfileHydration } from "@/hooks/useGskFile";
+import { resolveProfileHydration } from "@/hooks/useFileLoadRuntime";
 import type { AppState } from "@/state/types";
 
 function baseState(): AppState {
