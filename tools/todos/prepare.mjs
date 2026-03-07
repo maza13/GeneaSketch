@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { persistWithGit } from "../shared/gitPersistence.mjs";
 import {
   FILE_RE,
   appendWorkLog,
@@ -62,6 +63,18 @@ function writeRenamedRecord(record, nextStatus) {
   record.name = path.basename(nextPath);
   record.statusFromName = nextStatus;
   return nextPath;
+}
+
+function prepareCommitMessage(umbrellaId) {
+  return `chore(todos): prepare umbrella ${umbrellaId}`;
+}
+
+function nextStatusPath(record, nextStatus) {
+  const currentName = path.basename(record.fullPath);
+  const match = currentName.match(FILE_RE);
+  if (!match) die(`invalid todo filename: ${currentName}`);
+  const [, id, , priority, slug] = match;
+  return path.resolve(TODOS_DIR, `${id}-${nextStatus}-${priority}-${slug}.md`);
 }
 
 function main() {
@@ -134,6 +147,15 @@ function main() {
 
   umbrella.body = appendWorkLog(umbrella.body, entry);
 
+  const targetPaths = [umbrella.fullPath, nextStatusPath(umbrella, renderStatus(umbrella) === "pending" ? "ready" : renderStatus(umbrella))];
+  for (const childId of activated) {
+    const child = map.get(childId);
+    if (child) {
+      targetPaths.push(child.fullPath);
+      targetPaths.push(nextStatusPath(child, "ready"));
+    }
+  }
+
   if (opts.dryRun) {
     console.log("DRY RUN");
     console.log(`- umbrella: ${umbrella.id}`);
@@ -142,18 +164,26 @@ function main() {
     return;
   }
 
-  if (renderStatus(umbrella) === "pending") {
-    umbrella.meta.status = "ready";
-    umbrella.statusFromName = "ready";
-  }
-  umbrella.meta.updated_at = today();
-  writeRenamedRecord(umbrella, umbrella.meta.status);
+  persistWithGit({
+    root: ROOT,
+    targetPaths,
+    commitMessage: prepareCommitMessage(umbrella.id),
+    simulationPrefix: "TODOS_GIT_TX",
+    mutate: () => {
+      if (renderStatus(umbrella) === "pending") {
+        umbrella.meta.status = "ready";
+        umbrella.statusFromName = "ready";
+      }
+      umbrella.meta.updated_at = today();
+      writeRenamedRecord(umbrella, umbrella.meta.status);
 
-  for (const childId of activated) {
-    const child = readTodoRecord(ROOT, TODOS_DIR, resolveTodoPath(ROOT, TODOS_DIR, childId));
-    child.meta.updated_at = today();
-    writeRenamedRecord(child, "ready");
-  }
+      for (const childId of activated) {
+        const child = readTodoRecord(ROOT, TODOS_DIR, resolveTodoPath(ROOT, TODOS_DIR, childId));
+        child.meta.updated_at = today();
+        writeRenamedRecord(child, "ready");
+      }
+    }
+  });
 
   console.log(`OK: prepared umbrella ${umbrella.id}`);
   console.log(`- activated: ${activated.join(", ") || "none"}`);

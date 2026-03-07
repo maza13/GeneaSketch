@@ -101,7 +101,7 @@ When a task uses `protocol_version: 2` and `task_type: umbrella`:
 1. Run `npm run todo:brief -- --todo <id>` before mutating state.
 2. Summarize hard dependencies, child order, related tasks, blockers, and the recommended next child.
 3. If the user asked to start/open the umbrella, run `npm run todo:prepare -- --todo <id>`.
-4. `todo:prepare` may move eligible child tasks from `pending` to `ready`.
+4. `todo:prepare` may move eligible child tasks from `pending` to `ready` and must persist that mutation with an automatic commit.
 5. Do not execute child tasks automatically.
 6. Do not close the umbrella until all child tasks are complete and acceptance criteria are checked.
 
@@ -178,6 +178,7 @@ Safety contract:
 - If `git add` or `git commit` fails after the TODO rename/write step, the TODO file is rolled back to its original on-disk state.
 - Ignored paths are hard blockers, not warnings.
 - `--dry-run` must show the preflight result, expanded paths, and blocked categories.
+- `todo:prepare` must follow the same transactional persistence rule when it rewrites umbrella/child files.
 
 For `protocol_version: 2`, `todo:close` must refuse closure when:
 - any acceptance checkbox is unchecked

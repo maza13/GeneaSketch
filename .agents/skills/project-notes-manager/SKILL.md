@@ -43,6 +43,12 @@ Para ejecucion diaria y promocion:
 - `npm run notes:promote -- --note N0001` (propuesta)
 - `npm run notes:promote -- --note N0001 --execute --confirm` (ejecucion)
 
+Contrato operativo de persistencia:
+- `notes:new`, `notes:update`, `notes:archive`, `notes:capture` y `notes:promote` deben dejar commit automatico cuando mutan estado persistente.
+- Si el stage o el commit fallan, la mutacion debe revertirse en disco.
+- `notes:promote` debe incluir en el commit la nota fuente, `notes/index/registry.json` y los TODOs generados.
+- Los slugs de notas/TODOs promovidos deben truncarse de forma estable y sin cortes torpes cuando sea posible.
+
 ## Niveles de Analisis (superficiales)
 
 - `summary`: solo notas activas.

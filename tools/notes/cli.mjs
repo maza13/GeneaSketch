@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { persistWithGit } from "../shared/gitPersistence.mjs";
 
 const ROOT = process.cwd();
 const NOTES_DIR = path.resolve(ROOT, "notes");
@@ -125,6 +126,23 @@ function slugify(input) {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "") || "untitled";
+}
+
+function truncateAtWordBoundary(text, maxLength) {
+  const normalized = String(text).replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) return normalized;
+  const slice = normalized.slice(0, maxLength).trim();
+  const boundary = Math.max(slice.lastIndexOf(" "), slice.lastIndexOf("-"));
+  if (boundary >= Math.floor(maxLength * 0.6)) return slice.slice(0, boundary).trim();
+  return slice;
+}
+
+function slugifyLimited(input, maxLength = 48) {
+  const base = slugify(input);
+  if (base.length <= maxLength) return base;
+  const slice = base.slice(0, maxLength);
+  const boundary = slice.lastIndexOf("-");
+  return (boundary >= Math.floor(maxLength * 0.6) ? slice.slice(0, boundary) : slice).replace(/-+$/g, "") || base.slice(0, maxLength);
 }
 
 function quote(v) {
@@ -603,6 +621,20 @@ function rebuildRegistryOrFail() {
   return registry;
 }
 
+function noteCommitMessage(action, detail) {
+  return `chore(notes): ${action} ${detail}`;
+}
+
+function persistNotesMutation({ commitMessage, targetPaths, mutate }) {
+  return persistWithGit({
+    root: ROOT,
+    targetPaths,
+    commitMessage,
+    mutate,
+    simulationPrefix: "NOTES_GIT_TX"
+  });
+}
+
 function nextNoteId() {
   const ids = listNotePaths()
     .map((p) => path.basename(p).match(/^N(\d{4})-/)?.[1])
@@ -919,7 +951,7 @@ function titleFromText(text) {
   const cleaned = text.replace(/\s+/g, " ").trim();
   if (!cleaned) return "Captured note";
   const sentence = cleaned.split(/[.!?\n]/)[0].trim();
-  return sentence.slice(0, 90) || "Captured note";
+  return truncateAtWordBoundary(sentence, 90) || "Captured note";
 }
 
 function tokenize(text) {
@@ -970,17 +1002,24 @@ function captureInternal(text, sourceType, sourceContext, silent) {
       `Source context: ${sourceContext}`,
       `Reason: ${reason}`
     ]);
-    writeRecord(record);
-    rebuildRegistryOrFail();
+    persistNotesMutation({
+      commitMessage: noteCommitMessage("update captured note", record.meta.note_id),
+      targetPaths: [record.path, REGISTRY_PATH],
+      mutate: () => {
+        writeRecord(record);
+        rebuildRegistryOrFail();
+      }
+    });
     if (!silent) console.log(`UPDATED ${record.meta.note_id} - ${reason}`);
     return { action: "UPDATED", id: record.meta.note_id, reason };
   }
 
   const noteId = nextNoteId();
+  const normalizedTitle = truncateAtWordBoundary(title, 120);
   const meta = defaultMeta({
     note_id: noteId,
     kind,
-    title,
+    title: normalizedTitle,
     source_type: sourceType,
     source_context: sourceType === "auto_inferred" ? sourceContext : null,
     complexity,
@@ -990,12 +1029,18 @@ function captureInternal(text, sourceType, sourceContext, silent) {
     relevance_score: sourceType === "auto_inferred" ? 70 : 60,
     confidence: sourceType === "auto_inferred" ? "high" : "medium"
   });
-  let body = defaultBody(title, sourceType, sourceContext);
+  let body = defaultBody(normalizedTitle, sourceType, sourceContext);
   body = replaceSection(body, "## Context", text.slice(0, 800));
   body = replaceSection(body, "## Proposed Actions", "- Review this captured note and link relevant TODO or notes.");
-  const filePath = path.resolve(ENTRIES_DIR, `${noteId}-${kind}-${slugify(title)}.md`);
-  fs.writeFileSync(filePath, serialize(meta, body), "utf8");
-  rebuildRegistryOrFail();
+  const filePath = path.resolve(ENTRIES_DIR, `${noteId}-${kind}-${slugifyLimited(normalizedTitle, 72)}.md`);
+  persistNotesMutation({
+    commitMessage: noteCommitMessage("create captured note", noteId),
+    targetPaths: [filePath, REGISTRY_PATH],
+    mutate: () => {
+      fs.writeFileSync(filePath, serialize(meta, body), "utf8");
+      rebuildRegistryOrFail();
+    }
+  });
   if (!silent) console.log(`CREATED ${noteId} - new capture from detected intent`);
   return { action: "CREATED", id: noteId, reason: "new capture" };
 }
@@ -1168,12 +1213,13 @@ function cmdNew(opts) {
   if (!ALLOWED.effort_hint.includes(effort)) fail("--effort must be s|m|l");
   if (Number.isNaN(score) || score < 0 || score > 100) fail("--relevance-score must be 0..100");
 
+  const normalizedTitle = truncateAtWordBoundary(title, 120);
   const noteId = nextNoteId();
-  const filePath = path.resolve(ENTRIES_DIR, `${noteId}-${kind}-${slugify(title)}.md`);
+  const filePath = path.resolve(ENTRIES_DIR, `${noteId}-${kind}-${slugifyLimited(normalizedTitle, 72)}.md`);
   const meta = defaultMeta({
     note_id: noteId,
     kind,
-    title,
+    title: normalizedTitle,
     source_type: sourceType,
     source_context: sourceType === "auto_inferred" ? sourceContext : null,
     complexity,
@@ -1188,15 +1234,21 @@ function cmdNew(opts) {
     related_paths: listFromOption(opts, "related-paths"),
     related_todos: listFromOption(opts, "related-todos")
   });
-  let body = defaultBody(title, sourceType, sourceContext);
+  let body = defaultBody(normalizedTitle, sourceType, sourceContext);
   const context = oneOf(opts, "context");
   if (context) body = replaceSection(body, "## Context", context);
   const insight = oneOf(opts, "insight");
   if (insight) body = replaceSection(body, "## Insight", insight);
   const actions = oneOf(opts, "actions");
   if (actions) body = replaceSection(body, "## Proposed Actions", actions);
-  fs.writeFileSync(filePath, serialize(meta, body), "utf8");
-  rebuildRegistryOrFail();
+  persistNotesMutation({
+    commitMessage: noteCommitMessage("create note", noteId),
+    targetPaths: [filePath, REGISTRY_PATH],
+    mutate: () => {
+      fs.writeFileSync(filePath, serialize(meta, body), "utf8");
+      rebuildRegistryOrFail();
+    }
+  });
   console.log(`CREATED ${noteId}`);
 }
 
@@ -1244,7 +1296,7 @@ function cmdUpdate(opts) {
     record.meta.horizon = horizon;
   }
   const title = oneOf(opts, "title");
-  if (title) record.meta.title = title;
+  if (title) record.meta.title = truncateAtWordBoundary(title, 120);
   const activeState = oneOf(opts, "active-state");
   if (activeState) {
     if (!ALLOWED.active_state.includes(activeState)) fail("--active-state must be candidate|on_hold|validated");
@@ -1316,10 +1368,19 @@ function cmdUpdate(opts) {
     return;
   }
   const oldPath = record.path;
-  const nextPath = path.resolve(ENTRIES_DIR, `${record.meta.note_id}-${record.meta.kind}-${slugify(record.meta.title)}.md`);
-  writeRecord(record);
-  if (nextPath !== oldPath) fs.renameSync(oldPath, nextPath);
-  rebuildRegistryOrFail();
+  const nextPath = path.resolve(
+    ENTRIES_DIR,
+    `${record.meta.note_id}-${record.meta.kind}-${slugifyLimited(record.meta.title, 72)}.md`
+  );
+  persistNotesMutation({
+    commitMessage: noteCommitMessage("update note", record.meta.note_id),
+    targetPaths: [oldPath, nextPath, REGISTRY_PATH],
+    mutate: () => {
+      writeRecord(record);
+      if (nextPath !== oldPath) fs.renameSync(oldPath, nextPath);
+      rebuildRegistryOrFail();
+    }
+  });
   console.log(`UPDATED ${record.meta.note_id}`);
 }
 
@@ -1342,8 +1403,14 @@ function cmdArchive(opts) {
     `Archive reason: ${reason}`,
     `Summary: ${oneOf(opts, "summary") ?? "archived by notes:archive"}`
   ]);
-  writeRecord(record);
-  rebuildRegistryOrFail();
+  persistNotesMutation({
+    commitMessage: noteCommitMessage("archive note", record.meta.note_id),
+    targetPaths: [record.path, REGISTRY_PATH],
+    mutate: () => {
+      writeRecord(record);
+      rebuildRegistryOrFail();
+    }
+  });
   console.log(`ARCHIVED ${record.meta.note_id}`);
 }
 
@@ -1591,7 +1658,7 @@ function cmdPromote(opts) {
     const p = proposal[i];
     const issueId = todoIds[i];
     const itemTitle = sanitizePromotionTitle(p.title).replace(/\s+/g, " ").trim();
-    const todoSlug = slugify(sanitizePromotionTitle(p.slugBase ?? itemTitle)).slice(0, 48) || "promoted-task";
+    const todoSlug = slugifyLimited(sanitizePromotionTitle(p.slugBase ?? itemTitle), 48) || "promoted-task";
     const content = buildTodoFromTemplate({
       issue_id: issueId,
       priority,
@@ -1614,20 +1681,11 @@ function cmdPromote(opts) {
         : "Execute implementation end-to-end and close with automated commit."
     });
     const filePath = path.resolve(TODOS_DIR, `${issueId}-pending-${priority}-${todoSlug}.md`);
-    fs.writeFileSync(filePath, content, "utf8");
-    created.push(filePath);
+    created.push({ filePath, content });
   }
 
-  const createdRel = created.map((p) => path.relative(ROOT, p).replace(/\\/g, "/"));
-  const validation = spawnSync("node", ["tools/todos/validate.mjs", "--files", createdRel.join(",")], {
-    cwd: ROOT,
-    encoding: "utf8"
-  });
-  if (validation.status !== 0) {
-    if (validation.stdout) process.stdout.write(validation.stdout);
-    if (validation.stderr) process.stderr.write(validation.stderr);
-    fail("scoped TODO validation failed for promoted files");
-  }
+  const createdPaths = created.map((item) => item.filePath);
+  const createdRel = createdPaths.map((p) => path.relative(ROOT, p).replace(/\\/g, "/"));
 
   record.meta.phase = "archived";
   record.meta.active_state = null;
@@ -1641,8 +1699,26 @@ function cmdPromote(opts) {
     `Mode: ${complexity}`,
     "Source: notes:promote via file-todos template"
   ]);
-  writeRecord(record);
-  rebuildRegistryOrFail();
+  persistNotesMutation({
+    commitMessage: noteCommitMessage("promote note", `${record.meta.note_id} -> ${todoIds.join("-")}`),
+    targetPaths: [record.path, REGISTRY_PATH, ...createdPaths],
+    mutate: () => {
+      for (const item of created) {
+        fs.writeFileSync(item.filePath, item.content, "utf8");
+      }
+      const validation = spawnSync("node", ["tools/todos/validate.mjs", "--files", createdRel.join(",")], {
+        cwd: ROOT,
+        encoding: "utf8"
+      });
+      if (validation.status !== 0) {
+        if (validation.stdout) process.stdout.write(validation.stdout);
+        if (validation.stderr) process.stderr.write(validation.stderr);
+        throw new Error("scoped TODO validation failed for promoted files");
+      }
+      writeRecord(record);
+      rebuildRegistryOrFail();
+    }
+  });
 
   console.log(`PROMOTED ${record.meta.note_id} -> ${todoIds.join(", ")}`);
   for (const rel of createdRel) console.log(`- ${rel}`);
