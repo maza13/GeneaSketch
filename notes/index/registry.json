@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-06T21:21:45.636Z",
-  "total_entries": 11,
+  "generated_at": "2026-03-07T02:00:59.976Z",
+  "total_entries": 13,
   "by_id": {
     "N0001": {
       "file": "notes/entries/N0001-idea-integracion-con-apis-genealogicas-familysearchwikitree.md",
@@ -404,6 +404,54 @@
       "updated_at": "2026-03-06",
       "last_reviewed_at": "2026-03-06",
       "review_after": "2026-03-20"
+    },
+    "N0012": {
+      "file": "notes/entries/N0012-note-bug-del-sistema-todo-todoclose-no-siempre-commitea-todos-los-archivos-creados-o-modifica.md",
+      "title": "Bug del sistema TODO: todo:close no siempre commitea todos los archivos creados o modifica",
+      "kind": "note",
+      "phase": "active",
+      "complexity": "simple",
+      "connectivity": "isolated",
+      "horizon": "mid",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "auto_inferred",
+      "tags": [
+        "ai"
+      ],
+      "related_notes": [],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 70,
+      "confidence": "high",
+      "created_at": "2026-03-07",
+      "updated_at": "2026-03-07",
+      "last_reviewed_at": null,
+      "review_after": null
+    },
+    "N0013": {
+      "file": "notes/entries/N0013-note-deuda-del-sistema-de-notas-revisar-y-corregir-problemas-del-notes-system-en-areas-como-la.md",
+      "title": "Deuda del sistema de notas: revisar y corregir problemas del notes system en areas como la",
+      "kind": "note",
+      "phase": "active",
+      "complexity": "simple",
+      "connectivity": "isolated",
+      "horizon": "mid",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "auto_inferred",
+      "tags": [
+        "ai"
+      ],
+      "related_notes": [],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 70,
+      "confidence": "high",
+      "created_at": "2026-03-07",
+      "updated_at": "2026-03-07",
+      "last_reviewed_at": null,
+      "review_after": null
     }
   },
   "by_kind": {
@@ -420,7 +468,9 @@
     "note": [
       "N0007",
       "N0008",
-      "N0009"
+      "N0009",
+      "N0012",
+      "N0013"
     ]
   },
   "by_phase": {
@@ -431,7 +481,9 @@
       "N0004",
       "N0005",
       "N0006",
-      "N0010"
+      "N0010",
+      "N0012",
+      "N0013"
     ],
     "archived": [
       "N0007",
@@ -471,7 +523,9 @@
     ],
     "ai": [
       "N0004",
-      "N0010"
+      "N0010",
+      "N0012",
+      "N0013"
     ],
     "automation": [
       "N0004"
@@ -554,7 +608,10 @@
     ]
   },
   "by_connectivity": {
-    "isolated": [],
+    "isolated": [
+      "N0012",
+      "N0013"
+    ],
     "interconnected": [
       "N0001",
       "N0002",
@@ -570,7 +627,10 @@
     ]
   },
   "by_complexity": {
-    "simple": [],
+    "simple": [
+      "N0012",
+      "N0013"
+    ],
     "complex": [
       "N0001",
       "N0002",
@@ -655,7 +715,9 @@
         "N0008",
         "N0009",
         "N0010"
-      ]
+      ],
+      "N0012": [],
+      "N0013": []
     }
   },
   "signals": {
@@ -735,6 +797,20 @@
       "horizon": "mid",
       "last_reviewed_at": "2026-03-06",
       "review_after": "2026-03-20"
+    },
+    "N0012": {
+      "relevance_score": 70,
+      "confidence": "high",
+      "horizon": "mid",
+      "last_reviewed_at": null,
+      "review_after": null
+    },
+    "N0013": {
+      "relevance_score": 70,
+      "confidence": "high",
+      "horizon": "mid",
+      "last_reviewed_at": null,
+      "review_after": null
     }
   },
   "promotion_state": {
@@ -804,6 +880,14 @@
         "103",
         "104"
       ]
+    },
+    "N0012": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0013": {
+      "is_promoted": false,
+      "promoted_todos": []
     }
   },
   "analysis_state": {
