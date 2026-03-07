@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "122"
 title: "App shell residual orchestration cleanup"
@@ -17,9 +17,9 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 122: extract residual app shell orchestration"
+closed_at: "2026-03-07"
 ---
 
 
@@ -91,10 +91,10 @@ Refactor `App.tsx` toward a thinner composition root by extracting cohesive shel
 
 ## Acceptance Criteria
 
-- [ ] `App.tsx` is materially less concentrated as a shell composition root.
-- [ ] Extracted logic remains shell-layer only and does not reopen core/runtime seams.
-- [ ] Runtime behavior remains unchanged under existing validations.
-- [ ] Work log records commands, tests, and evidence.
+- [x] `App.tsx` is materially less concentrated as a shell composition root.
+- [x] Extracted logic remains shell-layer only and does not reopen core/runtime seams.
+- [x] Runtime behavior remains unchanged under existing validations.
+- [x] Work log records commands, tests, and evidence.
 
 ## Work Log
 
@@ -116,6 +116,35 @@ Refactor `App.tsx` toward a thinner composition root by extracting cohesive shel
   - `todos/122-pending-p2-app-shell-residual-orchestration-cleanup.md`
   - `src/App.tsx`
 
+### 2026-03-07 - Extracted shell orchestration into dedicated hooks
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Extracted shell interaction state and modal/node routing from `App.tsx` into `src/hooks/useAppShellController.ts`.
+- Extracted global keyboard shortcut wiring into `src/hooks/useAppShellShortcuts.ts`.
+- Rewired `App.tsx` to compose shell hooks instead of hosting inline shell orchestration for shortcuts, node interactions, and modal coordination.
+- Updated the live architecture map to reflect that residual shell debt is now composition density rather than orchestration concentration.
+
+**Evidence:**
+- Commands:
+  - `npm test -- src/tests/store.test.ts`
+  - `npm test -- src/tests/workspace-profile.integration.test.ts`
+  - `npx vite build`
+- Artifacts/paths:
+  - `src/App.tsx`
+  - `src/hooks/useAppShellController.ts`
+  - `src/hooks/useAppShellShortcuts.ts`
+  - `reports/architecture-separation-diagnosis/live-map.md`
+
 ## Notes
 
 This task is successful only if it reduces shell concentration, not if it merely redistributes lines mechanically.
+
+## Next Step Recommendation
+
+Execute `123` next to reduce `viewSlice.ts` reprojection and `expandedGraph` refresh churn now that `App.tsx` is closer to a composition root.
