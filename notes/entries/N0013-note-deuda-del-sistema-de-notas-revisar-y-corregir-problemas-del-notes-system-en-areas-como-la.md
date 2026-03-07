@@ -1,9 +1,9 @@
 ---
 note_id: "N0013"
 kind: "note"
-phase: "active"
-active_state: "candidate"
-archive_reason: null
+phase: "archived"
+active_state: null
+archive_reason: "promoted"
 complexity: "simple"
 connectivity: "isolated"
 horizon: "mid"
@@ -13,17 +13,18 @@ source_context: "conversation intent capture"
 tags: ["ai"]
 related_notes: []
 related_paths: []
-related_todos: []
-promoted_todos: []
+related_todos: ["114"]
+promoted_todos: ["114"]
 relevance_score: 70
 confidence: "high"
 priority_hint: "p2"
 effort_hint: "m"
 created_at: "2026-03-07"
 updated_at: "2026-03-07"
-last_reviewed_at: null
+last_reviewed_at: "2026-03-07"
 review_after: null
 ---
+
 
 # Deuda del sistema de notas: revisar y corregir problemas del notes system en areas como la
 
@@ -45,3 +46,9 @@ Capture the key idea/findings.
 
 - Source type: auto_inferred
 - Source context: conversation intent capture
+
+### 2026-03-07 - Promoted to TODO
+
+- Created TODO ids: 114
+- Mode: simple
+- Source: notes:promote via file-todos template
