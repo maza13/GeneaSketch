@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "umbrella"
-status: "ready"
+status: "complete"
 priority: "p2"
 issue_id: "115"
 title: "Guided hard-cut execution chain"
@@ -17,10 +17,11 @@ risk_level: "high"
 estimated_effort: "l"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 115: complete guided hard-cut execution chain"
+closed_at: "2026-03-07"
 ---
+
 
 
 
@@ -133,10 +134,10 @@ Open this chain only through `todo:brief` and `todo:prepare`. Execute child task
 
 ## Acceptance Criteria
 
-- [ ] Child tasks `116` through `120` exist and are linked.
-- [ ] The chain defines guardrails, execution order, validations, and evidence requirements per phase.
-- [ ] The umbrella explicitly prevents scope drift toward cloud, P2P, mobile, API implementation, or shared-tree feature delivery.
-- [ ] Work log initial entry recorded.
+- [x] Child tasks `116` through `120` exist and are linked.
+- [x] The chain defines guardrails, execution order, validations, and evidence requirements per phase.
+- [x] The umbrella explicitly prevents scope drift toward cloud, P2P, mobile, API implementation, or shared-tree feature delivery.
+- [x] Work log initial entry recorded.
 
 ## Work Log
 
@@ -265,3 +266,48 @@ This umbrella executes the refined guided hard-cut plan. It does not reopen the 
 - Hard dependencies complete: 099
 - Activated: 120
 - Blocked: none
+
+### 2026-03-07 - Guided hard-cut execution chain completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Completed child phases `116` through `120` in dependency order.
+- Maintained the live architecture map through the chain and recorded the final `base vs live vs target` comparison.
+- Preserved the anti-drift rule throughout execution: no cloud, P2P, mobile, external API, or shared-tree implementation scope was opened as part of this chain.
+
+**Evidence:**
+- Completed child tasks:
+  - `116`
+  - `117`
+  - `118`
+  - `119`
+  - `120`
+- Final architecture artifacts:
+  - `reports/architecture-separation-diagnosis/live-map.md`
+  - `reports/architecture-separation-diagnosis/executive-summary.md`
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Guided hard-cut execution chain completed through phase 4
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/115-complete-p2-guided-hard-cut-execution-chain.md
+
+**Next Recommendation (generated at closure):**
+- No direct dependent task found.
+- Recommended next unblocked task: 018 (p2).
