@@ -5,7 +5,7 @@ import { rankFocusCandidatesByName } from "@/core/ai/matching";
 import { updateAiReviewItemCandidate, updateAiReviewItemSelection, updateAiReviewItemStatus } from "@/core/ai/reviewState";
 import { aiAppendDiagnosticLog, aiReadDiagnosticLog } from "@/services/aiRuntime";
 import { downloadBlob } from "@/utils/download";
-import type { AiDiagnosticEntry, AiGlobalFocusDetection, AiInputContext, AiReviewDraft, AiReviewItemStatus, AiSettings } from "@/types/ai";
+import type { AiDiagnosticEntry, AiGlobalFocusDetection, AiInputContext, AiReviewDraft, AiReviewItemStatus } from "@/types/ai";
 import type { AiAssistantDocumentView, AiAssistantViewModel } from "@/app-shell/facade/types";
 
 

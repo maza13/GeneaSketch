@@ -185,6 +185,38 @@ export function ImportReviewPanel({
 }: Props) {
   const { baseDocument: baseDoc, incomingDocument: incomingDoc, initialDraft } = viewModel;
   if (!baseDoc || !incomingDoc) return null;
+  return (
+    <ImportReviewPanelReady
+      baseDoc={baseDoc}
+      incomingDoc={incomingDoc}
+      initialDraft={initialDraft}
+      onDraftChange={onDraftChange}
+      onFocusChange={onFocusChange}
+      onApply={onApply}
+      onClose={onClose}
+    />
+  );
+}
+
+type ReadyProps = {
+  baseDoc: ImportReviewDocumentView;
+  incomingDoc: ImportReviewDocumentView;
+  initialDraft: MergeDraftSnapshot | null;
+  onDraftChange?: (draft: MergeDraftSnapshot | null) => void;
+  onFocusChange?: (focus: MergeFocusPayload | null) => void;
+  onApply: (merged: ImportReviewDocumentView, stats: MergeStats) => void;
+  onClose: () => void;
+};
+
+function ImportReviewPanelReady({
+  baseDoc,
+  incomingDoc,
+  initialDraft,
+  onDraftChange,
+  onFocusChange,
+  onApply,
+  onClose,
+}: ReadyProps) {
   const contextId = useMemo(() => mergeContextId(baseDoc, incomingDoc), [baseDoc, incomingDoc]);
   const [step, setStep] = useState<MergeReviewStep>("strategy");
   const [preset, setPreset] = useState<MergeReviewPreset>("fast");

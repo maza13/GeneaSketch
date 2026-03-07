@@ -1066,7 +1066,7 @@ function nextTodoIds(count) {
 function readTodoTemplate() {
   const candidates = [
     path.resolve(ROOT, ".agents/skills/file-todos/assets/todo-template.md"),
-    path.resolve(ROOT, ".agent/skills/file-todos/assets/todo-template.md")
+    path.resolve(ROOT, ".agents/skills/file-todos/assets/todo-template.md")
   ];
   for (const c of candidates) if (fs.existsSync(c)) return fs.readFileSync(c, "utf8");
   fail("file-todos template not found");

@@ -66,7 +66,7 @@ Rules: enforce UX-RULE-001..010 from capitulo 12
 
 ### Gobernanza de skills
 - Fuente primaria de skills del proyecto: `.agents/skills/*`.
-- Espejo operativo obligatorio: `.agent/skills/*`.
+- Raiz operativa obligatoria: `.agents/skills/*`.
 - Todas las skills deben existir en ambos directorios.
 - Si hay divergencia de contenido en skills criticas, se considera incumplimiento de gobernanza.
 

@@ -8,7 +8,6 @@ import type { GraphDocument } from "@/core/read-model/types";
 import type { AiSettings, AiInputContext } from "@/types/ai";
 import type {
   ExpandedGraph,
-  Family,
   PendingRelationType,
   Person,
   TimelineViewMode,
@@ -368,7 +367,7 @@ export type ShellWorkspaceFacade = {
     };
     onScopeChange: (scope: "viewport" | "full") => void;
     onPaperSizeChange: (size: "LETTER" | "LEGAL" | "TABLOID" | "A0" | "A1" | "A2" | "A3" | "A4" | "A5" | "CUSTOM") => void;
-    onExportNow: () => Promise<void>;
+    onExportNow: () => Promise<void | true | undefined>;
     onClose: () => void;
   };
   importReview: {

@@ -3,11 +3,15 @@
     "private": true,
     "version": "0.4.5",
     "type": "module",
+    "engines": {
+        "node": "^22"
+    },
     "scripts": {
         "dev": "vite",
         "build": "tsc -b \u0026\u0026 vite build",
         "preview": "vite preview",
         "test": "vitest run",
+        "test:ci": "npm run build \u0026\u0026 npm run test:baseline:qa001",
         "test:baseline:qa001": "vitest run src/tests/diagnostics/analyzer.test.ts src/tests/diagnostics/fixPlanner.test.ts src/tests/expand.depth.test.ts src/tests/expand.presets.test.ts",
         "plan:dtree-v3:validate": "node tools/dtree-v3/validate-todo-chain.mjs",
         "todo:validate": "node tools/todos/validate.mjs",

@@ -30,7 +30,6 @@ import type {
   BranchExportViewModel,
   DiagnosticsViewModel,
   LeftPanelViewModel,
-  PersonDocumentView,
   PersonPickerViewModel,
   PersonStatsViewModel,
   PersonWorkspaceViewModel,
@@ -40,10 +39,6 @@ import type {
   TimelinePanelViewModel,
   TimelinePresenceResult,
 } from "./types";
-
-function toDocumentView(document: GraphDocument | null): PersonDocumentView | null {
-  return document;
-}
 
 function toRelatedPerson(person: Person): RelatedPersonListItem {
   return {
@@ -114,7 +109,7 @@ function buildLeftPanelViewModel(
 ): LeftPanelViewModel {
   return {
     hasDocument: Boolean(document),
-    documentView: toDocumentView(document),
+    documentView: document,
     sections: {
       layersOpen: viewConfig?.leftSections?.layersOpen ?? true,
       treeConfigOpen: viewConfig?.leftSections?.treeConfigOpen ?? true,
@@ -332,8 +327,6 @@ export function useAppShellFacade(): AppShellFacade {
     () => projectGraphDocument(gschemaGraph),
     [gschemaGraph?.graphId, gschemaGraph?.journalLength],
   );
-  const documentView = useMemo(() => toDocumentView(document), [document]);
-
   const openFileInputRef = useRef<HTMLInputElement>(null);
   const importFileInputRef = useRef<HTMLInputElement>(null);
   const graphSvgRef = useRef<SVGSVGElement | null>(null);

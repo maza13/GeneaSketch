@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import type { FamilyPatch } from "@/core/edit/commands";
-import type { PendingRelationType } from "@/types/domain";
 import type { PersonWorkspaceViewModel, ShellFeaturesFacade } from "@/app-shell/facade/types";
 import { PersonDetailShell } from "@/ui/person/PersonDetailShell";
 import { type PersonDetailSectionId } from "@/ui/person/personDetailSections";
@@ -16,15 +14,6 @@ import { PersonTimelineSection } from "@/ui/person/sections/PersonTimelineSectio
 import { PersonAnalysisSection } from "@/ui/person/sections/PersonAnalysisSection";
 import { PersonHistorySection } from "@/ui/person/sections/PersonHistorySection";
 import { getPersonLabel } from "@/ui/person/personDetailUtils";
-
-type PersonInput = {
-  name: string;
-  surname?: string;
-  sex?: "M" | "F" | "U";
-  birthDate?: string;
-  deathDate?: string;
-  lifeStatus?: "alive" | "deceased";
-};
 
 type Props = {
   viewModel: PersonWorkspaceViewModel;
@@ -46,7 +35,7 @@ export function PersonWorkspacePanel({
   viewModel,
   commands,
 }: Props) {
-  const { personId, person, aiSettings, sections } = viewModel;
+  const { personId, person, sections } = viewModel;
   const { onClose, onSelectPerson, onSetAsFocus, onSavePerson, onSaveFamily, onCreatePerson, onQuickAddRelation } = commands;
   const [tab, setTab] = useState<PersonDetailSectionId>(getInitialTab);
 

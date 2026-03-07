@@ -5,7 +5,6 @@ import { buildImportReviewViewModel } from "@/app-shell/workbenches/importReview
 import { buildPersonEditorViewModel } from "@/app-shell/workbenches/personEditorWorkbench";
 import { buildPersonWorkspaceViewModel } from "@/app-shell/workbenches/personWorkspaceWorkbench";
 import type { GeneaDocument } from "@/types/domain";
-import type { MergeDraftSnapshot } from "@/types/merge-draft";
 
 function buildDoc(): GeneaDocument {
   return {
@@ -50,19 +49,6 @@ function buildDoc(): GeneaDocument {
       "@M1@": { id: "@M1@", title: "Foto", fileName: "foto.jpg" },
     },
     metadata: { sourceFormat: "GSK", gedVersion: "7.0.x" },
-  };
-}
-
-function buildDraft(): MergeDraftSnapshot {
-  return {
-    version: 1,
-    contextId: "ctx-1",
-    step: "strategy",
-    preset: "fast",
-    mode: "expert_workbench",
-    session: null,
-    workingDiff: null,
-    matchResult: null,
   };
 }
 
@@ -127,12 +113,11 @@ describe("app shell workbenches", () => {
 
   it("buildImportReviewViewModel preserves inputs", () => {
     const doc = buildDoc();
-    const draft = buildDraft();
-    const model = buildImportReviewViewModel(doc, doc, draft);
+    const model = buildImportReviewViewModel(doc, doc, null);
 
     expect(model.baseDocument).toBe(doc);
     expect(model.incomingDocument).toBe(doc);
-    expect(model.initialDraft).toBe(draft);
+    expect(model.initialDraft).toBeNull();
   });
 
   it("buildAiAssistantViewModel preserves inputs", () => {

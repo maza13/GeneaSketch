@@ -31,11 +31,22 @@ yarn-error.log*
 .temp
 .cache
 tmp/
+*.tsbuildinfo
 *.tmp.json
 *.log
 errors.txt
 out.txt
 reports/
+notes/reports/*
+!notes/reports/.gitkeep
+_audit/
+release-dist/
+diff.txt
+out.json
+test_output.txt
+ts_errors.txt
+tmp.txt
+.tmp_deep_analysis.md
 
 # Keep DTree V3 phase0 perf baselines versioned
 !reports/

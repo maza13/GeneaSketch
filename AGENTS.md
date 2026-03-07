@@ -5,7 +5,7 @@ It summarizes build/lint/test commands (including single-test workflows) and cod
 ## 1) Project Snapshot
 - Stack: Tauri desktop shell + React 18 + TypeScript + Vite + Vitest + Zustand.
 - Domain: local-first genealogy app with `.gsk` as native package format and GEDCOM interoperability.
-- CI workflow (`.github/workflows/baseline-qa001.yml`) uses Node `22` and runs `npm run test:baseline:qa001`.
+- CI workflow (`.github/workflows/baseline-qa001.yml`) uses Node `22` and runs `npm run build` plus `npm run test:baseline:qa001`.
 - TypeScript is strict (`strict`, `noUnusedLocals`, `noUnusedParameters` in `tsconfig.json`).
 - Path alias `@/* -> src/*` is configured in `tsconfig.json` and `vite.config.ts`.
 
@@ -14,6 +14,7 @@ It summarizes build/lint/test commands (including single-test workflows) and cod
 npm ci
 ```
 Use `npm ci` for deterministic installs.
+Use Node `22.x` locally; `.nvmrc` and `.node-version` are the source of truth for runtime alignment.
 
 ## 3) Build and Dev Commands
 ### Web app

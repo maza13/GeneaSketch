@@ -17,7 +17,8 @@ import {
   selectTimelineInput,
   setReadModelMode,
 } from "@/core/read-model";
-import type { Event, GeneaDocument, GraphDocument, GraphFamily, GraphPerson, GraphSearchEntry, GraphStatsSummary, GraphTimelineInput, Person } from "@/types/domain";
+import type { GraphFamily, GraphPerson, GraphSearchEntry, GraphStatsSummary, GraphTimelineInput } from "@/core/read-model/types";
+import type { Event, GeneaDocument, GraphDocument, Person } from "@/types/domain";
 
 type ParityFixture = {
   id: string;

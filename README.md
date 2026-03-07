@@ -29,6 +29,9 @@ Instalacion:
 npm ci
 ```
 
+Node soportado para desarrollo y CI: `22.x`.
+Si usas `nvm` o un gestor compatible, la raiz del repo incluye `.nvmrc` y `.node-version`.
+
 Web:
 
 ```bash

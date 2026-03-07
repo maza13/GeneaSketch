@@ -7,15 +7,6 @@ import { PersonIdentitySection } from "@/ui/person/sections/PersonIdentitySectio
 import { PersonFamiliesSection } from "@/ui/person/sections/PersonFamiliesSection";
 import { PersonEventsSection } from "@/ui/person/sections/PersonEventsSection";
 
-type PersonInput = {
-    name: string;
-    surname?: string;
-    sex?: "M" | "F" | "U";
-    birthDate?: string;
-    deathDate?: string;
-    lifeStatus?: "alive" | "deceased";
-};
-
 type Props = {
     viewModel: PersonWorkspaceViewModel;
     commands: ShellFeaturesFacade["personWorkspaceV3"]["commands"];
@@ -43,7 +34,7 @@ export function PersonWorkspacePanelV3({
     viewModel,
     commands,
 }: Props) {
-    const { personId, person, aiSettings, documentView: document, sections } = viewModel;
+    const { personId, person, documentView: document, sections } = viewModel;
     const { onClose, onSelectPerson, onSetAsFocus, onSavePerson, onSaveFamily, onCreatePerson, onQuickAddRelation } = commands;
     const [tab, setTab] = useState<V3Tab>(getInitialV3Tab);
 

@@ -1,4 +1,0 @@
-interface:
-  display_name: "GeneaSketch Desktop Release"
-  short_description: "Windows Tauri release planning and build checks"
-  default_prompt: "Use $geneasketch-desktop-release to prepare a Windows desktop release with valid MSI versioning, changelog updates, and build diagnostics."

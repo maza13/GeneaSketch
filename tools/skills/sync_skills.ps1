@@ -1,6 +1,6 @@
 ﻿param(
   [string]$SourceRoot = ".agents/skills",
-  [string]$DestinationRoot = ".agent/skills",
+  [string]$DestinationRoot = ".agents/skills",
   [switch]$Prune
 )
 
