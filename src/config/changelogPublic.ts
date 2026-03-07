@@ -6,6 +6,15 @@ export type PublicChangelogEntry = {
 
 export const PUBLIC_CHANGELOG: PublicChangelogEntry[] = [
   {
+    "heading": "7 de marzo de 2026 - 0.4.5 (Beta GSchema, Shell Composition and Docs Sync)",
+    "technicalVersion": "0.4.5",
+    "userChanges": [
+      "La shell queda mas ordenada internamente sin cambiar los flujos visibles de trabajo.",
+      "La documentacion principal ahora describe mejor el estado real de la app, `.gsk` y `DTree V3`.",
+      "Se agregan tests para blindar la frontera entre App Shell, facade y features complejas."
+    ]
+  },
+  {
     "heading": "6 de marzo de 2026 - 0.4.5 (Beta GSchema, Foundation Close, Desktop)",
     "technicalVersion": "0.4.5",
     "userChanges": [

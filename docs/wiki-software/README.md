@@ -3,7 +3,7 @@
 ## Resumen
 Esta wiki describe el uso del producto para investigacion genealogica local-first.
 
-- **Version del software:** `0.4.4`
+- **Version del software:** `0.4.5`
 - **Formato nativo de trabajo:** `.gsk`
 - **Estado documental:** estable
 

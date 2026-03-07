@@ -44,4 +44,22 @@ describe("app shell boundary guard", () => {
     expect(source).not.toContain('from "@/hooks/useAiAssistant"');
     expect(source).not.toContain("useAppStore");
   });
+
+  it("keeps composition hosts detached from runtime hooks and direct store access", () => {
+    const hostPaths = [
+      "src/app-shell/components/ShellAppFrame.tsx",
+      "src/app-shell/components/ShellCanvasStage.tsx",
+      "src/app-shell/components/ShellWorkspaceOverlays.tsx",
+      "src/app-shell/components/ShellGlobalOverlays.tsx",
+    ];
+
+    for (const relPath of hostPaths) {
+      const source = read(relPath);
+      expect(source, relPath).not.toContain('from "@/state/store"');
+      expect(source, relPath).not.toContain('from "@/hooks/useGskFile"');
+      expect(source, relPath).not.toContain('from "@/hooks/useAiAssistant"');
+      expect(source, relPath).not.toContain('from "@/hooks/useMenuConfig"');
+      expect(source, relPath).not.toContain("useAppStore");
+    }
+  });
 });

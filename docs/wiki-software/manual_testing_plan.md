@@ -1,4 +1,4 @@
-# Plan de Pruebas Manuales - GeneaSketch v0.4.4 (Beta GSchema)
+# Plan de Pruebas Manuales - GeneaSketch v0.4.5 (Beta GSchema)
 
 Este documento contiene pruebas paso a paso para verificar estabilidad de motores visuales, logicos y de interfaz antes de un corte de release.
 

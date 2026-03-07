@@ -2,6 +2,27 @@
 
 Todos los cambios notables de GeneaSketch se documentan aqui.
 
+## 7 de marzo de 2026 - 0.4.5 (Beta GSchema, Shell Composition and Docs Sync)
+
+### Para usuarios (resumen rapido)
+- La shell queda mas ordenada internamente sin cambiar flujos visibles de uso.
+- La documentacion principal ahora refleja mejor el estado real de la app y del formato nativo `.gsk`.
+- Se agrega una capa de tests para proteger la frontera entre `App Shell`, facade y features complejas.
+
+### Detalle tecnico
+- `App.tsx` se reduce a composition root y reparte canvas, overlays de workspace y overlays globales en hosts separados.
+- Se endurece el seam de shell con tests para workbenches, facade contract y boundary guard estructural.
+- `README` y referencias visibles de version/wiki se sincronizan con `0.4.5`, `DTree V3` y la ruta `GSK-first`.
+
+### Known Issues
+- La superficie first-class para claims/citations/evidence sigue diferida y documentada como deuda posterior.
+- El bundle web sigue siendo grande para produccion y mantiene advertencias de chunk en build.
+
+### Compatibilidad
+- Desktop (Tauri) Windows.
+- Canal visible: beta.
+- Codename: gschema.
+
 ## 6 de marzo de 2026 - 0.4.5 (Beta GSchema, Foundation Close, Desktop)
 
 ### Para usuarios (resumen rapido)
