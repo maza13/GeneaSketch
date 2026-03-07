@@ -72,6 +72,15 @@ Removal difficulty vocabulary:
 - `GSK Package IO -> Workspace Profile` through `useGskFile`
 - `Read Model -> Legacy projection fallback`
 
+## Future-Facing Constraints Inferred from the Audit
+
+This audit is still about the current runtime, not about hypothetical future systems. Even so, the current edge shape already implies a few constraints for later planning:
+
+- if future shared-tree, API, or AI-assisted changes are introduced, they should converge toward the same validated and auditable mutation surfaces rather than each keeping a special runtime bridge
+- `Workspace Profile` should remain the local/private state boundary; file/package cleanup should not accidentally turn profile state into shareable tree state
+- nothing in the current audit justifies introducing cloud, P2P, or mobile as primary architecture drivers before the current hotspot chain is reduced
+- the most dangerous future failure mode is not “missing infrastructure”; it is letting future concerns re-enter through already-mixed loci such as `App.tsx`, `useGskFile.ts`, and `docSlice.ts`
+
 ## Escalations for `110`
 
 The next task should treat these as the highest-value hotspot candidates:
@@ -87,3 +96,4 @@ The next task should treat these as the highest-value hotspot candidates:
 
 - This audit intentionally stops at legitimacy and removal difficulty; severity ranking belongs in `110`.
 - Several edges are legitimate in principle but still poor in current concentration. In those cases, the dependency itself is not the problem; the current orchestration locus is.
+- Future-facing constraints should therefore be absorbed as boundary guardrails first, not as additional runtime responsibilities in the current mixed loci.

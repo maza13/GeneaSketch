@@ -26,6 +26,7 @@ The three candidate sequences are compared against the current evidence using th
 - `architectural clarity gain`: how much structural clarity it creates by the end of the sequence.
 - `execution realism`: how plausible it is given the current code concentration in `App.tsx`, `useGskFile.ts`, and `docSlice.ts`.
 - `hard-cut readiness`: how well it prepares the project for a later explicit execution phase.
+- `scope discipline`: how well it keeps future concerns visible without letting them silently expand the cleanup scope.
 
 ## Option A - Conservative Path
 
@@ -58,6 +59,7 @@ The three candidate sequences are compared against the current evidence using th
 - leaves the `State Manager <-> GSchema Engine <-> Read Model` knot substantially alive
 - postpones the highest structural leverage point
 - can create a false sense of progress because the architecture becomes cleaner at the edges but not at the center
+- still leaves the plan too exposed to drift if future sharing, cloud, or integration concerns start attaching to the unchanged central knot
 
 ### Prerequisites
 
@@ -79,6 +81,7 @@ The three candidate sequences are compared against the current evidence using th
 - architectural clarity gain: `medium`
 - execution realism: `high`
 - hard-cut readiness: `medium-low`
+- scope discipline: `medium`
 
 ## Option B - Guided Hard Cut
 
@@ -108,17 +111,20 @@ The three candidate sequences are compared against the current evidence using th
 - preserves stable boundaries already observed in `108`
 - turns the future hard cut into a prepared phase instead of a leap
 - creates direct input for `112` without overcommitting to implementation detail yet
+- gives the best place to absorb future constraints such as shared-tree support, cloud-adjacent concerns, and external connectors without turning them into premature implementation scope
 
 ### Risks
 
 - still requires coordinated refactor planning
 - slower than an aggressive cut
 - demands discipline to stop after boundary cleanup and not sprawl into opportunistic rewrites
+- requires explicit operating artifacts and decision hygiene; without them, future-facing considerations can still blur the scope even if the phase order is correct
 
 ### Prerequisites
 
 - stable baseline from `108-110`
 - willingness to sequence work around boundary cleanup before broader feature expansion in affected runtime areas
+- willingness to keep future constraints explicit as guardrails while deferring infrastructure choices that do not yet change the hotspot order
 
 ### Why yes
 
@@ -139,6 +145,7 @@ The three candidate sequences are compared against the current evidence using th
 - architectural clarity gain: `high`
 - execution realism: `high`
 - hard-cut readiness: `high`
+- scope discipline: `high`
 
 ## Option C - Aggressive Cut
 
@@ -170,6 +177,7 @@ The three candidate sequences are compared against the current evidence using th
 - stacks too many `high` removal-difficulty edges in the same window
 - current code concentration makes the blast radius too broad
 - failure mode is expensive because rollback would be conceptually simple but operationally messy
+- future concerns such as shared trees or external integrations would almost certainly get answered through shortcuts instead of through clarified boundaries
 
 ### Prerequisites
 
@@ -193,14 +201,15 @@ The three candidate sequences are compared against the current evidence using th
 - architectural clarity gain: `high`
 - execution realism: `medium-low`
 - hard-cut readiness: `medium`
+- scope discipline: `low`
 
 ## Comparative Summary
 
-| Option | Risk containment | Hotspot coverage | Clarity gain | Execution realism | Hard-cut readiness | Verdict |
+| Option | Risk containment | Hotspot coverage | Clarity gain | Execution realism | Hard-cut readiness | Scope discipline | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
-| Conservative path | High | Medium-low | Medium | High | Medium-low | Too cautious for the current hotspot profile |
-| Guided hard cut | Medium-high | High | High | High | High | Best balance |
-| Aggressive cut | Low | High | High | Medium-low | Medium | Too risky for current concentration level |
+| Conservative path | High | Medium-low | Medium | High | Medium-low | Medium | Too cautious for the current hotspot profile |
+| Guided hard cut | Medium-high | High | High | High | High | High | Best balance |
+| Aggressive cut | Low | High | High | Medium-low | Medium | Low | Too risky for current concentration level |
 
 ## Recommended Sequence
 
@@ -233,8 +242,11 @@ Choose **Option B - Guided Hard Cut**.
 - dependencies
 - temporary freezes
 - readiness signals for opening a future execution phase
+- cross-phase invariants
+- a decision model for future-facing considerations that must stay visible without becoming immediate scope
 
 ## Notes
 
 - This recommendation is evidence-driven from `108-110`; it is not a commitment to immediate implementation.
 - The aggressive route remains a theoretical option, but current runtime concentration makes it the wrong next move.
+- The near/mid-term possibility of shared-tree support does not change the winning option; it strengthens the need for Option B to stay disciplined about boundaries.

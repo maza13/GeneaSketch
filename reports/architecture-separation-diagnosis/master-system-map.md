@@ -390,6 +390,16 @@ Cross-cutting systems:
 - `App Shell`
 - `State Manager`
 
+## Constraint Notes for Later Phases
+
+The current taxonomy still holds. No new top-level system needs to be introduced yet for cloud, P2P, mobile, or shared-tree support.
+
+However, the map now implies a few constraints that later phases should preserve:
+
+- `Workspace Profile` should remain the local/private preference boundary and should not be allowed to drift into a future shareable-tree boundary.
+- future shared-tree, API, or AI-assisted changes should attach through validated mutation/application surfaces, not by reopening broad runtime shortcuts.
+- mobile or cloud concerns should arrive later as adapters or shells around current boundaries, not as reasons to redefine the current system taxonomy prematurely.
+
 ## Immediate Relevance for `109`
 
 The next task should treat the following as prime candidates for runtime boundary audit:
@@ -405,3 +415,4 @@ The next task should treat the following as prime candidates for runtime boundar
 
 - This map intentionally does not classify severity. That belongs to `109` and `110`.
 - The baseline taxonomy remains the source of canonical names; this file only binds those names to current code reality.
+- Emerging future constraints matter here only when they pressure existing boundaries; they do not justify new top-level systems by themselves.
