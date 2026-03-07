@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "ready"
 priority: "p2"
 issue_id: "124"
 title: "Runtime read-model compat state normalization"
@@ -21,6 +21,7 @@ commit_confirmed: false
 commit_message: null
 closed_at: null
 ---
+
 
 # Runtime read-model compat state normalization
 
