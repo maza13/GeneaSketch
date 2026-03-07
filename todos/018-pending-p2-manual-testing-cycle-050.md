@@ -12,7 +12,7 @@ Final validation gate for GeneaSketch 0.5.0 Stable.
 
 ## Problem Statement
 
-After the massive architectural shift (GSchema hardening and Legacy Engine removal), we need a comprehensive manual verification to catch edge cases that automated tests might miss, especially regarding UI responsiveness and visual regressions.
+After the massive architectural shift (GSchema hardening and Legacy Engine removal), we need a comprehensive manual verification to catch edge cases that automated tests might miss, specifically regarding **Visual Engine** parity (DTree D3 rendering) and **App Shell (UI)** responsiveness/visual regressions.
 
 ## Recommended Action
 
