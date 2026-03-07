@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "complete"
 priority: "p2"
 issue_id: "113"
 title: "Final diagnosis packet"
@@ -17,10 +17,12 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 113: produce final architecture diagnosis packet"
+closed_at: "2026-03-07"
 ---
+
+
 
 # Final diagnosis packet
 
@@ -88,10 +90,10 @@ Create the final packet under `reports/architecture-separation-diagnosis/` and u
 
 ## Acceptance Criteria
 
-- [ ] `executive-summary.md` and `findings.json` exist under `reports/architecture-separation-diagnosis/`.
-- [ ] The final packet synthesizes `108` through `112` and states an explicit readiness verdict.
-- [ ] `113` is the only child task that declares the final diagnosis packet complete.
-- [ ] Work log updated.
+- [x] `executive-summary.md` and `findings.json` exist under `reports/architecture-separation-diagnosis/`.
+- [x] The final packet synthesizes `108` through `112` and states an explicit readiness verdict.
+- [x] `113` is the only child task that declares the final diagnosis packet complete.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -113,6 +115,50 @@ Create the final packet under `reports/architecture-separation-diagnosis/` and u
   - `todos/099-pending-p2-post-baseline-architecture-followup.md`
   - `reports/architecture-separation-diagnosis/README.md`
 
+### 2026-03-07 - Final diagnosis packet completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Produced `executive-summary.md` with the final readiness verdict and next-phase opening criteria.
+- Produced `findings.json` to normalize the major architecture findings from `108` through `112`.
+- Consolidated the final recommendation that the project should proceed only through a phased guided hard cut.
+
+**Evidence:**
+- Artifacts/paths:
+  - `reports/architecture-separation-diagnosis/executive-summary.md`
+  - `reports/architecture-separation-diagnosis/findings.json`
+  - `reports/architecture-separation-diagnosis/master-system-map.md`
+  - `reports/architecture-separation-diagnosis/boundary-audit.md`
+  - `reports/architecture-separation-diagnosis/hotspots.json`
+  - `reports/architecture-separation-diagnosis/separation-options.md`
+  - `reports/architecture-separation-diagnosis/guided-hard-cut-plan.md`
+
 ## Notes
 
 This task should be the only place that states the final diagnosis verdict for the chain.
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Produced the final diagnosis packet, normalized architecture findings, and set the readiness verdict and opening criteria for a future execution phase.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/113-complete-p2-final-diagnosis-packet.md
+
+**Next Recommendation (generated at closure):**
+- An umbrella now includes this completed task in its child chain: 099 (p2).
+- Recommended next step: brief/prepare umbrella 099.

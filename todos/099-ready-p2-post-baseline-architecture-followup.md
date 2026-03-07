@@ -27,6 +27,7 @@ closed_at: null
 
 
 
+
 # Architecture separation diagnosis and guided hard-cut planning
 
 Turn the completed architecture baseline from `100` into an evidence-driven diagnosis package that defines what must be separated, in what order, and under what gates before any real hard cut is opened.
@@ -288,3 +289,23 @@ This umbrella is diagnostic by design. It must not be used to start runtime refa
 - Hard dependencies complete: 100
 - Activated: 112
 - Blocked: 113 (blocked by 112)
+
+### 2026-03-07 - Umbrella prepared via todo:prepare
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Reviewed hard dependencies before opening the umbrella.
+- Confirmed child execution order: 108, 109, 110, 111, 112, 113.
+- Considered related context: 097:precedent, 100:precedent, 098:parallel, 048:context.
+- Activated eligible child tasks: 113.
+- Left blocked child tasks pending: none.
+
+**Evidence:**
+- Hard dependencies complete: 100
+- Activated: 113
+- Blocked: none
