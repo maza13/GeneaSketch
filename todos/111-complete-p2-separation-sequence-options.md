@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "complete"
 priority: "p2"
 issue_id: "111"
 title: "Separation sequence options"
@@ -17,10 +17,12 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 111: select separation sequence strategy"
+closed_at: "2026-03-07"
 ---
+
+
 
 # Separation sequence options
 
@@ -88,10 +90,10 @@ Create `reports/architecture-separation-diagnosis/separation-options.md` and use
 
 ## Acceptance Criteria
 
-- [ ] `separation-options.md` exists under `reports/architecture-separation-diagnosis/`.
-- [ ] It compares conservative, guided hard-cut, and aggressive sequences.
-- [ ] It recommends one sequence with explicit tradeoff rationale.
-- [ ] Work log updated.
+- [x] `separation-options.md` exists under `reports/architecture-separation-diagnosis/`.
+- [x] It compares conservative, guided hard-cut, and aggressive sequences.
+- [x] It recommends one sequence with explicit tradeoff rationale.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -113,6 +115,46 @@ Create `reports/architecture-separation-diagnosis/separation-options.md` and use
   - `todos/110-pending-p2-hotspot-risk-classification.md`
   - `todos/099-pending-p2-post-baseline-architecture-followup.md`
 
+### 2026-03-07 - Separation sequence comparison completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Produced the sequence comparison report under `reports/architecture-separation-diagnosis/`.
+- Compared conservative, guided hard-cut, and aggressive separation routes against the current hotspot profile.
+- Selected one recommended route and fixed the strategic handoff for `112`.
+
+**Evidence:**
+- Artifacts/paths:
+  - `reports/architecture-separation-diagnosis/separation-options.md`
+  - `reports/architecture-separation-diagnosis/hotspots.json`
+  - `todos/111-ready-p2-separation-sequence-options.md`
+
 ## Notes
 
 This task recommends a sequence but should not yet prescribe the complete phase plan. That belongs in `112`.
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Compared conservative, guided hard-cut, and aggressive separation routes against the current hotspot evidence and fixed the strategic recommendation for task 112.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/111-complete-p2-separation-sequence-options.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 112 (p2).
+- Recommended start: 112 (p2).
