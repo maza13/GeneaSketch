@@ -1,19 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { analyzeGeneaDocument } from "@/core/diagnostics/analyzer";
 import { applyDiagnosticFixes } from "@/core/diagnostics/fixExecutor";
-import { calculateGlobalStatistics } from "@/core/graph/globalStatistics";
-import { calculateDetailedStatistics } from "@/core/graph/statistics";
-import { extractSubTree } from "@/core/edit/generators";
-import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
 import { projectGraphDocument } from "@/core/read-model/selectors";
-import { buildTimeline } from "@/core/timeline/buildTimeline";
 import { inferTimelineEvents, inferTimelineStatus } from "@/core/timeline/livingPresence";
-import { buildAiAssistantViewModel } from "@/app-shell/workbenches/aiAssistantWorkbench";
-import { buildImportReviewViewModel } from "@/app-shell/workbenches/importReviewWorkbench";
-import { buildPersonEditorViewModel } from "@/app-shell/workbenches/personEditorWorkbench";
-import { buildPersonWorkspaceViewModel } from "@/app-shell/workbenches/personWorkspaceWorkbench";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
 import { DEFAULT_COLOR_THEME, useAppShellController } from "@/hooks/useAppShellController";
 import { useAppShellShortcuts } from "@/hooks/useAppShellShortcuts";
@@ -22,239 +12,13 @@ import { useGskFile } from "@/hooks/useGskFile";
 import { useMenuConfig } from "@/hooks/useMenuConfig";
 import { useWorkspacePersistenceEffects } from "@/hooks/useWorkspacePersistenceEffects";
 import { useAppStore } from "@/state/store";
-import type { GraphDocument, Person } from "@/types/domain";
 import type { SearchFilterState, SearchSortDirection, SearchSortField } from "@/ui/search/searchEngine";
-import { buildSearchResults } from "@/ui/search/searchEngine";
 import type {
   AppShellFacade,
-  BranchExportViewModel,
-  DiagnosticsViewModel,
-  LeftPanelViewModel,
-  PersonPickerViewModel,
-  PersonStatsViewModel,
-  PersonWorkspaceViewModel,
-  RelatedPersonListItem,
-  SearchPanelViewModel,
-  SelectedPersonPanelViewModel,
-  TimelinePanelViewModel,
   TimelinePresenceResult,
 } from "./types";
-
-function toRelatedPerson(person: Person): RelatedPersonListItem {
-  return {
-    id: person.id,
-    name: person.name,
-    surname: person.surname,
-    sex: person.sex,
-    birthDate: person.birthDate || person.events.find((event) => event.type === "BIRT")?.date,
-  };
-}
-
-function buildSelectedPersonPanelViewModel(
-  document: GraphDocument | null,
-  selectedPersonId: string | null,
-): SelectedPersonPanelViewModel {
-  if (!document || !selectedPersonId) return { kind: "empty" };
-
-  const person = document.persons[selectedPersonId];
-  if (!person) return { kind: "empty" };
-
-  const parents = Object.values(document.families)
-    .filter((family) => family.childrenIds.includes(person.id))
-    .flatMap((family) => [family.husbandId, family.wifeId])
-    .filter((id): id is string => Boolean(id && id !== person.id))
-    .map((id) => document.persons[id])
-    .filter((candidate): candidate is Person => Boolean(candidate))
-    .map(toRelatedPerson);
-
-  const spouses = person.fams
-    .map((familyId) => document.families[familyId])
-    .filter(Boolean)
-    .map((family) => (family.husbandId === person.id ? family.wifeId : family.husbandId))
-    .filter((id): id is string => Boolean(id))
-    .map((id) => document.persons[id])
-    .filter((candidate): candidate is Person => Boolean(candidate))
-    .map(toRelatedPerson);
-
-  const children = person.fams
-    .map((familyId) => document.families[familyId])
-    .filter(Boolean)
-    .flatMap((family) => family.childrenIds)
-    .map((id) => document.persons[id])
-    .filter((candidate): candidate is Person => Boolean(candidate))
-    .map(toRelatedPerson);
-
-  return {
-    kind: "selected",
-    person: {
-      id: person.id,
-      name: person.name,
-      sex: person.sex,
-      birthDate: person.birthDate || person.events.find((event) => event.type === "BIRT")?.date,
-      birthPlace: person.birthPlace || person.events.find((event) => event.type === "BIRT")?.place,
-      deathDate: person.deathDate || person.events.find((event) => event.type === "DEAT")?.date,
-      deathPlace: person.deathPlace || person.events.find((event) => event.type === "DEAT")?.place,
-      lifeStatus: person.lifeStatus,
-    },
-    parents,
-    spouses,
-    children,
-  };
-}
-
-function buildLeftPanelViewModel(
-  document: GraphDocument | null,
-  viewConfig: ReturnType<typeof useAppStore.getState>["viewConfig"],
-  visualConfig: ReturnType<typeof useAppStore.getState>["visualConfig"],
-): LeftPanelViewModel {
-  return {
-    hasDocument: Boolean(document),
-    documentView: document,
-    sections: {
-      layersOpen: viewConfig?.leftSections?.layersOpen ?? true,
-      treeConfigOpen: viewConfig?.leftSections?.treeConfigOpen ?? true,
-      canvasToolsOpen: viewConfig?.leftSections?.canvasToolsOpen ?? false,
-    },
-    treeConfig: viewConfig
-      ? {
-          isVertical: viewConfig.dtree?.isVertical ?? false,
-          preset: viewConfig.preset,
-          depth: viewConfig.depth,
-          showSpouses: viewConfig.showSpouses,
-        }
-      : null,
-    canvasTools: {
-      gridEnabled: visualConfig.gridEnabled,
-      positionCount: Object.keys(visualConfig.nodePositions).length,
-    },
-  };
-}
-
-function buildVisiblePersonIds(document: GraphDocument | null, expandedGraph: ReturnType<typeof useAppStore.getState>["expandedGraph"]): string[] {
-  if (!document) return [];
-  const ids = new Set<string>();
-  for (const node of expandedGraph.nodes) {
-    if (node.type !== "person" && node.type !== "personAlias") continue;
-    const canonicalId = node.canonicalId || node.id;
-    if (document.persons[canonicalId]) ids.add(canonicalId);
-  }
-  return Array.from(ids);
-}
-
-function buildTimelinePanelViewModel(
-  document: GraphDocument | null,
-  expandedGraph: ReturnType<typeof useAppStore.getState>["expandedGraph"],
-  viewConfig: ReturnType<typeof useAppStore.getState>["viewConfig"],
-): TimelinePanelViewModel {
-  const items = document && viewConfig ? buildTimeline(document, expandedGraph, viewConfig) : [];
-  const years = items
-    .filter((item) => item.sortDate)
-    .map((item) => (item.sortDate as Date).getUTCFullYear());
-  const currentYear = new Date().getFullYear();
-  const bounds = years.length === 0
-    ? { min: currentYear - 120, max: currentYear + 20 }
-    : { min: Math.min(...years) - 5, max: Math.max(...years) + 5 };
-  const timelineOverlay = viewConfig?.dtree?.overlays.find((overlay) => overlay.type === "timeline");
-  const scope = viewConfig?.timeline.scope ?? "visible";
-
-  return {
-    isOpen: viewConfig?.timelinePanelOpen ?? false,
-    isExpanded: (viewConfig?.rightStack?.timelineMode ?? "compact") === "expanded",
-    items,
-    activeItemId: timelineOverlay?.config.sourceItemId ?? null,
-    scopeLabel: scope === "all" ? "Todo el archivo" : "Solo visibles",
-    timelineView: viewConfig?.timeline.view ?? "list",
-    scaleZoom: viewConfig?.timeline.scaleZoom ?? 1,
-    scaleOffset: viewConfig?.timeline.scaleOffset ?? 0,
-    bounds,
-  };
-}
-
-function buildSearchViewModel(
-  open: boolean,
-  document: GraphDocument | null,
-  query: string,
-  sortField: SearchSortField,
-  sortDirection: SearchSortDirection,
-  filters: SearchFilterState,
-): SearchPanelViewModel {
-  const results = document ? buildSearchResults(document, query, sortField, sortDirection, filters) : [];
-  return {
-    open,
-    query,
-    sortField,
-    sortDirection,
-    filters,
-    results,
-    hasSearchData: Boolean(document),
-  };
-}
-
-function buildPersonPickerViewModel(
-  document: GraphDocument | null,
-  picker: { anchorId: string; type: import("@/types/domain").PendingRelationType | "kinship" } | null,
-): PersonPickerViewModel | null {
-  if (!document || !picker) return null;
-  const options = Object.values(document.persons)
-    .filter((person) => person.id !== picker.anchorId)
-    .map((person) => ({
-      id: person.id,
-      name: person.name,
-      surname: person.surname,
-      birthDate: person.birthDate || person.events.find((event) => event.type === "BIRT")?.date,
-    }))
-    .sort((left, right) => `${left.name} ${left.surname || ""}`.localeCompare(`${right.name} ${right.surname || ""}`));
-
-  return {
-    open: true,
-    anchorId: picker.anchorId,
-    relationType: picker.type,
-    options,
-  };
-}
-
-function buildBranchExportViewModel(document: GraphDocument | null, branchAnchorId: string | null): BranchExportViewModel | null {
-  if (!document || !branchAnchorId) return null;
-  const person = document.persons[branchAnchorId];
-  if (!person) return null;
-
-  return {
-    open: true,
-    personId: person.id,
-    personName: `${person.name} ${person.surname || ""}`.trim(),
-    previews: {
-      all_ancestors: (() => {
-        const sub = extractSubTree(document, person.id, "all_ancestors");
-        return { persons: Object.keys(sub.persons).length, families: Object.keys(sub.families).length };
-      })(),
-      paternal_ancestors: (() => {
-        const sub = extractSubTree(document, person.id, "paternal_ancestors");
-        return { persons: Object.keys(sub.persons).length, families: Object.keys(sub.families).length };
-      })(),
-      maternal_ancestors: (() => {
-        const sub = extractSubTree(document, person.id, "maternal_ancestors");
-        return { persons: Object.keys(sub.persons).length, families: Object.keys(sub.families).length };
-      })(),
-      all_descendants: (() => {
-        const sub = extractSubTree(document, person.id, "all_descendants");
-        return { persons: Object.keys(sub.persons).length, families: Object.keys(sub.families).length };
-      })(),
-    },
-  };
-}
-
-function buildPersonStatsViewModel(document: GraphDocument | null, personId: string | null): PersonStatsViewModel {
-  if (!document || !personId) return { kind: "empty" };
-  const person = document.persons[personId];
-  if (!person) return { kind: "empty" };
-  return {
-    kind: "ready",
-    personId,
-    personName: person.name,
-    personSex: person.sex,
-    stats: calculateDetailedStatistics(document, personId),
-  };
-}
+import { useShellDerivedViewModels } from "./useShellDerivedViewModels";
+import { useShellSessionFlow } from "./useShellSessionFlow";
 
 export function useAppShellFacade(): AppShellFacade {
   const gschemaGraph = useAppStore((state) => state.gschemaGraph);
@@ -263,10 +27,11 @@ export function useAppShellFacade(): AppShellFacade {
   const expandedGraph = useAppStore((state) => state.expandedGraph);
   const selectedPersonId = useAppStore((state) => state.selectedPersonId);
   const fitNonce = useAppStore((state) => state.fitNonce);
-  const restoreAvailable = useAppStore((state) => state.restoreAvailable);
   const recentFiles = useAppStore((state) => state.recentFiles);
   const mergeDraft = useAppStore((state) => state.mergeDraft);
   const aiSettings = useAppStore((state) => state.aiSettings);
+  const bootStatus = useAppStore((state) => state.bootStatus);
+  const restoreNoticeVisible = useAppStore((state) => state.restoreNoticeVisible);
   const { parseErrors, parseWarnings } = useAppStore(
     useShallow((state) => ({
       parseErrors: state.parseErrors,
@@ -314,9 +79,9 @@ export function useAppShellFacade(): AppShellFacade {
       setMergeDraft: state.setMergeDraft,
       clearMergeDraft: state.clearMergeDraft,
       setAiSettings: state.setAiSettings,
-      checkRestoreAvailability: state.checkRestoreAvailability,
-      restoreSession: state.restoreSession,
+      bootstrapSession: state.bootstrapSession,
       clearSession: state.clearSession,
+      dismissRestoreNotice: state.dismissRestoreNotice,
       setFocusFamilyId: state.setFocusFamilyId,
       inspectPerson: state.inspectPerson,
       saveAutosessionNow: state.saveAutosessionNow,
@@ -444,9 +209,20 @@ export function useAppShellFacade(): AppShellFacade {
     colorTheme: shellController.colorTheme,
   });
 
-  useEffect(() => {
-    actions.checkRestoreAvailability();
-  }, [actions.checkRestoreAvailability]);
+  const sessionFlow = useShellSessionFlow({
+    bootStatus,
+    restoreNoticeVisible,
+    document,
+    gschemaGraph,
+    bootstrapSession: actions.bootstrapSession,
+    dismissRestoreNotice: actions.dismissRestoreNotice,
+    clearSession: actions.clearSession,
+    createNewTreeDoc: actions.createNewTreeDoc,
+    setSelectedPerson: actions.setSelectedPerson,
+    fitToScreen: actions.fitToScreen,
+    openPersonEditor: shellController.openPersonEditor,
+    setStatus,
+  });
 
   const { menus, actions: menuActions } = useMenuConfig({
     document,
@@ -459,7 +235,7 @@ export function useAppShellFacade(): AppShellFacade {
     leftCollapsed,
     rightCollapsed,
     timelineOpen: viewConfig?.timelinePanelOpen ?? false,
-    createNewTreeDoc: actions.createNewTreeDoc,
+    createNewTreeDoc: async () => sessionFlow.startFreshSession(),
     openFileInput: () => openFileInputRef.current?.click(),
     importFileInput: () => importFileInputRef.current?.click(),
     openAndReplace,
@@ -497,77 +273,48 @@ export function useAppShellFacade(): AppShellFacade {
     menuLayout: shellController.menuLayout,
     setMenuLayout: shellController.setMenuLayout,
   });
-
-  const visiblePersonIds = useMemo(
-    () => buildVisiblePersonIds(document, expandedGraph),
-    [document, expandedGraph],
-  );
-  const normalizedDtreeConfig = useMemo(
-    () => (viewConfig ? normalizeDtreeConfig(viewConfig.dtree) : undefined),
-    [viewConfig],
-  );
-  const leftPanelViewModel = useMemo(
-    () => buildLeftPanelViewModel(document, viewConfig, visualConfig),
-    [document, viewConfig, visualConfig],
-  );
-  const selectedPersonPanelViewModel = useMemo(
-    () => buildSelectedPersonPanelViewModel(document, shellController.workspacePersonId || selectedPersonId),
-    [document, selectedPersonId, shellController.workspacePersonId],
-  );
-  const timelineViewModel = useMemo(
-    () => buildTimelinePanelViewModel(document, expandedGraph, viewConfig),
-    [document, expandedGraph, viewConfig],
-  );
-  const searchViewModel = useMemo(
-    () => buildSearchViewModel(shellController.showSearchPanel, document, searchQuery, searchSortField, searchSortDirection, searchFilters),
-    [document, searchFilters, searchQuery, searchSortDirection, searchSortField, shellController.showSearchPanel],
-  );
-  const diagnosticsViewModel = useMemo<DiagnosticsViewModel>(
-    () => ({
-      report: document ? analyzeGeneaDocument(document) : null,
-      parseErrors,
-      parseWarnings,
-    }),
-    [document, parseErrors, parseWarnings],
-  );
-  const globalStatsViewModel = useMemo(
-    () => ({
-      hasDocument: Boolean(document),
-      visiblePersonIds,
-      getStats: (scope: "all" | "visible") => calculateGlobalStatistics(document!, scope, visiblePersonIds),
-    }),
-    [document, visiblePersonIds],
-  );
-  const personStatsViewModel = useMemo(
-    () => buildPersonStatsViewModel(document, shellController.showPersonStatsPersonId),
-    [document, shellController.showPersonStatsPersonId],
-  );
-  const personWorkspaceViewModel = useMemo<PersonWorkspaceViewModel | null>(() => {
-    return buildPersonWorkspaceViewModel(document, aiSettings, shellController.workspacePersonId);
-  }, [aiSettings, document, shellController.workspacePersonId]);
-  const personWorkspaceViewModelV3 = useMemo<PersonWorkspaceViewModel | null>(() => {
-    return buildPersonWorkspaceViewModel(document, aiSettings, shellController.workspacePersonIdV3);
-  }, [aiSettings, document, shellController.workspacePersonIdV3]);
-  const personEditorViewModel = useMemo(
-    () => buildPersonEditorViewModel(document, aiSettings, shellController.personDetailModal),
-    [aiSettings, document, shellController.personDetailModal],
-  );
-  const importReviewViewModel = useMemo(
-    () => buildImportReviewViewModel(document, importIncomingDoc, mergeDraft),
-    [document, importIncomingDoc, mergeDraft],
-  );
-  const aiAssistantViewModel = useMemo(
-    () => buildAiAssistantViewModel(showAiAssistantModal, aiContext, document, aiSettings),
-    [aiContext, aiSettings, document, showAiAssistantModal],
-  );
-  const personPickerViewModel = useMemo(
-    () => buildPersonPickerViewModel(document, shellController.picker),
-    [document, shellController.picker],
-  );
-  const branchExportViewModel = useMemo(
-    () => buildBranchExportViewModel(document, shellController.branchAnchorId),
-    [document, shellController.branchAnchorId],
-  );
+  const {
+    visiblePersonIds,
+    normalizedDtreeConfig,
+    leftPanelViewModel,
+    selectedPersonPanelViewModel,
+    timelineViewModel,
+    searchViewModel,
+    diagnosticsViewModel,
+    globalStatsViewModel,
+    personStatsViewModel,
+    personWorkspaceViewModel,
+    personWorkspaceViewModelV3,
+    personEditorViewModel,
+    importReviewViewModel,
+    aiAssistantViewModel,
+    personPickerViewModel,
+    branchExportViewModel,
+  } = useShellDerivedViewModels({
+    document,
+    viewConfig,
+    visualConfig,
+    expandedGraph,
+    selectedPersonId,
+    workspacePersonId: shellController.workspacePersonId,
+    workspacePersonIdV3: shellController.workspacePersonIdV3,
+    branchAnchorId: shellController.branchAnchorId,
+    showSearchPanel: shellController.showSearchPanel,
+    searchQuery,
+    searchSortField,
+    searchSortDirection,
+    searchFilters,
+    parseErrors,
+    parseWarnings,
+    aiSettings,
+    showPersonStatsPersonId: shellController.showPersonStatsPersonId,
+    personDetailModal: shellController.personDetailModal,
+    importIncomingDoc,
+    mergeDraft,
+    showAiAssistantModal,
+    aiContext,
+    picker: shellController.picker,
+  });
 
   return {
     chrome: {
@@ -680,6 +427,9 @@ export function useAppShellFacade(): AppShellFacade {
       },
     },
     workspace: {
+      boot: {
+        status: bootStatus,
+      },
       hiddenInputs: {
         openFile: {
           ref: openFileInputRef,
@@ -699,9 +449,10 @@ export function useAppShellFacade(): AppShellFacade {
         },
       },
       restoreBanner: {
-        visible: restoreAvailable,
-        onRestore: actions.restoreSession,
-        onClear: actions.clearSession,
+        visible: sessionFlow.restoreBanner.visible,
+        message: sessionFlow.restoreBanner.message,
+        onDismiss: sessionFlow.restoreBanner.onDismiss,
+        onStartFresh: sessionFlow.restoreBanner.onStartFresh,
       },
       exportWarningsBanner: {
         visible: exportWarnings.length > 0,

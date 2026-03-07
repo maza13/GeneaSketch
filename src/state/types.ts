@@ -94,7 +94,9 @@ export interface ViewSlice {
 export interface SessionSlice {
     focusHistory: string[];
     focusIndex: number;
+    bootStatus: "checking" | "restoring" | "ready";
     restoreAvailable: boolean;
+    restoreNoticeVisible: boolean;
     parseErrors: string[];
     parseWarnings: string[];
     recentFiles: RecentFileEntry[];
@@ -110,9 +112,11 @@ export interface SessionSlice {
     clearRecentFiles: () => void;
     openRecentFile: (id: string) => { entry: RecentFileEntry, payload: RecentPayloadV2 } | null;
     saveAutosessionNow: () => Promise<void>;
+    bootstrapSession: () => Promise<void>;
     checkRestoreAvailability: () => Promise<void>;
     restoreSession: () => Promise<void>;
     clearSession: () => Promise<void>;
+    dismissRestoreNotice: () => void;
 }
 
 export interface AiSlice {

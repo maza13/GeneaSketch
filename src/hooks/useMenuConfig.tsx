@@ -30,7 +30,7 @@ export type MenuConfigParams = {
     timelineOpen: boolean;
     menuLayout: MenuLayout;
     // Callbacks
-    createNewTreeDoc: () => void;
+    createNewTreeDoc: () => void | Promise<void>;
     openFileInput: () => void;
     importFileInput: () => void;
     openAndReplace: (file: File) => void;
@@ -93,7 +93,7 @@ export function useMenuConfig(p: MenuConfigParams) {
     const menus = useMemo((): MenuGroup[] => {
 
         // ── Archivo / Proyecto shared items ──────────────────────────────────
-        const itemNew: MenuItem = { id: "new", label: "Nuevo", icon: ic("add"), onClick: () => p.createNewTreeDoc() };
+        const itemNew: MenuItem = { id: "new", label: "Nuevo", icon: ic("add"), onClick: () => void p.createNewTreeDoc() };
         const itemOpen: MenuItem = { id: "open", label: "Abrir...", icon: ic("folder_open"), shortcut: "Ctrl+O", onClick: () => p.openFileInput() };
         const itemSave: MenuItem = { id: "save-gsk", label: "Guardar (.gsk)", icon: ic("save"), shortcut: "Ctrl+S", disabled: !p.document, onClick: () => void p.saveGsk(p.colorTheme) };
         const itemImport: MenuItem = {

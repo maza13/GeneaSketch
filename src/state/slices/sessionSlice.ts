@@ -16,7 +16,9 @@ const newRecentId = () => `recent_${Date.now().toString(36)}_${Math.floor(Math.r
 export const createSessionSlice: StateCreator<AppState, [], [], SessionSlice> = (set, get) => ({
     focusHistory: [],
     focusIndex: -1,
+    bootStatus: "checking",
     restoreAvailable: false,
+    restoreNoticeVisible: false,
     parseErrors: [],
     parseWarnings: [],
     recentFiles: [],
@@ -102,6 +104,22 @@ export const createSessionSlice: StateCreator<AppState, [], [], SessionSlice> = 
         await SessionService.saveAutosession(buildAutosessionSnapshot(get()));
     },
 
+    bootstrapSession: async () => {
+        try {
+            set({ bootStatus: "checking", isRestoring: true });
+            const restored = await SessionService.restoreAutosession();
+            if (!restored) {
+                set({ restoreAvailable: false, restoreNoticeVisible: false, isRestoring: false, bootStatus: "ready" });
+                return;
+            }
+            set({ bootStatus: "restoring" });
+            applyRestoredSnapshot(set, get, restored, true);
+        } catch (error) {
+            console.warn("[sessionSlice] bootstrapSession failed; starting clean", error);
+            set({ restoreAvailable: false, restoreNoticeVisible: false, isRestoring: false, bootStatus: "ready" });
+        }
+    },
+
     checkRestoreAvailability: async () => {
         const restored = await SessionService.restoreAutosession();
         const hasSession = !!restored;
@@ -113,50 +131,64 @@ export const createSessionSlice: StateCreator<AppState, [], [], SessionSlice> = 
         try {
             const restored = await SessionService.restoreAutosession();
             if (!restored) {
-                set({ restoreAvailable: false });
+                set({ restoreAvailable: false, restoreNoticeVisible: false });
                 return;
             }
-            let restoredGraph = restored.graph
-                ? GSchemaGraph.fromData(restored.graph.data, restored.graph.journal)
-                : null;
-            if ((restored.schemaVersion ?? 0) < SESSION_SNAPSHOT_SCHEMA_VERSION && !restoredGraph) {
-                set({ restoreAvailable: false });
-                return;
-            }
-            const projectedDoc = projectGraphDocument(restoredGraph);
-            const normalizedViewConfig = normalizeRestoredViewConfig(restored.viewConfig, projectedDoc);
-            const selectedPersonId = normalizedViewConfig?.focusPersonId
-                || Object.keys(projectedDoc?.persons || {})[0]
-                || null;
-            const normalizedAiSettings = normalizeRestoredAiSettings(restored.aiSettings);
-            const mergeDraft = sanitizeMergeDraftSnapshot(restored.mergeDraft) ?? null;
-            get().loadGraph({ graph: restoredGraph, source: "session" });
-            set({
-                viewConfig: normalizedViewConfig,
-                visualConfig: UiEngine.normalizeVisualConfig(restored.visualConfig),
-                expandedGraph: ensureExpanded(projectedDoc, normalizedViewConfig),
-                selectedPersonId,
-                focusHistory: restored.focusHistory || [],
-                focusIndex: restored.focusIndex ?? -1,
-                recentFiles: restored.recentFiles || [],
-                recentPayloads: restored.recentPayloads || {},
-                mergeDraft,
-                aiSettings: normalizedAiSettings,
-                restoreAvailable: false
-            });
+            applyRestoredSnapshot(set, get, restored, false);
         } catch (error) {
             console.warn("[sessionSlice] restoreSession failed; clearing restore state", error);
-            set({ restoreAvailable: false });
+            set({ restoreAvailable: false, restoreNoticeVisible: false });
         } finally {
-            set({ isRestoring: false });
+            set({ isRestoring: false, bootStatus: "ready" });
         }
     },
 
     clearSession: async () => {
         await SessionService.clearAutosession();
-        set({ restoreAvailable: false, isRestoring: false });
-    }
+        set({ restoreAvailable: false, restoreNoticeVisible: false, isRestoring: false, bootStatus: "ready" });
+    },
+
+    dismissRestoreNotice: () => set({ restoreNoticeVisible: false }),
 });
+
+function applyRestoredSnapshot(
+    set: Parameters<StateCreator<AppState, [], [], SessionSlice>>[0],
+    get: Parameters<StateCreator<AppState, [], [], SessionSlice>>[1],
+    restored: SessionSnapshot,
+    showNotice: boolean,
+): void {
+    const restoredGraph = restored.graph
+        ? GSchemaGraph.fromData(restored.graph.data, restored.graph.journal)
+        : null;
+    if ((restored.schemaVersion ?? 0) < SESSION_SNAPSHOT_SCHEMA_VERSION && !restoredGraph) {
+        set({ restoreAvailable: false, restoreNoticeVisible: false, isRestoring: false, bootStatus: "ready" });
+        return;
+    }
+    const projectedDoc = projectGraphDocument(restoredGraph);
+    const normalizedViewConfig = normalizeRestoredViewConfig(restored.viewConfig, projectedDoc);
+    const selectedPersonId = normalizedViewConfig?.focusPersonId
+        || Object.keys(projectedDoc?.persons || {})[0]
+        || null;
+    const normalizedAiSettings = normalizeRestoredAiSettings(restored.aiSettings);
+    const mergeDraft = sanitizeMergeDraftSnapshot(restored.mergeDraft) ?? null;
+    get().loadGraph({ graph: restoredGraph, source: "session" });
+    set({
+        viewConfig: normalizedViewConfig,
+        visualConfig: UiEngine.normalizeVisualConfig(restored.visualConfig),
+        expandedGraph: ensureExpanded(projectedDoc, normalizedViewConfig),
+        selectedPersonId,
+        focusHistory: restored.focusHistory || [],
+        focusIndex: restored.focusIndex ?? -1,
+        recentFiles: restored.recentFiles || [],
+        recentPayloads: restored.recentPayloads || {},
+        mergeDraft,
+        aiSettings: normalizedAiSettings,
+        restoreAvailable: false,
+        restoreNoticeVisible: showNotice,
+        isRestoring: false,
+        bootStatus: "ready",
+    });
+}
 
 function hasActiveSessionState(state: AppState): boolean {
     return !!state.gschemaGraph || !!state.viewConfig;

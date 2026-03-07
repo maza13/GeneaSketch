@@ -9,6 +9,25 @@ const LeftPanel = lazy(() => import("@/ui/LeftPanel").then((module) => ({ defaul
 const RightPanel = lazy(() => import("@/ui/RightPanel").then((module) => ({ default: module.RightPanel })));
 const ShellTimelineRightPanel = lazy(() => import("./ShellTimelineRightPanel").then((module) => ({ default: module.ShellTimelineRightPanel })));
 
+function LeftPanelPlaceholder() {
+  return (
+    <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ height: 14, width: "58%", borderRadius: 999, background: "var(--bg-card)" }} />
+      <div style={{ height: 42, borderRadius: 12, background: "var(--bg-input)" }} />
+      <div style={{ height: 14, width: "46%", borderRadius: 999, background: "var(--bg-card)" }} />
+      <div style={{ height: 72, borderRadius: 12, background: "var(--bg-input)" }} />
+    </div>
+  );
+}
+
+function RightPanelPlaceholder() {
+  return (
+    <div style={{ padding: 18, color: "var(--ink-muted)", fontSize: 13 }}>
+      Cargando panel...
+    </div>
+  );
+}
+
 type Props = {
   chrome: ShellChromeFacade;
   timeline: ShellFeaturesFacade["timeline"];
@@ -45,14 +64,14 @@ export function ShellAppFrame({ chrome, timeline, canvasStage }: Props) {
       }
       leftPanel={
         <PanelErrorBoundary panelName="Panel izquierdo">
-          <Suspense fallback={null}>
+          <Suspense fallback={<LeftPanelPlaceholder />}>
             <LeftPanel viewModel={chrome.leftPanel.viewModel} commands={chrome.leftPanel.commands} />
           </Suspense>
         </PanelErrorBoundary>
       }
       rightPanel={
         <PanelErrorBoundary panelName="Panel derecho">
-          <Suspense fallback={null}>
+          <Suspense fallback={<RightPanelPlaceholder />}>
             <>
               <RightPanel
                 viewModel={chrome.rightPanel.viewModel}

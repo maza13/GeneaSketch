@@ -112,6 +112,7 @@ vi.mock("@/hooks/useAppShellController", () => ({
 
 vi.mock("@/hooks/useGskFile", () => ({
   useGskFile: () => mockGskFile,
+  hasMeaningfulTree: () => true,
 }));
 
 vi.mock("@/hooks/useAiAssistant", () => ({
@@ -201,9 +202,9 @@ function createActions() {
     setMergeDraft: vi.fn(),
     clearMergeDraft: vi.fn(),
     setAiSettings: vi.fn(),
-    checkRestoreAvailability: vi.fn(),
-    restoreSession: vi.fn(),
+    bootstrapSession: vi.fn(),
     clearSession: vi.fn(),
+    dismissRestoreNotice: vi.fn(),
     setFocusFamilyId: vi.fn(),
     inspectPerson: vi.fn(),
     saveAutosessionNow: vi.fn(),
@@ -223,7 +224,9 @@ describe("useAppShellFacade contract", () => {
       expandedGraph: { nodes: [{ id: "@I1@", canonicalId: "@I1@", type: "person" }], edges: [] },
       selectedPersonId: "@I1@",
       fitNonce: 0,
+      bootStatus: "ready",
       restoreAvailable: false,
+      restoreNoticeVisible: false,
       recentFiles: [],
       mergeDraft: null,
       aiSettings: createDefaultAiSettings(),
@@ -293,5 +296,52 @@ describe("useAppShellFacade contract", () => {
     expect(mockAiAssistant.applyAiBatch).toHaveBeenCalledWith(expect.objectContaining({ persons: expect.any(Object) }), "applied");
     facade!.features.ai.assistantModal.onOpenSettings();
     expect(mockAiAssistant.setShowAiSettingsModal).toHaveBeenCalledWith(true);
+  });
+
+  it("uses a guarded fresh-session flow before clearing autosave", async () => {
+    const confirmSpy = vi.fn();
+    vi.stubGlobal("confirm", confirmSpy);
+    confirmSpy.mockReturnValueOnce(false);
+    fakeState.current.restoreNoticeVisible = true;
+
+    const { useAppShellFacade } = await import("@/app-shell/facade/useAppShellFacade");
+    let facade: ReturnType<typeof useAppShellFacade> | null = null;
+
+    function Harness() {
+      facade = useAppShellFacade();
+      return null;
+    }
+
+    renderToStaticMarkup(<Harness />);
+    expect(facade).not.toBeNull();
+
+    await facade!.workspace.restoreBanner.onStartFresh();
+    expect(fakeState.current.clearSession).not.toHaveBeenCalled();
+    expect(fakeState.current.createNewTreeDoc).not.toHaveBeenCalled();
+
+    confirmSpy.mockReturnValueOnce(true);
+    await facade!.workspace.restoreBanner.onStartFresh();
+    expect(fakeState.current.clearSession).toHaveBeenCalledOnce();
+    expect(fakeState.current.createNewTreeDoc).toHaveBeenCalledOnce();
+  });
+
+  it("exposes a lightweight restore notice after automatic bootstrap", async () => {
+    fakeState.current.restoreNoticeVisible = true;
+
+    const { useAppShellFacade } = await import("@/app-shell/facade/useAppShellFacade");
+    let facade: ReturnType<typeof useAppShellFacade> | null = null;
+
+    function Harness() {
+      facade = useAppShellFacade();
+      return null;
+    }
+
+    renderToStaticMarkup(<Harness />);
+    expect(facade).not.toBeNull();
+    expect(facade!.workspace.restoreBanner.visible).toBe(true);
+    expect(facade!.workspace.restoreBanner.message).toContain("restaurada automaticamente");
+
+    facade!.workspace.restoreBanner.onDismiss();
+    expect(fakeState.current.dismissRestoreNotice).toHaveBeenCalledOnce();
   });
 });

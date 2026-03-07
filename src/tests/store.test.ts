@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { documentToGSchema, gschemaToDocument } from "@/core/gschema/GedcomBridge";
 import { createNewTree } from "@/core/edit/commands";
 import { projectGraphDocument } from "@/core/read-model";
+import { UiEngine } from "@/core/engine/UiEngine";
 import { SessionService } from "@/io/sessionService";
 import { useAppStore } from "@/state/store";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
@@ -195,8 +196,10 @@ beforeEach(() => {
     selectedPersonId: null,
     focusHistory: [],
     focusIndex: -1,
+    bootStatus: "ready",
     fitNonce: 0,
     restoreAvailable: false,
+    restoreNoticeVisible: false,
     isRestoring: false,
     parseErrors: [],
     parseWarnings: [],
@@ -205,6 +208,18 @@ beforeEach(() => {
 });
 
 describe("store explicit id actions", () => {
+  it("createNewTreeDoc initializes the placeholder root as the selected focus", () => {
+    useAppStore.getState().createNewTreeDoc();
+
+    const state = useAppStore.getState();
+    const projected = state.gschemaGraph ? projectGraphDocument(state.gschemaGraph) : null;
+    expect(projected?.persons["@I1@"]).toBeDefined();
+    expect(projected?.persons["@I1@"]?.name).toBe("(Sin nombre)");
+    expect(projected?.persons["@I1@"]?.isPlaceholder).toBe(true);
+    expect(state.selectedPersonId).toBe("@I1@");
+    expect(state.viewConfig?.focusPersonId).toBe("@I1@");
+  });
+
   it("applyProjectedDocument loads a whole projected document through the narrower store surface", () => {
     const doc = buildDocWithTwoPersons();
 
@@ -631,6 +646,51 @@ describe("legacy restore normalization", () => {
 });
 
 describe("session autosave/restore robustness", () => {
+  it("bootstrapSession restores autosession automatically and shows a lightweight notice", async () => {
+    const doc = createNewTree();
+    doc.persons["@I1@"].name = "Root";
+    doc.persons["@I1@"].isPlaceholder = false;
+
+    restoreValue = {
+      schemaVersion: 8,
+      graph: snapshotGraph(doc),
+      viewConfig: UiEngine.createDefaultViewConfig("@I1@"),
+      visualConfig: UiEngine.createDefaultVisualConfig(),
+      focusHistory: ["@I1@"],
+      focusIndex: 0,
+    };
+
+    useAppStore.setState({ bootStatus: "checking", isRestoring: true });
+    await useAppStore.getState().bootstrapSession();
+
+    expect(useAppStore.getState().bootStatus).toBe("ready");
+    expect(useAppStore.getState().restoreNoticeVisible).toBe(true);
+    expect(useAppStore.getState().selectedPersonId).toBe("@I1@");
+  });
+
+  it("bootstrapSession leaves a clean ready state when no autosession exists", async () => {
+    restoreValue = null;
+
+    useAppStore.setState({ bootStatus: "checking", isRestoring: true });
+    await useAppStore.getState().bootstrapSession();
+
+    expect(useAppStore.getState().bootStatus).toBe("ready");
+    expect(useAppStore.getState().restoreNoticeVisible).toBe(false);
+    expect(useAppStore.getState().restoreAvailable).toBe(false);
+  });
+
+  it("bootstrapSession falls back to a clean ready state when restore throws", async () => {
+    vi.mocked(SessionService.restoreAutosession).mockRejectedValueOnce(new Error("autosession failed"));
+
+    useAppStore.setState({ bootStatus: "checking", isRestoring: true, restoreNoticeVisible: true });
+    await useAppStore.getState().bootstrapSession();
+
+    expect(useAppStore.getState().bootStatus).toBe("ready");
+    expect(useAppStore.getState().restoreNoticeVisible).toBe(false);
+    expect(useAppStore.getState().restoreAvailable).toBe(false);
+    expect(useAppStore.getState().isRestoring).toBe(false);
+  });
+
   it("does not save autosession while restoring without active state", async () => {
     useAppStore.setState({ gschemaGraph: null, viewConfig: null, isRestoring: true });
 

@@ -5,7 +5,7 @@ const MockToolsPanel = lazy(() => import("@/ui/MockToolsPanel").then((module) =>
 const DTreeViewV3 = lazy(() => import("@/views/DTreeViewV3").then((module) => ({ default: module.DTreeViewV3 })));
 
 type Props = {
-  workspace: Pick<ShellWorkspaceFacade, "restoreBanner" | "exportWarningsBanner" | "banners">;
+  workspace: Pick<ShellWorkspaceFacade, "boot" | "restoreBanner" | "exportWarningsBanner" | "banners">;
   canvas: ShellFeaturesFacade["canvas"];
 };
 
@@ -39,13 +39,21 @@ const MOCK_TOOLS_STYLE = {
 } as const;
 
 export function ShellCanvasStage({ workspace, canvas }: Props) {
+  const hasDocument = Boolean(canvas.documentView);
+
   return (
     <>
+      {workspace.boot.status !== "ready" ? (
+        <div className="empty-state">
+          {workspace.boot.status === "restoring" ? "Restaurando sesion..." : "Preparando espacio de trabajo..."}
+        </div>
+      ) : null}
+
       {workspace.restoreBanner.visible ? (
         <div className="restore-banner">
-          <span>Se encontro sesion previa.</span>
-          <button onClick={() => void workspace.restoreBanner.onRestore()}>Continuar sesion</button>
-          <button onClick={() => void workspace.restoreBanner.onClear()}>Nueva sesion</button>
+          <span>{workspace.restoreBanner.message}</span>
+          <button onClick={() => void workspace.restoreBanner.onStartFresh()}>Nueva sesion</button>
+          <button onClick={workspace.restoreBanner.onDismiss}>Ocultar</button>
         </div>
       ) : null}
 
@@ -69,8 +77,12 @@ export function ShellCanvasStage({ workspace, canvas }: Props) {
         </div>
       ) : null}
 
-      {canvas.documentView ? null : <div className="empty-state">Crea un arbol nuevo o abre un archivo .gsk o .ged.</div>}
-      {canvas.modeBadge ? <div className="mode-badge">{canvas.modeBadge}</div> : null}
+      {workspace.boot.status === "ready" && !hasDocument ? (
+        <div className="empty-state">
+          Crea un arbol nuevo o abre un archivo .gsk o .ged para empezar.
+        </div>
+      ) : null}
+      {workspace.boot.status === "ready" && hasDocument && canvas.modeBadge ? <div className="mode-badge">{canvas.modeBadge}</div> : null}
       <Suspense fallback={null}>
         {canvas.showMockTools ? (
           <div style={MOCK_TOOLS_STYLE}>
@@ -79,23 +91,25 @@ export function ShellCanvasStage({ workspace, canvas }: Props) {
         ) : null}
       </Suspense>
 
-      <Suspense fallback={<div className="empty-state">Cargando lienzo...</div>}>
-        <DTreeViewV3
-          graph={canvas.graph}
-          document={canvas.documentView}
-          fitNonce={canvas.fitNonce}
-          onNodeClick={canvas.commands.onNodeClick}
-          onNodeContextMenu={canvas.commands.onNodeContextMenu}
-          focusPersonId={canvas.focusPersonId}
-          focusFamilyId={canvas.focusFamilyId}
-          selectedPersonId={canvas.selectedPersonId}
-          colorTheme={canvas.colorTheme}
-          dtreeConfig={canvas.dtreeConfig}
-          onBgClick={canvas.commands.onBgClick}
-          onBgDoubleClick={canvas.commands.onBgDoubleClick}
-          onSvgReady={canvas.commands.onSvgReady}
-        />
-      </Suspense>
+      {workspace.boot.status === "ready" && hasDocument ? (
+        <Suspense fallback={<div className="empty-state">Cargando lienzo...</div>}>
+          <DTreeViewV3
+            graph={canvas.graph}
+            document={canvas.documentView}
+            fitNonce={canvas.fitNonce}
+            onNodeClick={canvas.commands.onNodeClick}
+            onNodeContextMenu={canvas.commands.onNodeContextMenu}
+            focusPersonId={canvas.focusPersonId}
+            focusFamilyId={canvas.focusFamilyId}
+            selectedPersonId={canvas.selectedPersonId}
+            colorTheme={canvas.colorTheme}
+            dtreeConfig={canvas.dtreeConfig}
+            onBgClick={canvas.commands.onBgClick}
+            onBgDoubleClick={canvas.commands.onBgDoubleClick}
+            onSvgReady={canvas.commands.onSvgReady}
+          />
+        </Suspense>
+      ) : null}
     </>
   );
 }

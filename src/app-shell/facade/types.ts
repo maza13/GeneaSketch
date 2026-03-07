@@ -339,6 +339,9 @@ export type ShellNavigationFacade = {
 };
 
 export type ShellWorkspaceFacade = {
+  boot: {
+    status: "checking" | "restoring" | "ready";
+  };
   hiddenInputs: {
     openFile: {
       ref: RefObject<HTMLInputElement>;
@@ -351,8 +354,9 @@ export type ShellWorkspaceFacade = {
   };
   restoreBanner: {
     visible: boolean;
-    onRestore: () => Promise<void>;
-    onClear: () => Promise<void>;
+    message: string;
+    onDismiss: () => void;
+    onStartFresh: () => Promise<void>;
   };
   exportWarningsBanner: {
     visible: boolean;
