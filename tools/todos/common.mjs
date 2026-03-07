@@ -160,6 +160,11 @@ export function toRepoRelative(root, p) {
   return path.relative(root, p).replace(/\\/g, "/");
 }
 
+export function isWithinRoot(root, targetPath) {
+  const relative = path.relative(root, targetPath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
 export function loadAllTodoNames(todosDir) {
   return fs
     .readdirSync(todosDir, { withFileTypes: true })
@@ -284,4 +289,3 @@ export function parseRelatedItems(meta) {
     .map((item) => relationParts(item))
     .filter(Boolean);
 }
-

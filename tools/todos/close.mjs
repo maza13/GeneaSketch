@@ -8,12 +8,12 @@ import {
   appendWorkLog,
   childTasksOf,
   dependenciesOf,
+  isWithinRoot,
   parseChecklist,
   parseFrontmatter,
   protocolVersion,
   readTodoRecords,
   resolveTodoPath,
-  sectionText,
   serialize,
   taskType,
   toRepoRelative,
@@ -22,6 +22,7 @@ import {
 
 const ROOT = process.cwd();
 const TODOS_DIR = path.resolve(ROOT, "todos");
+const BLOCK_ORDER = ["outside_repo", "missing", "ignored", "empty", "partial"];
 
 function die(msg) {
   console.error(`ERROR: ${msg}`);
@@ -134,7 +135,7 @@ function buildNextRecommendation(currentId) {
   const unblocked = sortTasks(open.filter((r) => r.deps.every((d) => complete.has(d))));
   if (unblocked.length > 0) {
     return [
-      `- No direct dependent task found.`,
+      "- No direct dependent task found.",
       `- Recommended next unblocked task: ${unblocked[0].id} (${unblocked[0].priority}).`
     ];
   }
@@ -179,6 +180,250 @@ function validateCloseConstraints(record) {
   }
 
   return errors;
+}
+
+function parseGitStatus(stdout) {
+  const entries = [];
+  const lines = stdout.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  for (const line of lines) {
+    if (line.length < 4) continue;
+    const status = line.slice(0, 2);
+    const payload = line.slice(3).trim();
+    const pathPart = payload.includes(" -> ") ? payload.split(" -> ").at(-1) : payload;
+    const normalized = pathPart.replace(/^"|"$/g, "").replace(/\\/g, "/");
+    entries.push({ status, path: normalized });
+  }
+  return entries;
+}
+
+function uniqueSorted(items) {
+  return [...new Set(items)].sort();
+}
+
+function labelTarget(kind) {
+  if (kind === "directory") return "directory";
+  if (kind === "file") return "file";
+  return "path";
+}
+
+function resolveRequestedArtifacts(rawTargets) {
+  return rawTargets.map((raw) => {
+    const abs = path.isAbsolute(raw) ? raw : path.resolve(ROOT, raw);
+    const withinRoot = isWithinRoot(ROOT, abs);
+    const repoRel = withinRoot ? toRepoRelative(ROOT, abs) : null;
+
+    if (!withinRoot) {
+      return {
+        input: raw,
+        abs,
+        repoRel,
+        kind: "unknown",
+        exists: false,
+        state: "outside_repo",
+        stageablePaths: [],
+        ignoredPaths: [],
+        unchangedPaths: [],
+        blockedReason: "outside_repo"
+      };
+    }
+
+    if (!fs.existsSync(abs)) {
+      return {
+        input: raw,
+        abs,
+        repoRel,
+        kind: "unknown",
+        exists: false,
+        state: "missing",
+        stageablePaths: [],
+        ignoredPaths: [],
+        unchangedPaths: [],
+        blockedReason: "missing"
+      };
+    }
+
+    const stat = fs.statSync(abs);
+    return {
+      input: raw,
+      abs,
+      repoRel,
+      kind: stat.isDirectory() ? "directory" : "file",
+      exists: true,
+      state: "pending",
+      stageablePaths: [],
+      ignoredPaths: [],
+      unchangedPaths: [],
+      blockedReason: null
+    };
+  });
+}
+
+function preflightRequestedArtifacts(todoRel, rawTargets) {
+  const artifacts = resolveRequestedArtifacts(rawTargets);
+  const stageableRequested = artifacts.filter((artifact) => artifact.state === "pending");
+  const gitTargets = stageableRequested.map((artifact) => artifact.repoRel);
+  const statusEntries = gitTargets.length > 0
+    ? (() => {
+        const status = run("git", ["status", "--short", "--untracked-files=all", "--ignored=matching", "--", ...gitTargets]);
+        if (status.status !== 0) die(`git status failed during preflight:\n${status.stderr || status.stdout}`);
+        return parseGitStatus(status.stdout);
+      })()
+    : [];
+
+  const statusByTarget = new Map();
+  for (const artifact of stageableRequested) {
+    const checkIgnore = run("git", ["check-ignore", "-q", "--", artifact.repoRel]);
+    if (![0, 1].includes(checkIgnore.status)) {
+      die(`git check-ignore failed during preflight for '${artifact.repoRel}':\n${checkIgnore.stderr || checkIgnore.stdout}`);
+    }
+    const exactIgnored = checkIgnore.status === 0;
+    const relatedStatuses = statusEntries.filter((entry) => entry.path === artifact.repoRel || entry.path.startsWith(`${artifact.repoRel}/`));
+    statusByTarget.set(artifact.repoRel, relatedStatuses);
+
+    const ignored = uniqueSorted(relatedStatuses.filter((entry) => entry.status === "!!").map((entry) => entry.path));
+    const changed = uniqueSorted(relatedStatuses.filter((entry) => entry.status !== "!!").map((entry) => entry.path));
+
+    artifact.ignoredPaths = ignored;
+    artifact.stageablePaths = artifact.kind === "directory" ? changed : changed.filter((entry) => entry === artifact.repoRel);
+
+    if (artifact.kind === "directory") {
+      artifact.unchangedPaths = artifact.stageablePaths.length === 0 && ignored.length === 0 ? [artifact.repoRel] : [];
+    } else if (artifact.stageablePaths.length === 0 && !exactIgnored && ignored.length === 0) {
+      artifact.unchangedPaths = [artifact.repoRel];
+    } else {
+      artifact.unchangedPaths = [];
+    }
+
+    if (exactIgnored || ignored.length > 0) {
+      artifact.state = artifact.stageablePaths.length > 0 ? "partial" : "ignored";
+      artifact.blockedReason = artifact.stageablePaths.length > 0 ? "partial" : "ignored";
+    } else if (artifact.stageablePaths.length > 0) {
+      artifact.state = "ok";
+    } else {
+      artifact.state = "unchanged";
+      artifact.blockedReason = "empty";
+    }
+  }
+
+  const blocked = {
+    outside_repo: artifacts.filter((artifact) => artifact.blockedReason === "outside_repo"),
+    missing: artifacts.filter((artifact) => artifact.blockedReason === "missing"),
+    ignored: artifacts.filter((artifact) => artifact.blockedReason === "ignored"),
+    empty: artifacts.filter((artifact) => artifact.blockedReason === "empty"),
+    partial: artifacts.filter((artifact) => artifact.blockedReason === "partial")
+  };
+
+  const resolvedStageTargets = uniqueSorted(stageableRequested.flatMap((artifact) => artifact.stageablePaths));
+  const unchangedTargets = uniqueSorted(artifacts.flatMap((artifact) => artifact.unchangedPaths));
+  const hasBlocked = BLOCK_ORDER.some((key) => blocked[key].length > 0);
+  const status =
+    blocked.partial.length > 0 || (resolvedStageTargets.length > 0 && hasBlocked)
+      ? "blocked_partial"
+      : blocked.outside_repo.length > 0
+        ? "blocked_outside_repo"
+        : blocked.missing.length > 0
+          ? "blocked_missing"
+          : blocked.ignored.length > 0
+            ? "blocked_ignored"
+            : rawTargets.length > 0 && resolvedStageTargets.length === 0
+              ? "blocked_empty"
+              : "ok";
+
+  return {
+    todoRel,
+    requestedArtifacts: artifacts,
+    resolvedStageTargets,
+    unchangedTargets,
+    status,
+    ok: status === "ok",
+    blocked
+  };
+}
+
+function formatArtifactLine(artifact) {
+  const parts = [`- ${artifact.input} -> ${artifact.repoRel ?? artifact.abs}`];
+  parts.push(`[${labelTarget(artifact.kind)}]`);
+  parts.push(`state=${artifact.state}`);
+  if (artifact.stageablePaths.length > 0) {
+    parts.push(`stageable=${artifact.stageablePaths.join("|")}`);
+  }
+  if (artifact.ignoredPaths.length > 0) {
+    parts.push(`ignored=${artifact.ignoredPaths.join("|")}`);
+  }
+  if (artifact.unchangedPaths.length > 0) {
+    parts.push(`unchanged=${artifact.unchangedPaths.join("|")}`);
+  }
+  return parts.join(" ");
+}
+
+function preflightActionFor(status) {
+  if (status === "blocked_outside_repo") return "Use only files or directories that live inside the repository root.";
+  if (status === "blocked_missing") return "Create the missing paths first or remove them from --files/--file.";
+  if (status === "blocked_ignored") return "Move the artifacts to a tracked path or update .gitignore before retrying.";
+  if (status === "blocked_empty") return "Modify the requested files or omit unchanged paths from the close command.";
+  if (status === "blocked_partial") return "Resolve blocked paths first; the command refuses partial closure commits.";
+  return "Proceed with todo:close.";
+}
+
+function formatPreflightReport(preflight) {
+  const lines = [
+    `todo: ${preflight.todoRel}`,
+    `preflight: ${preflight.status}`,
+    `resolved stage targets: ${preflight.resolvedStageTargets.length > 0 ? preflight.resolvedStageTargets.join(", ") : "(none)"}`,
+    `blocked categories: ${
+      BLOCK_ORDER.filter((key) => preflight.blocked[key].length > 0)
+        .map((key) => key)
+        .join(", ") || "(none)"
+    }`
+  ];
+
+  if (preflight.unchangedTargets.length > 0) {
+    lines.push(`unchanged targets: ${preflight.unchangedTargets.join(", ")}`);
+  }
+
+  if (preflight.requestedArtifacts.length > 0) {
+    lines.push("requested artifacts:");
+    for (const artifact of preflight.requestedArtifacts) {
+      lines.push(formatArtifactLine(artifact));
+    }
+  }
+
+  for (const key of BLOCK_ORDER) {
+    const blockedItems = preflight.blocked[key];
+    if (blockedItems.length === 0) continue;
+    lines.push(`${key}:`);
+    for (const artifact of blockedItems) {
+      lines.push(`- ${artifact.input} -> ${artifact.repoRel ?? artifact.abs}`);
+    }
+  }
+
+  lines.push(`recommended action: ${preflightActionFor(preflight.status)}`);
+  return lines.join("\n");
+}
+
+function maybeSimulateFailure(kind) {
+  if (kind === "stage" && process.env.TODO_CLOSE_SIMULATE_STAGE_FAILURE === "1") {
+    return { status: 1, stderr: "simulated stage failure", stdout: "" };
+  }
+  if (kind === "commit" && process.env.TODO_CLOSE_SIMULATE_COMMIT_FAILURE === "1") {
+    return { status: 1, stderr: "simulated commit failure", stdout: "" };
+  }
+  return null;
+}
+
+function rollbackTodoMutation(originalPath, originalRaw, closedPath) {
+  if (fs.existsSync(closedPath)) {
+    fs.unlinkSync(closedPath);
+  }
+  fs.writeFileSync(originalPath, originalRaw, "utf8");
+}
+
+function unstageTodoPaths(todoPaths) {
+  if (todoPaths.length === 0) return;
+  const reset = run("git", ["reset", "--quiet", "HEAD", "--", ...todoPaths]);
+  if (reset.status !== 0) {
+    console.warn(`WARN: could not unstage TODO paths after rollback:\n${reset.stderr || reset.stdout}`);
+  }
 }
 
 function main() {
@@ -260,39 +505,57 @@ function main() {
 
   const newName = `${id}-complete-${priority}-${slug}.md`;
   const newPath = path.join(path.dirname(todoPath), newName);
+  const todoOldRel = toRepoRelative(ROOT, todoPath);
+  const todoNewRel = toRepoRelative(ROOT, newPath);
+  const preflight = preflightRequestedArtifacts(todoOldRel, opts.files);
+  const preflightReport = formatPreflightReport(preflight);
+  if (!preflight.ok) {
+    die(preflightReport);
+  }
 
   const stageSet = new Set();
-  stageSet.add(toRepoRelative(ROOT, newPath));
-  if (newPath !== todoPath) stageSet.add(toRepoRelative(ROOT, todoPath));
-  for (const f of opts.files) {
-    const resolved = path.isAbsolute(f) ? f : path.resolve(ROOT, f);
-    stageSet.add(toRepoRelative(ROOT, resolved));
+  stageSet.add(todoNewRel);
+  if (newPath !== todoPath) stageSet.add(todoOldRel);
+  for (const stageTarget of preflight.resolvedStageTargets) {
+    stageSet.add(stageTarget);
   }
   const stageFiles = [...stageSet];
 
   if (opts.dryRun) {
     console.log("DRY RUN");
-    console.log(`- todo: ${toRepoRelative(ROOT, newPath)}`);
+    console.log(`- todo: ${todoNewRel}`);
     console.log(`- commit message: ${commitMessage}`);
+    console.log(`- preflight: ${preflight.status}`);
     console.log(`- staged files: ${stageFiles.join(", ")}`);
+    console.log(preflightReport);
     return;
   }
 
   fs.writeFileSync(newPath, newContent, "utf8");
   if (newPath !== todoPath) fs.unlinkSync(todoPath);
 
-  const add = run("git", ["add", "-A", "--", ...stageFiles]);
-  if (add.status !== 0) die(`git add failed:\n${add.stderr || add.stdout}`);
+  const stageFailure = maybeSimulateFailure("stage");
+  const add = stageFailure ?? run("git", ["add", "-A", "--", ...stageFiles]);
+  if (add.status !== 0) {
+    rollbackTodoMutation(todoPath, raw, newPath);
+    unstageTodoPaths(uniqueSorted([todoOldRel, todoNewRel]));
+    die(`stage_failed\n${preflightReport}\nraw git error:\n${add.stderr || add.stdout}`);
+  }
 
-  const commit = run("git", ["commit", "-m", commitMessage]);
-  if (commit.status !== 0) die(`git commit failed:\n${commit.stderr || commit.stdout}`);
+  const commitFailure = maybeSimulateFailure("commit");
+  const commit = commitFailure ?? run("git", ["commit", "-m", commitMessage]);
+  if (commit.status !== 0) {
+    rollbackTodoMutation(todoPath, raw, newPath);
+    unstageTodoPaths(uniqueSorted([todoOldRel, todoNewRel]));
+    die(`commit_failed\n${preflightReport}\nraw git error:\n${commit.stderr || commit.stdout}`);
+  }
 
   const hash = run("git", ["rev-parse", "--short", "HEAD"]);
   if (hash.status !== 0) die(`commit created but could not read hash:\n${hash.stderr || hash.stdout}`);
 
   console.log(`OK: closed todo ${id} with commit ${hash.stdout.trim()}`);
   console.log(`Message: ${commitMessage}`);
-  console.log(`File: ${toRepoRelative(ROOT, newPath)}`);
+  console.log(`File: ${todoNewRel}`);
 }
 
 main();

@@ -20,6 +20,12 @@ function makeRepo(): string {
   return dir;
 }
 
+function writeFile(repo: string, relPath: string, content: string) {
+  const fullPath = path.join(repo, relPath);
+  fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+  fs.writeFileSync(fullPath, content, "utf8");
+}
+
 function writeTodo(repo: string, name: string, content: string) {
   fs.writeFileSync(path.join(repo, "todos", name), content.trimStart(), "utf8");
 }
@@ -45,6 +51,84 @@ function runNode(script: string, cwd: string, args: string[]) {
     cwd,
     encoding: "utf8"
   });
+}
+
+function runNodeWithEnv(script: string, cwd: string, args: string[], env: NodeJS.ProcessEnv) {
+  return spawnSync(process.execPath, [script, ...args], {
+    cwd,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      ...env
+    }
+  });
+}
+
+function runGit(cwd: string, args: string[]) {
+  return spawnSync("git", args, {
+    cwd,
+    encoding: "utf8"
+  });
+}
+
+function initGitRepo(repo: string) {
+  expect(runGit(repo, ["init"]).status).toBe(0);
+  expect(runGit(repo, ["config", "user.name", "Test User"]).status).toBe(0);
+  expect(runGit(repo, ["config", "user.email", "test@example.com"]).status).toBe(0);
+  writeFile(repo, ".gitignore", "ignored-output/\n");
+  writeFile(repo, "README.md", "seed\n");
+  expect(runGit(repo, ["add", "."]).status).toBe(0);
+  expect(runGit(repo, ["commit", "-m", "init"]).status).toBe(0);
+}
+
+function writeClosableTodo(repo: string, name = "300-ready-p2-close-target.md") {
+  writeTodo(
+    repo,
+    name,
+    `
+---
+protocol_version: 2
+task_type: "leaf"
+status: "ready"
+priority: "p2"
+issue_id: "300"
+title: "close target"
+tags: []
+dependencies: []
+child_tasks: []
+related_tasks: []
+owner: "codex"
+created_at: "2026-03-06"
+updated_at: "2026-03-06"
+target_date: null
+risk_level: "medium"
+estimated_effort: "s"
+complexity: "standard"
+auto_closure: false
+commit_confirmed: false
+commit_message: null
+closed_at: null
+---
+
+# Close target
+
+## Problem Statement
+
+Test.
+
+## Recommended Action
+
+Close it.
+
+## Acceptance Criteria
+
+- [x] Ready to close
+
+## Work Log
+
+### 2026-03-06 - Test
+`
+  );
 }
 
 afterEach(() => {
@@ -728,5 +812,169 @@ Test insight.
     expect(umbrella).toContain('task_type: "umbrella"');
     expect(umbrella).toContain('child_tasks: ["002", "003"]');
     expect(child).toContain('task_type: "leaf"');
+  });
+
+  it("closes successfully with a modified tracked file", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "docs/report.md", "draft\n");
+    expect(runGit(repo, ["add", "."]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "seed report"]).status).toBe(0);
+    writeFile(repo, "docs/report.md", "draft\nupdated\n");
+
+    const result = runNode(CLOSE, repo, ["--todo", "300", "--files", "docs/report.md"]);
+    expect(result.status).toBe(0);
+    expect(fs.existsSync(path.join(repo, "todos", "300-complete-p2-close-target.md"))).toBe(true);
+    expect(result.stdout).toContain("OK: closed todo 300");
+  });
+
+  it("expands directories to changed tracked files during dry run", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "reports/a.md", "a1\n");
+    writeFile(repo, "reports/b.md", "b1\n");
+    expect(runGit(repo, ["add", "."]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "seed reports"]).status).toBe(0);
+    writeFile(repo, "reports/a.md", "a2\n");
+    writeFile(repo, "reports/b.md", "b2\n");
+
+    const result = runNode(CLOSE, repo, ["--todo", "300", "--files", "reports", "--dry-run"]);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("preflight: ok");
+    expect(result.stdout).toContain("reports/a.md");
+    expect(result.stdout).toContain("reports/b.md");
+    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
+  });
+
+  it("fails preflight for missing paths before editing the todo", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+
+    const result = runNode(CLOSE, repo, ["--todo", "300", "--files", "reports/missing.md", "--dry-run"]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("preflight: blocked_missing");
+    expect(result.stderr).toContain("missing:");
+    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
+  });
+
+  it("fails preflight for ignored paths before editing the todo", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "ignored-output/result.json", "{\"ok\":true}\n");
+
+    const result = runNode(CLOSE, repo, ["--todo", "300", "--files", "ignored-output", "--dry-run"]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("preflight: blocked_ignored");
+    expect(result.stderr).toContain("ignored:");
+    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
+  });
+
+  it("fails preflight for partial directory targets with valid and ignored files", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "mixed/keep.md", "keep\n");
+    writeFile(repo, ".gitignore", "ignored-output/\nmixed/ignored.log\n");
+    expect(runGit(repo, ["add", ".gitignore", "mixed/keep.md"]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "seed mixed"]).status).toBe(0);
+    writeFile(repo, "mixed/keep.md", "keep changed\n");
+    writeFile(repo, "mixed/ignored.log", "secret\n");
+
+    const result = runNode(CLOSE, repo, ["--todo", "300", "--files", "mixed", "--dry-run"]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("preflight: blocked_partial");
+    expect(result.stderr).toContain("partial:");
+    expect(result.stderr).toContain("mixed/keep.md");
+    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
+  });
+
+  it("fails preflight when requested files are unchanged", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "docs/stable.md", "stable\n");
+    expect(runGit(repo, ["add", "."]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "seed stable"]).status).toBe(0);
+
+    const result = runNode(CLOSE, repo, ["--todo", "300", "--files", "docs/stable.md", "--dry-run"]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("preflight: blocked_empty");
+    expect(result.stderr).toContain("unchanged targets: docs/stable.md");
+  });
+
+  it("rolls back the todo file when stage fails after mutation", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "docs/change.md", "draft\n");
+    expect(runGit(repo, ["add", "."]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "seed change"]).status).toBe(0);
+    writeFile(repo, "docs/change.md", "draft\nupdated\n");
+
+    const result = runNodeWithEnv(
+      CLOSE,
+      repo,
+      ["--todo", "300", "--files", "docs/change.md"],
+      { TODO_CLOSE_SIMULATE_STAGE_FAILURE: "1" }
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("stage_failed");
+    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
+    expect(fs.existsSync(path.join(repo, "todos", "300-complete-p2-close-target.md"))).toBe(false);
+    const todo = fs.readFileSync(path.join(repo, "todos", "300-ready-p2-close-target.md"), "utf8");
+    expect(todo).toContain('status: "ready"');
+  });
+
+  it("rolls back the todo file when commit fails after staging", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "docs/commit.md", "draft\n");
+    expect(runGit(repo, ["add", "."]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "seed commit"]).status).toBe(0);
+    writeFile(repo, "docs/commit.md", "draft\nupdated\n");
+
+    const result = runNodeWithEnv(
+      CLOSE,
+      repo,
+      ["--todo", "300", "--files", "docs/commit.md"],
+      { TODO_CLOSE_SIMULATE_COMMIT_FAILURE: "1" }
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("commit_failed");
+    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
+    expect(fs.existsSync(path.join(repo, "todos", "300-complete-p2-close-target.md"))).toBe(false);
+  });
+
+  it("keeps the original todo when a requested directory mixes valid and ignored artifacts", () => {
+    const repo = makeRepo();
+    initGitRepo(repo);
+    writeClosableTodo(repo);
+    writeFile(repo, "reports/architecture-separation-diagnosis/summary.md", "old\n");
+    expect(runGit(repo, ["add", "."]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "seed regression"]).status).toBe(0);
+    writeFile(repo, ".gitignore", "ignored-output/\nreports/architecture-separation-diagnosis/blocked.json\n");
+    expect(runGit(repo, ["add", ".gitignore"]).status).toBe(0);
+    expect(runGit(repo, ["commit", "-m", "ignore blocked artifact"]).status).toBe(0);
+    writeFile(repo, "reports/architecture-separation-diagnosis/summary.md", "new\n");
+    writeFile(repo, "reports/architecture-separation-diagnosis/blocked.json", "{\"blocked\":true}\n");
+
+    const result = runNode(
+      CLOSE,
+      repo,
+      ["--todo", "300", "--files", "reports/architecture-separation-diagnosis", "--dry-run"]
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("preflight: blocked_partial");
+    expect(result.stderr).toContain("reports/architecture-separation-diagnosis/blocked.json");
+    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
+    expect(fs.existsSync(path.join(repo, "todos", "300-complete-p2-close-target.md"))).toBe(false);
   });
 });

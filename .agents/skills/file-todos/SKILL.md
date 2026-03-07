@@ -166,9 +166,18 @@ Behavior of `todo:close`:
 - updates timestamps and commit confirmation fields
 - appends closing Work Log entry
 - generates next-step recommendation using current dependency/project state
-- stages provided files + TODO file
+- validates requested `--files`/`--file` targets before mutating the TODO
+- accepts files and directories in `--files`; directories are expanded to changed files only
+- refuses closure if any requested target is missing, ignored, outside the repo, or would produce a partial commit
+- stages validated files + TODO file
 - creates commit automatically
 - prints commit hash and message
+
+Safety contract:
+- `todo:close` must fail before editing the TODO when requested artifacts cannot be committed safely.
+- If `git add` or `git commit` fails after the TODO rename/write step, the TODO file is rolled back to its original on-disk state.
+- Ignored paths are hard blockers, not warnings.
+- `--dry-run` must show the preflight result, expanded paths, and blocked categories.
 
 For `protocol_version: 2`, `todo:close` must refuse closure when:
 - any acceptance checkbox is unchecked
