@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FamilyPatch } from "@/core/edit/commands";
-import type { AiSettings } from "@/types/ai";
-import type { GraphDocument, PendingRelationType } from "@/types/domain";
-import type { PersonEditorPatch } from "@/types/editor";
+import type { PendingRelationType } from "@/types/domain";
+import type { PersonWorkspaceViewModel, ShellFeaturesFacade } from "@/app-shell/facade/types";
 import { PersonDetailShell } from "@/ui/person/PersonDetailShell";
 import { type PersonDetailSectionId } from "@/ui/person/personDetailSections";
 import { PersonIdentitySection } from "@/ui/person/sections/PersonIdentitySection";
@@ -28,16 +27,8 @@ type PersonInput = {
 };
 
 type Props = {
-  document: GraphDocument;
-  personId: string;
-  aiSettings: AiSettings;
-  onClose: () => void;
-  onSelectPerson: (personId: string) => void;
-  onSetAsFocus: (personId: string) => void;
-  onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
-  onSaveFamily: (familyId: string, patch: FamilyPatch) => void;
-  onCreatePerson: (input: PersonInput) => string | null;
-  onQuickAddRelation: (anchorId: string, relationType: PendingRelationType) => void;
+  viewModel: PersonWorkspaceViewModel;
+  commands: ShellFeaturesFacade["personWorkspace"]["commands"];
 };
 
 function getInitialTab(): PersonDetailSectionId {
@@ -52,18 +43,11 @@ function getInitialTab(): PersonDetailSectionId {
 
 
 export function PersonWorkspacePanel({
-  document,
-  personId,
-  aiSettings,
-  onClose,
-  onSelectPerson,
-  onSetAsFocus,
-  onSavePerson,
-  onSaveFamily,
-  onCreatePerson,
-  onQuickAddRelation
+  viewModel,
+  commands,
 }: Props) {
-  const person = document.persons[personId];
+  const { personId, person, aiSettings, sections } = viewModel;
+  const { onClose, onSelectPerson, onSetAsFocus, onSavePerson, onSaveFamily, onCreatePerson, onQuickAddRelation } = commands;
   const [tab, setTab] = useState<PersonDetailSectionId>(getInitialTab);
 
   useEffect(() => {
@@ -85,13 +69,12 @@ export function PersonWorkspacePanel({
 
   const renderTabContent = () => {
     if (tab === "identity") {
-      return <PersonIdentitySection person={person} document={document} onSavePerson={onSavePerson} />;
+      return <PersonIdentitySection viewModel={sections.identity} onSavePerson={onSavePerson} />;
     }
     if (tab === "family_links") {
       return (
         <PersonFamiliesSection
-          personId={person.id}
-          document={document}
+          viewModel={sections.familyLinks}
           onSelectPerson={onSelectPerson}
           onSaveFamily={onSaveFamily}
           onCreatePerson={onCreatePerson}
@@ -100,28 +83,28 @@ export function PersonWorkspacePanel({
       );
     }
     if (tab === "events") {
-      return <PersonEventsSection person={person} document={document} aiSettings={aiSettings} onSavePerson={onSavePerson} />;
+      return <PersonEventsSection viewModel={sections.events} onSavePerson={onSavePerson} />;
     }
     if (tab === "sources") {
-      return <PersonSourcesSection person={person} document={document} onSavePerson={onSavePerson} />;
+      return <PersonSourcesSection viewModel={sections.sources} onSavePerson={onSavePerson} />;
     }
     if (tab === "notes") {
-      return <PersonNotesSection person={person} document={document} onSavePerson={onSavePerson} />;
+      return <PersonNotesSection viewModel={sections.notes} onSavePerson={onSavePerson} />;
     }
     if (tab === "media") {
-      return <PersonMediaSection person={person} document={document} onSavePerson={onSavePerson} />;
+      return <PersonMediaSection viewModel={sections.media} onSavePerson={onSavePerson} />;
     }
     if (tab === "audit") {
       return <PersonAuditSection person={person} />;
     }
     if (tab === "extensions") {
-      return <PersonExtensionsSection person={person} document={document} />;
+      return <PersonExtensionsSection viewModel={sections.extensions} />;
     }
     if (tab === "timeline") {
-      return <PersonTimelineSection document={document} personId={person.id} onSelectPerson={onSelectPerson} />;
+      return <PersonTimelineSection viewModel={sections.timeline} onSelectPerson={onSelectPerson} />;
     }
     if (tab === "analysis") {
-      return <PersonAnalysisSection document={document} person={person} onSelectPerson={onSelectPerson} />;
+      return <PersonAnalysisSection viewModel={sections.analysis} onSelectPerson={onSelectPerson} />;
     }
     return <PersonHistorySection />;
   };

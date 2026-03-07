@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { GraphDocument, Person } from "@/types/domain";
+import type { PersonIdentitySectionViewModel } from "@/app-shell/facade/types";
 import type { PersonEditorPatch } from "@/types/editor";
 import { splitSurnames } from "@/ui/person/personDetailUtils";
 import { normalizePersonSurnames, type SurnameOrder } from "@/core/naming/surname";
@@ -8,12 +8,12 @@ import { getNameSuggestions, getPlaceSuggestions, getSurnameSuggestions, normali
 import { SectionCard } from "../../common/StandardModal";
 
 type Props = {
-  person: Person;
-  document: GraphDocument;
+  viewModel: PersonIdentitySectionViewModel;
   onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
 };
 
-export function PersonIdentitySection({ person, document, onSavePerson }: Props) {
+export function PersonIdentitySection({ viewModel, onSavePerson }: Props) {
+  const { person, documentView: document } = viewModel;
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(person.name === "(Sin nombre)" ? "" : person.name);
   const canonical = useMemo(() => normalizePersonSurnames(person), [person.surname, person.surnamePaternal, person.surnameMaternal, person.surnameOrder]);

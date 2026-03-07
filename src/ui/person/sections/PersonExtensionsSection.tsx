@@ -1,14 +1,14 @@
-import type { GraphDocument, Person } from "@/types/domain";
+import type { PersonSectionViewModel } from "@/app-shell/facade/types";
 import { SectionCard } from "@/ui/common/StandardModal";
 
 type Props = {
-  person: Person;
-  document: GraphDocument;
+  viewModel: PersonSectionViewModel;
 };
 
 const MAPPED_TAGS = new Set(["NOTE"]);
 
-export function PersonExtensionsSection({ person, document }: Props) {
+export function PersonExtensionsSection({ viewModel }: Props) {
+  const { person, documentView: document } = viewModel;
   const extensionEntries = Object.entries(person.rawTags || {}).filter(([tag]) => !MAPPED_TAGS.has(tag));
   const schemaUris = document.metadata.schemaUris || [];
 

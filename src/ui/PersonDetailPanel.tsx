@@ -1,22 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { uiDateToGedcom, gedcomDateToUi } from "@/utils/date";
 import type { PendingRelationType } from "@/types/domain";
-import type { GraphDocument } from "@/types/domain";
-import type { PersonEditorPatch, PersonEditorState, PersonRelationInput } from "@/types/editor";
-import type { AiSettings } from "@/types/ai";
+import type { PersonRelationInput } from "@/types/editor";
+import type { PersonEditorViewModel, ShellFeaturesFacade } from "@/app-shell/facade/types";
 import { BirthRangeRefinementCard } from "@/ui/person/BirthRangeRefinementCard";
 import { SuggestionInput } from "@/ui/components/SuggestionInput";
-import { getNameSuggestions, getPlaceSuggestions, getSurnameSuggestions, normalizePlace } from "@/core/edit/suggestions";
+import { normalizePlace } from "@/core/edit/suggestions";
 import { StandardModal, SectionCard } from "@/ui/common/StandardModal";
 
 type Props = {
-  editorState: PersonEditorState;
-  document: GraphDocument | null;
-  aiSettings: AiSettings;
-  onClose: () => void;
-  onSaveEdit: (personId: string, patch: PersonEditorPatch) => void;
-  onSaveRelation: (anchorId: string, type: PendingRelationType, input: PersonRelationInput) => void;
-  onCreateStandalone?: (input: PersonRelationInput) => void;
+  viewModel: PersonEditorViewModel;
+  commands: ShellFeaturesFacade["personEditor"]["commands"];
 };
 
 const CROP_VIEW_W = 220;
@@ -49,7 +43,9 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export function PersonDetailPanel({ editorState, document, aiSettings, onClose, onSaveEdit, onSaveRelation, onCreateStandalone }: Props) {
+export function PersonDetailPanel({ viewModel, commands }: Props) {
+  const { editorState, documentView: document, birthRefinement } = viewModel;
+  const { onClose, onSaveEdit, onSaveRelation, onCreateStandalone } = commands;
   const [name, setName] = useState("");
   const [paternalSurname, setPaternalSurname] = useState("");
   const [maternalSurname, setMaternalSurname] = useState("");
@@ -115,7 +111,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
 
       if (editorState.type === "add_relation") {
         setRelationType(editorState.relationType);
-        const sugs = getSurnameSuggestions(document, editorState.anchorId, editorState.relationType);
+        const sugs = viewModel.getSurnameSuggestions(editorState.anchorId, editorState.relationType);
         if (sugs.length > 0) {
           setPaternalSurname(sugs[0].paternal);
           setMaternalSurname(sugs[0].maternal);
@@ -134,7 +130,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
     setImgDim({ w: 0, h: 0 });
     setFormError("");
     setPendingNotesAppend([]);
-  }, [editorState, document]);
+  }, [editorState, document, viewModel]);
 
   useEffect(() => {
     function onMove(e: MouseEvent) {
@@ -162,7 +158,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
 
   async function applyPhotoFile(file: File) {
     if (!isImageFile(file)) {
-      setFormError("Archivo no compatible. Usa una imagen válida.");
+      setFormError("Archivo no compatible. Usa una imagen vÃ¡lida.");
       return;
     }
     try {
@@ -249,7 +245,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
   const title = editorState.type === "edit" ? "Ficha de Persona" : editorState.type === "create_standalone" ? "Crear Persona" : "Agregar Familiar";
 
   const surnameSugs = editorState.type === "add_relation"
-    ? getSurnameSuggestions(document, editorState.anchorId, relationType)
+    ? viewModel.getSurnameSuggestions(editorState.anchorId, relationType)
     : [];
 
   const sexIcon = sex === "M" ? "male" : sex === "F" ? "female" : "person";
@@ -268,8 +264,8 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
     <StandardModal open={true} title={title} onClose={onClose} size="md" footer={footer}>
       {formError && <div className="gs-alert gs-alert--error" style={{ marginBottom: 16 }}>{formError}</div>}
 
-      {/* -- SECCIÓN 1: Identidad (V2 Hero adaptado a edición) -- */}
-      <SectionCard title="Identidad Básica" icon="face">
+      {/* -- SECCIÃ“N 1: Identidad (V2 Hero adaptado a ediciÃ³n) -- */}
+      <SectionCard title="Identidad BÃ¡sica" icon="face">
         {editorState.type === "add_relation" && (
           <div style={{ marginBottom: 16, borderBottom: '1px solid var(--line-soft)', paddingBottom: 16 }}>
             <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink-muted)', display: 'block', marginBottom: 6 }}>
@@ -280,7 +276,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
               value={relationType} onChange={(e) => {
                 const newType = e.target.value as PendingRelationType;
                 setRelationType(newType);
-                const sugs = getSurnameSuggestions(document, editorState.anchorId, newType);
+                const sugs = viewModel.getSurnameSuggestions(editorState.anchorId, newType);
                 if (sugs.length > 0) {
                   setPaternalSurname(sugs[0].paternal);
                   setMaternalSurname(sugs[0].maternal);
@@ -306,7 +302,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
               <SuggestionInput
                 value={name}
                 onChange={setName}
-                suggestions={getNameSuggestions(document, name)}
+                suggestions={viewModel.getNameSuggestions(name)}
                 placeholder="Nombre(s)"
                 className="v2-person-name person-editor-input-hero"
               />
@@ -314,7 +310,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
                 <SuggestionInput
                   value={paternalSurname}
                   onChange={setPaternalSurname}
-                  suggestions={[...surnameSugs.map(s => s.paternal), ...getSurnameSuggestions(document, null, null).map(s => s.paternal)].filter(Boolean)}
+                  suggestions={[...surnameSugs.map(s => s.paternal), ...viewModel.getSurnameSuggestions(null, null).map(s => s.paternal)].filter(Boolean)}
                   placeholder="Ap. Paterno"
                   className="person-editor-input-hero person-meta"
                 />
@@ -347,7 +343,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
         </div>
       </SectionCard>
 
-      {/* -- SECCIÓN 2: Hechos Vitales (V2 Grid) -- */}
+      {/* -- SECCIÃ“N 2: Hechos Vitales (V2 Grid) -- */}
       <SectionCard title="Hechos Vitales" icon="event">
         <div className="gs-facts-grid">
           <div className="gs-fact-row" style={{ alignItems: 'center' }}>
@@ -361,8 +357,8 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
                 value={birthPlace}
                 onChange={setBirthPlace}
                 onBlur={() => setBirthPlace(normalizePlace(birthPlace))}
-                suggestions={getPlaceSuggestions(document, birthPlace)}
-                placeholder="Ciudad, Estado, País"
+                suggestions={viewModel.getPlaceSuggestions(birthPlace)}
+                placeholder="Ciudad, Estado, PaÃ­s"
                 className="person-editor-input"
               />
             </span>
@@ -371,7 +367,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
           {!isAlive && (
             <>
               <div className="gs-fact-row" style={{ alignItems: 'center' }}>
-                <span className="gs-fact-label">F. Defunción</span>
+                <span className="gs-fact-label">F. DefunciÃ³n</span>
                 <span className="gs-fact-value"><input className="person-editor-input" value={deathDate} onChange={(e) => setDeathDate(e.target.value)} placeholder="Ej: 2020, 05 JAN 2020" /></span>
               </div>
               <div className="gs-fact-row" style={{ alignItems: 'center' }}>
@@ -381,8 +377,8 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
                     value={deathPlace}
                     onChange={setDeathPlace}
                     onBlur={() => setDeathPlace(normalizePlace(deathPlace))}
-                    suggestions={getPlaceSuggestions(document, deathPlace)}
-                    placeholder="Ciudad, Estado, País"
+                    suggestions={viewModel.getPlaceSuggestions(deathPlace)}
+                    placeholder="Ciudad, Estado, PaÃ­s"
                     className="person-editor-input"
                   />
                 </span>
@@ -397,20 +393,18 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
                 value={residence}
                 onChange={setResidence}
                 onBlur={() => setResidence(normalizePlace(residence))}
-                suggestions={getPlaceSuggestions(document, residence)}
-                placeholder="Ciudad, Estado, País"
+                suggestions={viewModel.getPlaceSuggestions(residence)}
+                placeholder="Ciudad, Estado, PaÃ­s"
                 className="person-editor-input"
               />
             </span>
           </div>
         </div>
 
-        {editorState.type === "edit" && document ? (
+        {editorState.type === "edit" && birthRefinement ? (
           <div style={{ marginTop: 16 }}>
             <BirthRangeRefinementCard
-              document={document}
-              personId={editorState.personId}
-              aiSettings={aiSettings}
+              viewModel={birthRefinement}
               onApplyBirthGedcom={setBirthDate}
               onAppendNote={(note) => setPendingNotesAppend((prev) => [...prev, note])}
             />
@@ -418,8 +412,8 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
         ) : null}
       </SectionCard>
 
-      {/* -- SECCIÓN 3: Recorte de Fotografía -- */}
-      <SectionCard title="Fotografía" icon="image">
+      {/* -- SECCIÃ“N 3: Recorte de FotografÃ­a -- */}
+      <SectionCard title="FotografÃ­a" icon="image">
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <input
             ref={fileInputRef}
@@ -444,7 +438,7 @@ export function PersonDetailPanel({ editorState, document, aiSettings, onClose, 
               cursor: "pointer", marginBottom: 12, color: 'var(--ink-muted)'
             }}
           >
-            {photoSourceDataUrl ? "Cambiar imagen..." : "Haz clic o arrastra una foto aquí"}
+            {photoSourceDataUrl ? "Cambiar imagen..." : "Haz clic o arrastra una foto aquÃ­"}
           </div>
 
           {photoSourceDataUrl && (

@@ -22,9 +22,9 @@ import {
   setSelectedCase
 } from "@/core/edit/reviewSession";
 import { findAllMatches, type MatchResult } from "@/core/edit/personMatcher";
-import type { GraphDocument } from "@/types/domain";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
 import type { MergeReviewPreset, MergeReviewSession, MergeReviewStep, MergeSessionPreview } from "@/types/merge-review";
+import type { ImportReviewDocumentView, ImportReviewViewModel } from "@/app-shell/facade/types";
 import { MergeApplyStep } from "@/ui/merge-review/MergeApplyStep";
 import { MergeActionJournalPane } from "@/ui/merge-review/MergeActionJournalPane";
 import { MergeCaseDetailPane } from "@/ui/merge-review/MergeCaseDetailPane";
@@ -34,12 +34,10 @@ import { MergeTechnicalConflictsStep } from "@/ui/merge-review/MergeTechnicalCon
 import { MERGE_STRINGS_ES } from "@/ui/merge-review/strings.es";
 
 type Props = {
-  baseDoc: GraphDocument;
-  incomingDoc: GraphDocument;
-  initialDraft?: MergeDraftSnapshot | null;
+  viewModel: ImportReviewViewModel;
   onDraftChange?: (draft: MergeDraftSnapshot | null) => void;
   onFocusChange?: (focus: MergeFocusPayload | null) => void;
-  onApply: (merged: GraphDocument, stats: MergeStats) => void;
+  onApply: (merged: ImportReviewDocumentView, stats: MergeStats) => void;
   onClose: () => void;
 };
 
@@ -56,7 +54,7 @@ function quickHash(input: string): string {
   return (hash >>> 0).toString(16);
 }
 
-function documentFingerprint(doc: GraphDocument): string {
+function documentFingerprint(doc: ImportReviewDocumentView): string {
   const personIds = Object.keys(doc.persons).sort((a, b) => a.localeCompare(b));
   const familyIds = Object.keys(doc.families).sort((a, b) => a.localeCompare(b));
   const personSample = personIds
@@ -77,7 +75,7 @@ function documentFingerprint(doc: GraphDocument): string {
   return quickHash(payload);
 }
 
-function mergeContextId(baseDoc: GraphDocument, incomingDoc: GraphDocument): string {
+function mergeContextId(baseDoc: ImportReviewDocumentView, incomingDoc: ImportReviewDocumentView): string {
   return quickHash(`${documentFingerprint(baseDoc)}::${documentFingerprint(incomingDoc)}`);
 }
 
@@ -113,7 +111,7 @@ function technicalIncomingIdsFromSession(session: MergeReviewSession): Set<strin
   );
 }
 
-function exportMergeAudit(merged: GraphDocument): void {
+function exportMergeAudit(merged: ImportReviewDocumentView): void {
   if (!merged.metadata.mergeAudit) return;
   const payload = JSON.stringify(merged.metadata.mergeAudit, null, 2);
   const blob = new Blob([payload], { type: "application/json" });
@@ -147,7 +145,7 @@ function uniqueSorted(ids: Iterable<string>): string[] {
   return Array.from(new Set(Array.from(ids).filter(Boolean))).sort((a, b) => a.localeCompare(b));
 }
 
-function immediateFamilyIds(doc: GraphDocument, personId: string | undefined): string[] {
+function immediateFamilyIds(doc: ImportReviewDocumentView, personId: string | undefined): string[] {
   if (!personId) return [];
   const person = doc.persons[personId];
   if (!person) return [];
@@ -170,7 +168,7 @@ function immediateFamilyIds(doc: GraphDocument, personId: string | undefined): s
   return uniqueSorted(out);
 }
 
-function expandOneHop(doc: GraphDocument, ids: string[]): string[] {
+function expandOneHop(doc: ImportReviewDocumentView, ids: string[]): string[] {
   const out = new Set<string>();
   for (const id of ids) {
     for (const relativeId of immediateFamilyIds(doc, id)) out.add(relativeId);
@@ -179,14 +177,14 @@ function expandOneHop(doc: GraphDocument, ids: string[]): string[] {
 }
 
 export function ImportReviewPanel({
-  baseDoc,
-  incomingDoc,
-  initialDraft,
+  viewModel,
   onDraftChange,
   onFocusChange,
   onApply,
   onClose
 }: Props) {
+  const { baseDocument: baseDoc, incomingDocument: incomingDoc, initialDraft } = viewModel;
+  if (!baseDoc || !incomingDoc) return null;
   const contextId = useMemo(() => mergeContextId(baseDoc, incomingDoc), [baseDoc, incomingDoc]);
   const [step, setStep] = useState<MergeReviewStep>("strategy");
   const [preset, setPreset] = useState<MergeReviewPreset>("fast");

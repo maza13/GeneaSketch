@@ -8,7 +8,9 @@ import type { GraphDocument } from "@/core/read-model/types";
 import type { AiSettings, AiInputContext } from "@/types/ai";
 import type {
   ExpandedGraph,
+  Family,
   PendingRelationType,
+  Person,
   TimelineViewMode,
   ViewConfig,
 } from "@/types/domain";
@@ -22,7 +24,63 @@ import type {
 import type { MenuGroup, MenuItem } from "@/ui/TopMenuBar";
 import type { SearchFilterState, SearchResult, SearchSortDirection, SearchSortField } from "@/ui/search/searchEngine";
 
-export type PersonDocumentView = GraphDocument;
+export type FeatureDocumentView = GraphDocument;
+
+export type PersonDocumentView = FeatureDocumentView;
+export type PersonEditorDocumentView = FeatureDocumentView;
+export type PersonWorkspaceDocumentView = FeatureDocumentView;
+export type ImportReviewDocumentView = FeatureDocumentView;
+export type AiAssistantDocumentView = FeatureDocumentView;
+
+export type BirthRangeRefinementViewModel = {
+  documentView: PersonEditorDocumentView;
+  personId: string;
+  aiSettings: AiSettings;
+};
+
+export type PersonIdentitySectionViewModel = {
+  person: Person;
+  documentView: PersonWorkspaceDocumentView;
+};
+
+export type PersonFamiliesSectionViewModel = {
+  personId: string;
+  documentView: PersonWorkspaceDocumentView;
+};
+
+export type PersonEventsSectionViewModel = {
+  person: Person;
+  documentView: PersonWorkspaceDocumentView;
+  aiSettings: AiSettings;
+};
+
+export type PersonSectionViewModel = {
+  person: Person;
+  documentView: PersonWorkspaceDocumentView;
+};
+
+export type PersonTimelineSectionViewModel = {
+  personId: string;
+  documentView: PersonWorkspaceDocumentView;
+};
+
+export type PersonWorkspaceSectionModels = {
+  identity: PersonIdentitySectionViewModel;
+  familyLinks: PersonFamiliesSectionViewModel;
+  events: PersonEventsSectionViewModel;
+  sources: PersonSectionViewModel;
+  notes: PersonSectionViewModel;
+  media: PersonSectionViewModel;
+  audit: {
+    person: Person;
+  };
+  extensions: PersonSectionViewModel;
+  timeline: PersonTimelineSectionViewModel;
+  analysis: PersonSectionViewModel;
+  history: {
+    person: Person;
+  };
+};
 
 export type RelatedPersonListItem = {
   id: string;
@@ -133,7 +191,8 @@ export type PersonStatsViewModel =
 export type PersonEditorViewModel = {
   editorState: PersonEditorState;
   aiSettings: AiSettings;
-  documentView: PersonDocumentView | null;
+  documentView: PersonEditorDocumentView | null;
+  birthRefinement: BirthRangeRefinementViewModel | null;
   getNameSuggestions: (query: string) => string[];
   getPlaceSuggestions: (query: string) => string[];
   getSurnameSuggestions: (anchorId: string | null, relationType: PendingRelationType | null) => Array<{ paternal: string; maternal: string }>;
@@ -141,8 +200,23 @@ export type PersonEditorViewModel = {
 
 export type PersonWorkspaceViewModel = {
   personId: string;
+  person: Person | null;
   aiSettings: AiSettings;
-  documentView: PersonDocumentView;
+  documentView: PersonWorkspaceDocumentView;
+  sections: PersonWorkspaceSectionModels;
+};
+
+export type ImportReviewViewModel = {
+  baseDocument: ImportReviewDocumentView | null;
+  incomingDocument: ImportReviewDocumentView | null;
+  initialDraft: import("@/types/merge-draft").MergeDraftSnapshot | null;
+};
+
+export type AiAssistantViewModel = {
+  open: boolean;
+  context: AiInputContext | null;
+  documentView: AiAssistantDocumentView | null;
+  settings: AiSettings;
 };
 
 export type PersonPickerOption = {
@@ -299,13 +373,11 @@ export type ShellWorkspaceFacade = {
   };
   importReview: {
     open: boolean;
-    baseDocument: GraphDocument | null;
-    incomingDocument: GraphDocument | null;
+    viewModel: ImportReviewViewModel;
     clearMergeFocus: () => void;
     onDraftChange: (draft: import("@/types/merge-draft").MergeDraftSnapshot | null) => void;
-    initialDraft: import("@/types/merge-draft").MergeDraftSnapshot | null;
     onFocusChange: (focus: import("@/core/edit/mergeFocus").MergeFocusPayload | null) => void;
-    onApply: (merged: GraphDocument, stats: { addedPersons: number; updatedPersons: number; addedFamilies: number }) => void;
+    onApply: (merged: ImportReviewDocumentView, stats: { addedPersons: number; updatedPersons: number; addedFamilies: number }) => void;
     onClose: () => void;
     onClearDraft: () => void;
   };
@@ -353,13 +425,10 @@ export type ShellFeaturesFacade = {
       onStatus: (status: string) => void;
     };
     assistantModal: {
-      open: boolean;
-      context: AiInputContext | null;
-      documentView: GraphDocument | null;
-      settings: AiSettings;
+      viewModel: AiAssistantViewModel;
       onClose: () => void;
       onStatus: (status: string) => void;
-      onApplyBatch: (nextDoc: GraphDocument, summary: string) => void;
+      onApplyBatch: (nextDoc: AiAssistantDocumentView, summary: string) => void;
       onOpenSettings: () => void;
     };
   };

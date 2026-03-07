@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import type { GraphDocument, Person } from "@/types/domain";
+import type { PersonSectionViewModel } from "@/app-shell/facade/types";
 import type { PersonEditorPatch } from "@/types/editor";
 import { SectionCard } from "@/ui/common/StandardModal";
 
 type Props = {
-  person: Person;
-  document: GraphDocument;
+  viewModel: PersonSectionViewModel;
   onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
 };
 
-export function PersonMediaSection({ person, document, onSavePerson }: Props) {
+export function PersonMediaSection({ viewModel, onSavePerson }: Props) {
+  const { person, documentView: document } = viewModel;
   const [mediaRefs, setMediaRefs] = useState<string[]>([...(person.mediaRefs || [])]);
   const [selectedExisting, setSelectedExisting] = useState("");
   const [message, setMessage] = useState("");

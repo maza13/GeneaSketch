@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FamilyPatch } from "@/core/edit/commands";
-import type { AiSettings } from "@/types/ai";
-import type { GraphDocument, PendingRelationType } from "@/types/domain";
-import type { PersonEditorPatch } from "@/types/editor";
+import type { PersonWorkspaceViewModel, ShellFeaturesFacade } from "@/app-shell/facade/types";
 import { getPersonLabel } from "@/ui/person/personDetailUtils";
 import { StandardModal } from "@/ui/common/StandardModal";
 import { splitPersonFamilies } from "@/ui/person/sections/PersonFamiliesSection";
@@ -20,16 +17,8 @@ type PersonInput = {
 };
 
 type Props = {
-    document: GraphDocument;
-    personId: string;
-    aiSettings: AiSettings;
-    onClose: () => void;
-    onSelectPerson: (personId: string) => void;
-    onSetAsFocus: (personId: string) => void;
-    onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
-    onSaveFamily: (familyId: string, patch: FamilyPatch) => void;
-    onCreatePerson: (input: PersonInput) => string | null;
-    onQuickAddRelation: (anchorId: string, relationType: PendingRelationType) => void;
+    viewModel: PersonWorkspaceViewModel;
+    commands: ShellFeaturesFacade["personWorkspaceV3"]["commands"];
 };
 
 type V3Tab = "identity" | "family_links" | "events";
@@ -51,18 +40,11 @@ function getInitialV3Tab(): V3Tab {
 }
 
 export function PersonWorkspacePanelV3({
-    document,
-    personId,
-    aiSettings,
-    onClose,
-    onSelectPerson,
-    onSetAsFocus,
-    onSavePerson,
-    onSaveFamily,
-    onCreatePerson,
-    onQuickAddRelation,
+    viewModel,
+    commands,
 }: Props) {
-    const person = document.persons[personId];
+    const { personId, person, aiSettings, documentView: document, sections } = viewModel;
+    const { onClose, onSelectPerson, onSetAsFocus, onSavePerson, onSaveFamily, onCreatePerson, onQuickAddRelation } = commands;
     const [tab, setTab] = useState<V3Tab>(getInitialV3Tab);
 
     // Persist tab selection
@@ -134,13 +116,12 @@ export function PersonWorkspacePanelV3({
 
     const renderTabContent = () => {
         if (tab === "identity") {
-            return <PersonIdentitySection person={person} document={document} onSavePerson={onSavePerson} />;
+            return <PersonIdentitySection viewModel={sections.identity} onSavePerson={onSavePerson} />;
         }
         if (tab === "family_links") {
             return (
                 <PersonFamiliesSection
-                    personId={person.id}
-                    document={document}
+                    viewModel={sections.familyLinks}
                     onSelectPerson={(id) => {
                         onSelectPerson(id);
                         // Also re-open this modal on the new person (navigation)
@@ -154,9 +135,7 @@ export function PersonWorkspacePanelV3({
         if (tab === "events") {
             return (
                 <PersonEventsSection
-                    person={person}
-                    document={document}
-                    aiSettings={aiSettings}
+                    viewModel={sections.events}
                     onSavePerson={onSavePerson}
                 />
             );

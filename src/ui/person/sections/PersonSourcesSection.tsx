@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import type { GraphDocument, Person, SourceRef } from "@/types/domain";
+import type { SourceRef } from "@/types/domain";
+import type { PersonSectionViewModel } from "@/app-shell/facade/types";
 import type { PersonEditorPatch } from "@/types/editor";
 import { SectionCard } from "@/ui/common/StandardModal";
 
 type Props = {
-  person: Person;
-  document: GraphDocument;
+  viewModel: PersonSectionViewModel;
   onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
 };
 
@@ -13,7 +13,8 @@ function emptySourceRef(id = ""): SourceRef {
   return { id, title: "", page: "", text: "", note: "" };
 }
 
-export function PersonSourcesSection({ person, document, onSavePerson }: Props) {
+export function PersonSourcesSection({ viewModel, onSavePerson }: Props) {
+  const { person, documentView: document } = viewModel;
   const [refs, setRefs] = useState<SourceRef[]>(person.sourceRefs?.map((ref) => ({ ...ref })) || []);
   const [selectedExisting, setSelectedExisting] = useState("");
   const [message, setMessage] = useState("");

@@ -6,23 +6,20 @@ import { updateAiReviewItemCandidate, updateAiReviewItemSelection, updateAiRevie
 import { aiAppendDiagnosticLog, aiReadDiagnosticLog } from "@/services/aiRuntime";
 import { downloadBlob } from "@/utils/download";
 import type { AiDiagnosticEntry, AiGlobalFocusDetection, AiInputContext, AiReviewDraft, AiReviewItemStatus, AiSettings } from "@/types/ai";
-import type { GraphDocument } from "@/types/domain";
+import type { AiAssistantDocumentView, AiAssistantViewModel } from "@/app-shell/facade/types";
 
 
 type Props = {
-  open: boolean;
-  context: AiInputContext | null;
-  document: GraphDocument | null;
-  settings: AiSettings;
+  viewModel: AiAssistantViewModel;
   onClose: () => void;
   onStatus: (message: string) => void;
-  onApplyBatch: (nextDoc: GraphDocument, summary: string) => void;
+  onApplyBatch: (nextDoc: AiAssistantDocumentView, summary: string) => void;
   onOpenSettings: () => void;
 };
 
 type ReviewStep = 1 | 2 | 3 | 4 | 5;
 
-function contextLabel(context: AiInputContext | null, document?: GraphDocument | null): string {
+function contextLabel(context: AiInputContext | null, document?: AiAssistantDocumentView | null): string {
   if (!context) return "Sin contexto";
   const kind = context.kind === "local" ? "Enfoque Local" : "Contexto Global";
   if (context.kind === "local" && document) {
@@ -82,7 +79,8 @@ function stepTitle(step: ReviewStep): string {
   return "5) Relaciones";
 }
 
-export function AiAssistantModal({ open, context, document, settings, onClose, onStatus, onApplyBatch, onOpenSettings }: Props) {
+export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, onOpenSettings }: Props) {
+  const { open, context, documentView: document, settings } = viewModel;
   const [inputText, setInputText] = useState("");
   const [running, setRunning] = useState(false);
   const [review, setReview] = useState<AiReviewDraft | null>(null);

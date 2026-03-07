@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import type { GraphDocument, Person } from "@/types/domain";
+import type { PersonSectionViewModel } from "@/app-shell/facade/types";
 import { getPersonLabel } from "@/ui/person/personDetailUtils";
 import { SectionCard } from "@/ui/common/StandardModal";
 
-function bfsOldestAncestor(doc: GraphDocument, startId: string): { id: string; name: string; year: number } | null {
+function bfsOldestAncestor(doc: PersonSectionViewModel["documentView"], startId: string): { id: string; name: string; year: number } | null {
   const visited = new Set<string>();
   const queue = [startId];
   let oldest: { id: string; name: string; year: number } | null = null;
@@ -31,7 +31,7 @@ function bfsOldestAncestor(doc: GraphDocument, startId: string): { id: string; n
   return oldest;
 }
 
-function bfsAncestorStats(doc: GraphDocument, startId: string): { totalAncestors: number; maxDepth: number } {
+function bfsAncestorStats(doc: PersonSectionViewModel["documentView"], startId: string): { totalAncestors: number; maxDepth: number } {
   const visited = new Set<string>();
   const queue: Array<{ id: string; depth: number }> = [{ id: startId, depth: 0 }];
   let maxDepth = 0;
@@ -53,12 +53,12 @@ function bfsAncestorStats(doc: GraphDocument, startId: string): { totalAncestors
 }
 
 type Props = {
-  document: GraphDocument;
-  person: Person;
+  viewModel: PersonSectionViewModel;
   onSelectPerson: (personId: string) => void;
 };
 
-export function PersonAnalysisSection({ document, person, onSelectPerson }: Props) {
+export function PersonAnalysisSection({ viewModel, onSelectPerson }: Props) {
+  const { documentView: document, person } = viewModel;
   const stats = useMemo(() => bfsAncestorStats(document, person.id), [document, person.id]);
   const oldest = useMemo(() => bfsOldestAncestor(document, person.id), [document, person.id]);
 
@@ -66,7 +66,7 @@ export function PersonAnalysisSection({ document, person, onSelectPerson }: Prop
     <div className="gs-sections-container" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* --- Scope & Stats --- */}
       <SectionCard
-        title="An·lisis de Alcance Ancestral"
+        title="An√°lisis de Alcance Ancestral"
         icon="analytics"
       >
         <div className="gs-facts-grid" style={{ marginTop: 4 }}>
@@ -83,7 +83,7 @@ export function PersonAnalysisSection({ document, person, onSelectPerson }: Prop
 
       {/* --- Oldest Ancestor --- */}
       <SectionCard
-        title="RaÌces: Antepasado m·s remoto"
+        title="Ra√≠ces: Antepasado m√°s remoto"
         icon="account_tree"
       >
         {oldest ? (
@@ -99,7 +99,7 @@ export function PersonAnalysisSection({ document, person, onSelectPerson }: Prop
             }}
           >
             <span style={{ fontSize: '12px', opacity: 0.7 }}>
-              Persona m·s antigua con aÒo de nacimiento en este linaje directo:
+              Persona m√°s antigua con a√±o de nacimiento en este linaje directo:
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div
@@ -125,7 +125,7 @@ export function PersonAnalysisSection({ document, person, onSelectPerson }: Prop
                   {oldest.name}
                 </button>
                 <div style={{ fontSize: '14px', opacity: 0.8, marginTop: 2 }}>
-                  Nacido aproximadamente en el aÒo <strong>{oldest.year}</strong>
+                  Nacido aproximadamente en el a√±o <strong>{oldest.year}</strong>
                 </div>
               </div>
             </div>
@@ -141,7 +141,7 @@ export function PersonAnalysisSection({ document, person, onSelectPerson }: Prop
           </div>
         ) : (
           <div className="gs-alert gs-alert--info">
-            No se han podido identificar antepasados con fechas de nacimiento v·lidas en este linaje.
+            No se han podido identificar antepasados con fechas de nacimiento v√°lidas en este linaje.
           </div>
         )}
       </SectionCard>
@@ -150,7 +150,7 @@ export function PersonAnalysisSection({ document, person, onSelectPerson }: Prop
         className="gs-alert gs-alert--info"
         style={{ fontSize: '11px', opacity: 0.6, margin: '0 4px' }}
       >
-        Este an·lisis utiliza una b˙squeda en anchura (BFS) para recorrer el ·rbol de ascendencia directo a travÈs de los registros de familia (FAMC).
+        Este an√°lisis utiliza una b√∫squeda en anchura (BFS) para recorrer el √°rbol de ascendencia directo a trav√©s de los registros de familia (FAMC).
       </div>
     </div>
   );

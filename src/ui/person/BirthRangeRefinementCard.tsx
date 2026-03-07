@@ -10,13 +10,11 @@ import {
 } from "@/core/inference/birthRangeFusion";
 import { recommendBirthRefinementLevel } from "@/core/inference/intelligenceAdvisor";
 import type { AiBirthRefinementLevel, AiBirthRangeRefinementResult, AiSettings } from "@/types/ai";
-import type { GraphDocument } from "@/types/domain";
+import type { BirthRangeRefinementViewModel } from "@/app-shell/facade/types";
 import { BirthRangeApplyConfirmPanel } from "@/ui/person/BirthRangeApplyConfirmPanel";
 
 type Props = {
-  document: GraphDocument;
-  personId: string;
-  aiSettings: AiSettings;
+  viewModel: BirthRangeRefinementViewModel;
   disabled?: boolean;
   onApplyBirthGedcom: (gedcom: string) => void;
   onAppendNote?: (note: string) => void;
@@ -142,13 +140,12 @@ function buildFusionNote(
 }
 
 export function BirthRangeRefinementCard({
-  document,
-  personId,
-  aiSettings,
+  viewModel,
   disabled = false,
   onApplyBirthGedcom,
   onAppendNote
 }: Props) {
+  const { documentView: document, personId, aiSettings } = viewModel;
   const [isActivated, setIsActivated] = useState(false);
   const [localInference, setLocalInference] = useState<InferenceResult | null>(null);
   const [aiResult, setAiResult] = useState<AiBirthRangeRefinementResult | null>(null);

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import type { GraphDocument, Person } from "@/types/domain";
+import type { Person } from "@/types/domain";
+import type { PersonWorkspaceDocumentView } from "@/app-shell/facade/types";
 import { normalizeGedcomTimelineDate, NormalizedTimelineDate } from "@/core/timeline/dateNormalization";
 import { getPersonLabel } from "@/ui/person/personDetailUtils";
 import { findKinship } from "@/core/graph/kinship";
 
 interface PersonalTimelineProps {
-  document: GraphDocument;
+  document: PersonWorkspaceDocumentView;
   personId: string;
   onSelectPerson: (personId: string) => void;
 }

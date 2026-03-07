@@ -202,12 +202,12 @@ export function App() {
         </div>
       ) : null}
 
-      {facade.workspace.importReview.open && facade.workspace.importReview.baseDocument && facade.workspace.importReview.incomingDocument ? (
+      {facade.workspace.importReview.open
+      && facade.workspace.importReview.viewModel.baseDocument
+      && facade.workspace.importReview.viewModel.incomingDocument ? (
         <MergeReviewErrorBoundary onClearDraft={facade.workspace.importReview.onClearDraft} onClose={facade.workspace.importReview.onClose}>
           <ImportReviewPanel
-            baseDoc={facade.workspace.importReview.baseDocument}
-            incomingDoc={facade.workspace.importReview.incomingDocument}
-            initialDraft={facade.workspace.importReview.initialDraft}
+            viewModel={facade.workspace.importReview.viewModel}
             onDraftChange={facade.workspace.importReview.onDraftChange}
             onFocusChange={facade.workspace.importReview.onFocusChange}
             onApply={facade.workspace.importReview.onApply}
@@ -245,10 +245,7 @@ export function App() {
       />
 
       <AiAssistantModal
-        open={facade.features.ai.assistantModal.open}
-        context={facade.features.ai.assistantModal.context}
-        document={facade.features.ai.assistantModal.documentView}
-        settings={facade.features.ai.assistantModal.settings}
+        viewModel={facade.features.ai.assistantModal.viewModel}
         onClose={facade.features.ai.assistantModal.onClose}
         onStatus={facade.features.ai.assistantModal.onStatus}
         onApplyBatch={facade.features.ai.assistantModal.onApplyBatch}
@@ -267,42 +264,21 @@ export function App() {
       ) : null}
 
       <PersonDetailPanel
-        editorState={facade.features.personEditor.viewModel.editorState}
-        document={facade.features.personEditor.viewModel.documentView}
-        aiSettings={facade.features.personEditor.viewModel.aiSettings}
-        onClose={facade.features.personEditor.commands.onClose}
-        onSaveEdit={facade.features.personEditor.commands.onSaveEdit}
-        onSaveRelation={facade.features.personEditor.commands.onSaveRelation}
-        onCreateStandalone={facade.features.personEditor.commands.onCreateStandalone}
+        viewModel={facade.features.personEditor.viewModel}
+        commands={facade.features.personEditor.commands}
       />
 
       {facade.features.personWorkspaceV3.open && facade.features.personWorkspaceV3.viewModel ? (
         <PersonWorkspacePanelV3
-          document={facade.features.personWorkspaceV3.viewModel.documentView}
-          personId={facade.features.personWorkspaceV3.viewModel.personId}
-          aiSettings={facade.features.personWorkspaceV3.viewModel.aiSettings}
-          onClose={facade.features.personWorkspaceV3.commands.onClose}
-          onSelectPerson={facade.features.personWorkspaceV3.commands.onSelectPerson}
-          onSetAsFocus={facade.features.personWorkspaceV3.commands.onSetAsFocus}
-          onSavePerson={facade.features.personWorkspaceV3.commands.onSavePerson}
-          onSaveFamily={facade.features.personWorkspaceV3.commands.onSaveFamily}
-          onCreatePerson={facade.features.personWorkspaceV3.commands.onCreatePerson}
-          onQuickAddRelation={facade.features.personWorkspaceV3.commands.onQuickAddRelation}
+          viewModel={facade.features.personWorkspaceV3.viewModel}
+          commands={facade.features.personWorkspaceV3.commands}
         />
       ) : null}
 
       {facade.features.personWorkspace.open && facade.features.personWorkspace.viewModel ? (
         <PersonWorkspacePanel
-          document={facade.features.personWorkspace.viewModel.documentView}
-          personId={facade.features.personWorkspace.viewModel.personId}
-          aiSettings={facade.features.personWorkspace.viewModel.aiSettings}
-          onClose={facade.features.personWorkspace.commands.onClose}
-          onSelectPerson={facade.features.personWorkspace.commands.onSelectPerson}
-          onSetAsFocus={facade.features.personWorkspace.commands.onSetAsFocus}
-          onSavePerson={facade.features.personWorkspace.commands.onSavePerson}
-          onSaveFamily={facade.features.personWorkspace.commands.onSaveFamily}
-          onCreatePerson={facade.features.personWorkspace.commands.onCreatePerson}
-          onQuickAddRelation={facade.features.personWorkspace.commands.onQuickAddRelation}
+          viewModel={facade.features.personWorkspace.viewModel}
+          commands={facade.features.personWorkspace.commands}
         />
       ) : null}
 

@@ -10,7 +10,10 @@ import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import { buildTimeline } from "@/core/timeline/buildTimeline";
 import { inferTimelineEvents, inferTimelineStatus } from "@/core/timeline/livingPresence";
-import { getNameSuggestions, getPlaceSuggestions, getSurnameSuggestions } from "@/core/edit/suggestions";
+import { buildAiAssistantViewModel } from "@/app-shell/workbenches/aiAssistantWorkbench";
+import { buildImportReviewViewModel } from "@/app-shell/workbenches/importReviewWorkbench";
+import { buildPersonEditorViewModel } from "@/app-shell/workbenches/personEditorWorkbench";
+import { buildPersonWorkspaceViewModel } from "@/app-shell/workbenches/personWorkspaceWorkbench";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
 import { DEFAULT_COLOR_THEME, useAppShellController } from "@/hooks/useAppShellController";
 import { useAppShellShortcuts } from "@/hooks/useAppShellShortcuts";
@@ -39,15 +42,7 @@ import type {
 } from "./types";
 
 function toDocumentView(document: GraphDocument | null): PersonDocumentView | null {
-  if (!document) return null;
-  return {
-    persons: document.persons,
-    families: document.families,
-    sources: document.sources,
-    notes: document.notes,
-    media: document.media,
-    metadata: document.metadata,
-  };
+  return document;
 }
 
 function toRelatedPerson(person: Person): RelatedPersonListItem {
@@ -555,21 +550,23 @@ export function useAppShellFacade(): AppShellFacade {
     [document, shellController.showPersonStatsPersonId],
   );
   const personWorkspaceViewModel = useMemo<PersonWorkspaceViewModel | null>(() => {
-    if (!documentView || !shellController.workspacePersonId) return null;
-    return {
-      personId: shellController.workspacePersonId,
-      aiSettings,
-      documentView,
-    };
-  }, [aiSettings, documentView, shellController.workspacePersonId]);
+    return buildPersonWorkspaceViewModel(document, aiSettings, shellController.workspacePersonId);
+  }, [aiSettings, document, shellController.workspacePersonId]);
   const personWorkspaceViewModelV3 = useMemo<PersonWorkspaceViewModel | null>(() => {
-    if (!documentView || !shellController.workspacePersonIdV3) return null;
-    return {
-      personId: shellController.workspacePersonIdV3,
-      aiSettings,
-      documentView,
-    };
-  }, [aiSettings, documentView, shellController.workspacePersonIdV3]);
+    return buildPersonWorkspaceViewModel(document, aiSettings, shellController.workspacePersonIdV3);
+  }, [aiSettings, document, shellController.workspacePersonIdV3]);
+  const personEditorViewModel = useMemo(
+    () => buildPersonEditorViewModel(document, aiSettings, shellController.personDetailModal),
+    [aiSettings, document, shellController.personDetailModal],
+  );
+  const importReviewViewModel = useMemo(
+    () => buildImportReviewViewModel(document, importIncomingDoc, mergeDraft),
+    [document, importIncomingDoc, mergeDraft],
+  );
+  const aiAssistantViewModel = useMemo(
+    () => buildAiAssistantViewModel(showAiAssistantModal, aiContext, document, aiSettings),
+    [aiContext, aiSettings, document, showAiAssistantModal],
+  );
   const personPickerViewModel = useMemo(
     () => buildPersonPickerViewModel(document, shellController.picker),
     [document, shellController.picker],
@@ -728,11 +725,9 @@ export function useAppShellFacade(): AppShellFacade {
       },
       importReview: {
         open: Boolean(importIncomingDoc && document),
-        baseDocument: document,
-        incomingDocument: importIncomingDoc,
+        viewModel: importReviewViewModel,
         clearMergeFocus: shellController.clearMergeFocusOverlay,
         onDraftChange: actions.setMergeDraft,
-        initialDraft: mergeDraft,
         onFocusChange: shellController.handleMergeFocusChange,
         onApply: handleMergeApply,
         onClose: () => {
@@ -807,10 +802,7 @@ export function useAppShellFacade(): AppShellFacade {
           onStatus: setStatus,
         },
         assistantModal: {
-          open: showAiAssistantModal,
-          context: aiContext,
-          documentView: document,
-          settings: aiSettings,
+          viewModel: aiAssistantViewModel,
           onClose: () => setShowAiAssistantModal(false),
           onStatus: setStatus,
           onApplyBatch: applyAiBatch,
@@ -818,14 +810,7 @@ export function useAppShellFacade(): AppShellFacade {
         },
       },
       personEditor: {
-        viewModel: {
-          editorState: shellController.personDetailModal,
-          aiSettings,
-          documentView,
-          getNameSuggestions: (query) => getNameSuggestions(document as GraphDocument | null, query),
-          getPlaceSuggestions: (query) => getPlaceSuggestions(document as GraphDocument | null, query),
-          getSurnameSuggestions: (anchorId, relationType) => getSurnameSuggestions(document as GraphDocument | null, anchorId, relationType),
-        },
+        viewModel: personEditorViewModel,
         commands: {
           onClose: () => shellController.setPersonDetailModal(null),
           onSaveEdit: actions.updatePersonById,

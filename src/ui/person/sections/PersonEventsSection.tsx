@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AiSettings } from "@/types/ai";
-import type { Event, GraphDocument, Person } from "@/types/domain";
+import type { Event } from "@/types/domain";
+import type { PersonEventsSectionViewModel } from "@/app-shell/facade/types";
 import type { PersonEditorPatch } from "@/types/editor";
 import { BirthRangeRefinementCard } from "@/ui/person/BirthRangeRefinementCard";
 import { GedcomDateInput } from "@/ui/person/events/GedcomDateInput";
@@ -19,9 +19,7 @@ import {
 import { SectionCard, SectionSubtitle } from "../../common/StandardModal";
 
 type Props = {
-  person: Person;
-  document: GraphDocument;
-  aiSettings: AiSettings;
+  viewModel: PersonEventsSectionViewModel;
   onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
 };
 
@@ -132,7 +130,8 @@ function EventFieldLabel({
   );
 }
 
-export function PersonEventsSection({ person, document, aiSettings, onSavePerson }: Props) {
+export function PersonEventsSection({ viewModel, onSavePerson }: Props) {
+  const { person, documentView: document, aiSettings } = viewModel;
   // Persistence state
   const [events, setEvents] = useState<Event[]>(
     (person.events || []).map((event, index) => normalizeEvent(event, index))
@@ -340,7 +339,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
     <div className="gs-sections-container" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* --- Global Event Actions --- */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
-        <SectionSubtitle>Cronología de Eventos</SectionSubtitle>
+        <SectionSubtitle>CronologÃ­a de Eventos</SectionSubtitle>
         <div style={{ position: 'relative', display: 'flex', gap: 8 }}>
           {emptyEventIds.length > 0 && (
             <button
@@ -348,10 +347,10 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
               style={{ padding: '6px 12px', fontSize: '12px' }}
               onClick={() => {
                 setEvents((prev) => prev.filter((event) => !emptyEventIds.includes(event.id || "")));
-                setMessage(`Se eliminaron ${emptyEventIds.length} eventos vacíos.`);
+                setMessage(`Se eliminaron ${emptyEventIds.length} eventos vacÃ­os.`);
               }}
             >
-              Eliminar {emptyEventIds.length} vacíos
+              Eliminar {emptyEventIds.length} vacÃ­os
             </button>
           )}
 
@@ -360,7 +359,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
             onClick={() => setAddTypeMenuOpen(!addTypeMenuOpen)}
             style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '13px' }}
           >
-            + Añadir Evento
+            + AÃ±adir Evento
           </button>
 
           {addTypeMenuOpen ? (
@@ -421,7 +420,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
       </div>
 
       <div style={{ fontSize: '11px', color: 'var(--ink-muted)', padding: '0 4px', marginBottom: -12, fontStyle: 'italic' }}>
-        DATE/PLAC aceptan texto libre GEDCOM. La validación es orientativa.
+        DATE/PLAC aceptan texto libre GEDCOM. La validaciÃ³n es orientativa.
       </div>
 
       {sortedEvents.map((evBase, index) => {
@@ -498,7 +497,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
                   style={{ width: 28, height: 28, padding: 0 }}
                   onClick={() => {
                     if (eventDirty) {
-                      if (!confirm("Este evento tiene cambios sin guardar. ¿Seguro que quieres eliminarlo?")) return;
+                      if (!confirm("Este evento tiene cambios sin guardar. Â¿Seguro que quieres eliminarlo?")) return;
                     }
                     setEvents((prev) => prev.filter((item) => item.id !== eventId));
                   }}
@@ -553,7 +552,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
                             style={{ marginLeft: 6, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', opacity: 0.6 }}
                             onClick={() => requestRemoveField(eventId, field)}
                           >
-                            ×
+                            Ã—
                           </button>
                         ) : null}
                       </span>
@@ -572,7 +571,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
                           }))
                         }
                       >
-                        <option value="">Añadir campo...</option>
+                        <option value="">AÃ±adir campo...</option>
                         {addableFields.map((field) => (
                           <option key={`${eventId}-field-${field}`} value={field}>
                             {EVENT_FIELD_META[field].labelHuman}
@@ -597,10 +596,10 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
 
                 {pendingRemovalForEvent ? (
                   <div className="gs-alert gs-alert--warning" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>¿Quitar <strong>{EVENT_FIELD_META[pendingRemovalForEvent].labelHuman}</strong>?</span>
+                    <span>Â¿Quitar <strong>{EVENT_FIELD_META[pendingRemovalForEvent].labelHuman}</strong>?</span>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button className="secondary-ghost" onClick={() => setPendingRemoveField(null)}>No</button>
-                      <button className="accent-solid danger" style={{ backgroundColor: 'var(--tree-danger)' }} onClick={confirmRemoveField}>Sí, quitar</button>
+                      <button className="accent-solid danger" style={{ backgroundColor: 'var(--tree-danger)' }} onClick={confirmRemoveField}>SÃ­, quitar</button>
                     </div>
                   </div>
                 ) : null}
@@ -630,9 +629,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
                       showBirthAssistant={event.type === "BIRT"}
                       birthAssistantSlot={event.type === "BIRT" ? (
                         <BirthRangeRefinementCard
-                          document={document}
-                          personId={person.id}
-                          aiSettings={aiSettings}
+                          viewModel={{ documentView: document, personId: person.id, aiSettings }}
                           onApplyBirthGedcom={(gedcom) => updateDraftField(eventId, "date", gedcom)}
                           onAppendNote={(note) => setPendingNotesAppend((prev) => [...prev, note])}
                         />
@@ -729,7 +726,7 @@ export function PersonEventsSection({ person, document, aiSettings, onSavePerson
             });
             setPendingNotesAppend([]);
             if (emptyEventIds.length > 0) {
-              setMessage(`Eventos guardados. Aviso: ${emptyEventIds.length} evento(s) vacíos.`);
+              setMessage(`Eventos guardados. Aviso: ${emptyEventIds.length} evento(s) vacÃ­os.`);
             } else {
               setMessage("Eventos guardados exitosamente.");
             }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { gedcomDateToUi, uiDateToGedcom } from "@/utils/date";
-import type { Family, GraphDocument, Person, PendingRelationType } from "@/types/domain";
+import type { Family, PendingRelationType, Person } from "@/types/domain";
+import type { PersonFamiliesSectionViewModel } from "@/app-shell/facade/types";
 import type { FamilyPatch, FamilyUnionStatus } from "@/core/edit/commands";
 import { deriveFamilyStatus, getPersonLabel } from "@/ui/person/personDetailUtils";
 import { SectionCard } from "../../common/StandardModal";
@@ -15,15 +16,14 @@ type PersonInput = {
 };
 
 type Props = {
-  personId: string;
-  document: GraphDocument;
+  viewModel: PersonFamiliesSectionViewModel;
   onSelectPerson: (personId: string) => void;
   onSaveFamily: (familyId: string, patch: FamilyPatch) => void;
   onCreatePerson: (input: PersonInput) => string | null;
   onQuickAddRelation: (anchorId: string, relationType: PendingRelationType) => void;
 };
 
-export function splitPersonFamilies(personId: string, document: GraphDocument): { originFamilies: Family[]; ownFamilies: Family[] } {
+export function splitPersonFamilies(personId: string, document: PersonFamiliesSectionViewModel["documentView"]): { originFamilies: Family[]; ownFamilies: Family[] } {
   const person = document.persons[personId];
   if (!person) return { originFamilies: [], ownFamilies: [] };
   return {
@@ -33,15 +33,15 @@ export function splitPersonFamilies(personId: string, document: GraphDocument): 
 }
 
 export function PersonFamiliesSection({
-  personId,
-  document,
+  viewModel,
   onSelectPerson,
   onSaveFamily,
   onCreatePerson,
   onQuickAddRelation
 }: Props) {
+  const { personId, documentView: document } = viewModel;
   const person = document.persons[personId];
-  // Track which family is in "edit mode" — only one at a time
+  // Track which family is in "edit mode" â€” only one at a time
   const [editingFamilyId, setEditingFamilyId] = useState<string | null>(null);
   const [linkFamilyId, setLinkFamilyId] = useState("");
   const [linkRole, setLinkRole] = useState<"famc" | "fams">("fams");
@@ -137,23 +137,23 @@ export function PersonFamiliesSection({
                 if (linkRole === "famc") {
                   const children = Array.from(new Set([...(fam.childrenIds || []), person.id]));
                   onSaveFamily(fam.id, { childrenIds: children });
-                  setLinkMessage(`Vínculo FAMC agregado en ${fam.id}.`);
+                  setLinkMessage(`VÃ­nculo FAMC agregado en ${fam.id}.`);
                   setLinkFamilyId("");
                   return;
                 }
                 if (!fam.husbandId) {
                   onSaveFamily(fam.id, { husbandId: person.id });
-                  setLinkMessage(`Vínculo FAMS como HUSB en ${fam.id}.`);
+                  setLinkMessage(`VÃ­nculo FAMS como HUSB en ${fam.id}.`);
                   setLinkFamilyId("");
                   return;
                 }
                 if (!fam.wifeId) {
                   onSaveFamily(fam.id, { wifeId: person.id });
-                  setLinkMessage(`Vínculo FAMS como WIFE en ${fam.id}.`);
+                  setLinkMessage(`VÃ­nculo FAMS como WIFE en ${fam.id}.`);
                   setLinkFamilyId("");
                   return;
                 }
-                setLinkMessage("La familia ya tiene ambos cónyuges.");
+                setLinkMessage("La familia ya tiene ambos cÃ³nyuges.");
               }}
             >
               Vincular
@@ -165,7 +165,7 @@ export function PersonFamiliesSection({
         </div>
 
         {ownFamilies.length === 0 && (
-          <div className="fam-empty-state">No participa en ninguna familia aún.</div>
+          <div className="fam-empty-state">No participa en ninguna familia aÃºn.</div>
         )}
 
         <div className="fam-cards-list">
@@ -190,7 +190,7 @@ export function PersonFamiliesSection({
 }
 
 // -------------------------------------------------------------------
-// FamilyCard — View mode + Edit mode in place (UX-RULE-006, §8.1)
+// FamilyCard â€” View mode + Edit mode in place (UX-RULE-006, Â§8.1)
 // -------------------------------------------------------------------
 function FamilyCard({
   family,
@@ -204,7 +204,7 @@ function FamilyCard({
   onCreatePerson,
 }: {
   family: Family;
-  document: GraphDocument;
+  document: PersonFamiliesSectionViewModel["documentView"];
   role: "origen" | "propia";
   personId: string;
   isEditing: boolean;
@@ -239,7 +239,7 @@ function FamilyCard({
         <div className="family-card-id">
           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>family_history</span>
           <strong>{family.id}</strong>
-          <span className="family-card-badge">{role === "origen" ? "Origen" : "Propia"} · {statusLabel}</span>
+          <span className="family-card-badge">{role === "origen" ? "Origen" : "Propia"} Â· {statusLabel}</span>
         </div>
         <div className="family-card-head-actions">
           {/* Edit toggle */}
@@ -253,17 +253,17 @@ function FamilyCard({
             </span>
           </button>
 
-          {/* Unlink with inline confirm (UX-RULE-007 / §8.5) */}
+          {/* Unlink with inline confirm (UX-RULE-007 / Â§8.5) */}
           {unlinkPending ? (
             <div className="family-card-confirm-row">
-              <span className="family-card-confirm-label">¿Quitar vínculo?</span>
-              <button className="accent-solid danger" style={{ fontSize: 11, padding: "2px 8px", height: "auto" }} onClick={handleUnlink}>Sí, quitar</button>
+              <span className="family-card-confirm-label">Â¿Quitar vÃ­nculo?</span>
+              <button className="accent-solid danger" style={{ fontSize: 11, padding: "2px 8px", height: "auto" }} onClick={handleUnlink}>SÃ­, quitar</button>
               <button className="secondary-ghost" style={{ fontSize: 11, padding: "2px 8px", height: "auto" }} onClick={() => setUnlinkPending(false)}>Cancelar</button>
             </div>
           ) : (
             <button
               className="panel-icon-btn danger"
-              title="Quitar vínculo"
+              title="Quitar vÃ­nculo"
               onClick={() => setUnlinkPending(true)}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>link_off</span>
@@ -299,7 +299,7 @@ function FamilyCard({
         </div>
       )}
 
-      {/* -- Edit mode expanded in place (UX-RULE-006 / §8.1) -- */}
+      {/* -- Edit mode expanded in place (UX-RULE-006 / Â§8.1) -- */}
       {isEditing && (
         <FamilyInlineEditor
           family={family}
@@ -314,7 +314,7 @@ function FamilyCard({
   );
 }
 
-// -- PersonRow — hover-reveal navigation (§8.2) ------------------
+// -- PersonRow â€” hover-reveal navigation (Â§8.2) ------------------
 function PersonRow({ label, person, onSelect }: {
   label: string;
   person: Person | null;
@@ -344,7 +344,7 @@ function PersonRow({ label, person, onSelect }: {
 }
 
 // -------------------------------------------------------------------
-// FamilyInlineEditor — appears inside FamilyCard when isEditing
+// FamilyInlineEditor â€” appears inside FamilyCard when isEditing
 // -------------------------------------------------------------------
 function FamilyInlineEditor({
   family,
@@ -355,7 +355,7 @@ function FamilyInlineEditor({
   onClose,
 }: {
   family: Family;
-  document: GraphDocument;
+  document: PersonFamiliesSectionViewModel["documentView"];
   onSaveFamily: (familyId: string, patch: FamilyPatch) => void;
   onCreatePerson: (input: PersonInput) => string | null;
   onSelectPerson: (personId: string) => void;
@@ -464,7 +464,7 @@ function FamilyInlineEditor({
               <button className="fam-person-link" onClick={() => onSelectPerson(childId)}>
                 {getPersonLabel(child)}
               </button>
-              {/* Inline confirm for child removal (UX-RULE-007 / §8.5) */}
+              {/* Inline confirm for child removal (UX-RULE-007 / Â§8.5) */}
               {removeChildPending === childId ? (
                 <div className="family-child-confirm">
                   <button className="accent-solid danger" style={{ fontSize: 11, padding: "2px 8px", height: "auto" }} onClick={() => { setChildrenIds(prev => prev.filter(id => id !== childId)); setRemoveChildPending(null); }}>
@@ -505,9 +505,9 @@ function FamilyInlineEditor({
         </div>
       </div>
 
-      {/* -- Estado de unión -- */}
+      {/* -- Estado de uniÃ³n -- */}
       <div className="family-editor-row">
-        <label className="family-editor-label">Estado de unión</label>
+        <label className="family-editor-label">Estado de uniÃ³n</label>
         <select className="family-editor-select" value={unionStatus} onChange={e => setUnionStatus(e.target.value as FamilyUnionStatus)}>
           <option value="partner">Pareja</option>
           <option value="married">Casados</option>
@@ -552,11 +552,11 @@ function FamilyInlineEditor({
           </div>
           <div className="family-editor-row">
             <label className="family-editor-label">Nombre</label>
-            <input className="family-editor-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej: María" />
+            <input className="family-editor-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej: MarÃ­a" />
           </div>
           <div className="family-editor-row">
             <label className="family-editor-label">Apellido</label>
-            <input className="family-editor-input" value={newSurname} onChange={e => setNewSurname(e.target.value)} placeholder="Ej: Núñez" />
+            <input className="family-editor-input" value={newSurname} onChange={e => setNewSurname(e.target.value)} placeholder="Ej: NÃºÃ±ez" />
           </div>
           <div className="family-editor-row">
             <label className="family-editor-label">Sexo</label>
