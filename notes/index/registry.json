@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-07T05:16:05.235Z",
-  "total_entries": 15,
+  "generated_at": "2026-03-07T06:32:40.041Z",
+  "total_entries": 16,
   "by_id": {
     "N0001": {
       "file": "notes/entries/N0001-idea-integracion-con-apis-genealogicas-familysearchwikitree.md",
@@ -492,7 +492,7 @@
     },
     "N0015": {
       "file": "notes/entries/N0015-note-registrar-una-nota-de-seguimiento-para-retomar-mas-adelante-el-plan-derivado-del-diagnosti.md",
-      "title": "Retomar el plan de separacion y preparacion para la nube, descentralizacion y APIs externas",
+      "title": "Retomar el plan de separacion considerando posibles implicaciones futuras",
       "kind": "note",
       "phase": "active",
       "complexity": "complex",
@@ -504,8 +504,8 @@
       "tags": [
         "architecture",
         "followup",
-        "cloud-ready",
-        "p2p",
+        "plan-reentry",
+        "design-review",
         "local-first",
         "sync",
         "api-connectivity"
@@ -529,6 +529,43 @@
       "updated_at": "2026-03-07",
       "last_reviewed_at": null,
       "review_after": null
+    },
+    "N0016": {
+      "file": "notes/entries/N0016-idea-compartir-arbol-por-repositorio-temporal-como-capacidad-cercana-sin.md",
+      "title": "Compartir arbol por repositorio temporal como capacidad cercana sin bloquear el hard cut",
+      "kind": "idea",
+      "phase": "active",
+      "complexity": "complex",
+      "connectivity": "interconnected",
+      "horizon": "mid",
+      "active_state": "candidate",
+      "archive_reason": null,
+      "source_type": "user_requested",
+      "tags": [
+        "architecture",
+        "sharing",
+        "sync",
+        "local-first",
+        "temporary-repository",
+        "privacy",
+        "security"
+      ],
+      "related_notes": [
+        "N0015",
+        "N0014",
+        "N0001",
+        "N0002",
+        "N0003",
+        "N0011"
+      ],
+      "related_todos": [],
+      "promoted_todos": [],
+      "relevance_score": 78,
+      "confidence": "high",
+      "created_at": "2026-03-07",
+      "updated_at": "2026-03-07",
+      "last_reviewed_at": null,
+      "review_after": null
     }
   },
   "by_kind": {
@@ -541,7 +578,8 @@
       "N0006",
       "N0010",
       "N0011",
-      "N0014"
+      "N0014",
+      "N0016"
     ],
     "note": [
       "N0007",
@@ -563,7 +601,8 @@
       "N0010",
       "N0012",
       "N0014",
-      "N0015"
+      "N0015",
+      "N0016"
     ],
     "archived": [
       "N0007",
@@ -579,7 +618,8 @@
     ],
     "sync": [
       "N0001",
-      "N0015"
+      "N0015",
+      "N0016"
     ],
     "future-feature": [
       "N0001"
@@ -656,7 +696,8 @@
       "N0010",
       "N0011",
       "N0014",
-      "N0015"
+      "N0015",
+      "N0016"
     ],
     "read-model": [
       "N0009"
@@ -705,17 +746,30 @@
     "followup": [
       "N0015"
     ],
-    "cloud-ready": [
+    "plan-reentry": [
       "N0015"
     ],
-    "p2p": [
+    "design-review": [
       "N0015"
     ],
     "local-first": [
-      "N0015"
+      "N0015",
+      "N0016"
     ],
     "api-connectivity": [
       "N0015"
+    ],
+    "sharing": [
+      "N0016"
+    ],
+    "temporary-repository": [
+      "N0016"
+    ],
+    "privacy": [
+      "N0016"
+    ],
+    "security": [
+      "N0016"
     ]
   },
   "by_connectivity": {
@@ -736,7 +790,8 @@
       "N0010",
       "N0011",
       "N0014",
-      "N0015"
+      "N0015",
+      "N0016"
     ]
   },
   "by_complexity": {
@@ -757,7 +812,8 @@
       "N0010",
       "N0011",
       "N0014",
-      "N0015"
+      "N0015",
+      "N0016"
     ]
   },
   "graph": {
@@ -845,6 +901,14 @@
         "N0005",
         "N0011",
         "N0014"
+      ],
+      "N0016": [
+        "N0015",
+        "N0014",
+        "N0001",
+        "N0002",
+        "N0003",
+        "N0011"
       ]
     }
   },
@@ -953,6 +1017,13 @@
       "horizon": "mid",
       "last_reviewed_at": null,
       "review_after": null
+    },
+    "N0016": {
+      "relevance_score": 78,
+      "confidence": "high",
+      "horizon": "mid",
+      "last_reviewed_at": null,
+      "review_after": null
     }
   },
   "promotion_state": {
@@ -1038,6 +1109,10 @@
       "promoted_todos": []
     },
     "N0015": {
+      "is_promoted": false,
+      "promoted_todos": []
+    },
+    "N0016": {
       "is_promoted": false,
       "promoted_todos": []
     }
