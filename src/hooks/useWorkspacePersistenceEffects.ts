@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { GraphDocument, ReadModelMode } from "@/core/read-model/types";
+import type { GraphDocument } from "@/core/read-model/types";
 import { WorkspaceProfileService } from "@/io/workspaceProfileService";
 import type { AiSettings } from "@/types/ai";
 import type { ViewConfig, VisualConfig } from "@/types/domain";
@@ -15,7 +15,6 @@ type UseWorkspacePersistenceEffectsArgs = {
   rightCollapsed: boolean;
   saveAutosessionNow: () => Promise<void>;
   graphId: string | null | undefined;
-  readModelMode: ReadModelMode;
   colorTheme: ColorThemeConfig;
 };
 
@@ -39,7 +38,6 @@ export function useWorkspacePersistenceEffects({
   rightCollapsed,
   saveAutosessionNow,
   graphId,
-  readModelMode,
   colorTheme,
 }: UseWorkspacePersistenceEffectsArgs): void {
   useEffect(() => {
@@ -58,12 +56,11 @@ export function useWorkspacePersistenceEffects({
         graphId,
         viewConfig: sanitizeWorkspaceProfileViewConfig(viewConfig),
         visualConfig,
-        readModelMode,
         colorTheme,
         updatedAt: new Date().toISOString(),
         source: "local-autosave",
       });
     }, 1200);
     return () => clearTimeout(timer);
-  }, [graphId, viewConfig, visualConfig, readModelMode, colorTheme]);
+  }, [graphId, viewConfig, visualConfig, colorTheme]);
 }

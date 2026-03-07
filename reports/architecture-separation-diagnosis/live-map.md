@@ -67,4 +67,5 @@ The following changed in `Phase 4`:
 - residual shell debt still exists, but it is now centered on render composition density rather than inline orchestration logic
 - `viewSlice.ts` now routes the main expanded-graph refresh path through `viewStateTransitions.ts`, reducing repeated reprojection boilerplate across view mutations
 - residual view debt still exists, but it is now concentrated in policy decisions about when view changes should refresh, not in duplicated recomputation code
+- runtime store and workspace persistence no longer treat `readModelMode` as a meaningful runtime branch; backward tolerance survives only during profile hydration and explicit read-model audit tooling
 - compatibility projection still exists for audit/tooling purposes, but no longer distorts the mainline read boundary

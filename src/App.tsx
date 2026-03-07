@@ -40,10 +40,9 @@ import { PersonStatsPanel } from "@/views/PersonStatsPanel";
 
 export function App() {
   const gschemaGraph = useAppStore((state) => state.gschemaGraph);
-  const readModelMode = useAppStore((state) => state.readModelMode);
   const document = useMemo(
     () => projectGraphDocument(gschemaGraph),
-    [gschemaGraph?.graphId, gschemaGraph?.journalLength, readModelMode],
+    [gschemaGraph?.graphId, gschemaGraph?.journalLength],
   );
   const viewConfig = useAppStore((state) => state.viewConfig);
   const visualConfig = useAppStore((state) => state.visualConfig);
@@ -271,7 +270,6 @@ export function App() {
     rightCollapsed,
     saveAutosessionNow,
     graphId: gschemaGraph?.graphId,
-    readModelMode,
     colorTheme: shellController.colorTheme,
   });
 

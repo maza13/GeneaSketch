@@ -1,8 +1,6 @@
 import { StateCreator } from "zustand";
 import { AppState, ViewSlice } from "../types";
-import { ensureExpanded } from "../helpers/graphHelpers";
 import { withFocusHistory } from "../helpers/sessionHelpers";
-import { projectGraphDocument } from "@/core/read-model/selectors";
 import { withExpandedGraphForView } from "../helpers/viewStateTransitions";
 import { UiEngine } from "@/core/engine/UiEngine";
 import { createDefaultDtreeConfig } from "@/core/dtree/dtreeConfig";
@@ -12,25 +10,10 @@ const defaultDtree = () => createDefaultDtreeConfig();
 const defaultRightStack = () => ({ detailsMode: "expanded" as const, timelineMode: "compact" as const, detailsAutoCompactedByTimeline: false });
 
 export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) => ({
-    readModelMode: "direct",
     viewConfig: null,
     visualConfig: UiEngine.createDefaultVisualConfig(),
     selectedPersonId: null,
     fitNonce: 0,
-
-    setReadModelMode: (mode) => set((state) => {
-        if (mode !== "direct") {
-            console.warn(`[viewSlice] Ignoring legacy read-model mode request (${mode}); runtime mainline is direct-only.`);
-        }
-        if (state.readModelMode === "direct") return {};
-        const projected = projectGraphDocument(state.gschemaGraph);
-        return {
-            readModelMode: "direct",
-            expandedGraph: state.viewConfig && projected
-                ? ensureExpanded(projected, state.viewConfig)
-                : state.expandedGraph
-        };
-    }),
 
     setSelectedPerson: (personId) => set((state) => {
         return { selectedPersonId: personId, ...withFocusHistory(state, personId) };

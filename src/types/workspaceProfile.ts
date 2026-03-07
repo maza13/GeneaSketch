@@ -14,6 +14,7 @@ export type WorkspaceProfileV2 = {
   graphId: string;
   viewConfig: ViewConfig;
   visualConfig: VisualConfig;
+  // Legacy tolerance only; current runtime is direct-only and no longer persists this field.
   readModelMode?: ReadModelMode;
   colorTheme?: ColorThemeConfig;
   updatedAt: string;

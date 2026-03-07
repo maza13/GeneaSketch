@@ -8,8 +8,7 @@ function baseState(): AppState {
   const visualConfig = UiEngine.createDefaultVisualConfig();
   return {
     viewConfig,
-    visualConfig,
-    readModelMode: "direct"
+    visualConfig
   } as AppState;
 }
 

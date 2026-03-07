@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
 import type { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { projectGraphDocument } from "@/core/read-model/selectors";
-import type { GraphDocument, GraphSource, ReadModelMode } from "@/core/read-model/types";
+import type { GraphDocument, GraphSource } from "@/core/read-model/types";
 import { WorkspaceProfileService } from "@/io/workspaceProfileService";
 import { ensureExpanded, useAppStore, type AppState } from "@/state/store";
 import type { ViewConfig, VisualConfig } from "@/types/domain";
@@ -42,17 +42,16 @@ export function resolveProfileHydration(
 ): {
   nextViewConfig: ViewConfig | null;
   nextVisualConfig: VisualConfig;
-  nextReadModelMode: ReadModelMode;
+  nextReadModelMode: "direct";
   nextTheme?: ColorThemeConfig;
 } {
   const nextViewConfig = profile?.viewConfig ?? gskMeta?.viewConfig ?? state.viewConfig;
   const nextVisualConfig = profile?.visualConfig ?? gskMeta?.visualConfig ?? state.visualConfig;
-  const nextReadModelMode = profile?.readModelMode ?? state.readModelMode;
   const nextTheme = profile?.colorTheme ?? gskMeta?.colorTheme;
   return {
     nextViewConfig: normalizeHydratedViewConfig(nextViewConfig),
     nextVisualConfig,
-    nextReadModelMode,
+    nextReadModelMode: "direct",
     nextTheme,
   };
 }
@@ -78,7 +77,6 @@ export function useFileLoadRuntime(clearMergeFocus: () => void): FileLoadRuntime
             expandedGraph: tempDoc ? ensureExpanded(tempDoc, nextHydration.nextViewConfig) : state.expandedGraph,
           };
         });
-        useAppStore.getState().setReadModelMode(nextHydration.nextReadModelMode);
       }
 
       return profile?.colorTheme ?? gskMeta?.colorTheme;

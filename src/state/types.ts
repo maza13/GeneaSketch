@@ -12,7 +12,7 @@ import type {
     VisualConfig
 } from "@/types/domain";
 import type { GSchemaGraph } from "@/core/gschema";
-import type { GraphDocument, GraphPayload, GraphSource, ReadModelMode, RecentPayloadV2 } from "@/core/read-model/types";
+import type { GraphDocument, GraphPayload, GraphSource, RecentPayloadV2 } from "@/core/read-model/types";
 
 export type RightStackState = {
     detailsMode: "expanded" | "compact";
@@ -53,12 +53,10 @@ export interface DocSlice {
 }
 
 export interface ViewSlice {
-    readModelMode: ReadModelMode;
     viewConfig: ViewConfig | null;
     visualConfig: VisualConfig;
     selectedPersonId: string | null;
     fitNonce: number;
-    setReadModelMode: (mode: ReadModelMode) => void;
     setSelectedPerson: (personId: string | null) => void;
     setFocusFamilyId: (familyId: string | null) => void;
     setMode: (mode: ViewMode) => void;
