@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-07T03:18:17.157Z",
+  "generated_at": "2026-03-07T05:16:05.235Z",
   "total_entries": 15,
   "by_id": {
     "N0001": {
@@ -492,7 +492,7 @@
     },
     "N0015": {
       "file": "notes/entries/N0015-note-registrar-una-nota-de-seguimiento-para-retomar-mas-adelante-el-plan-derivado-del-diagnosti.md",
-      "title": "Retomar el plan de separacion derivado del diagnostico arquitectonico",
+      "title": "Retomar el plan de separacion y preparacion para la nube, descentralizacion y APIs externas",
       "kind": "note",
       "phase": "active",
       "complexity": "complex",
@@ -504,11 +504,18 @@
       "tags": [
         "architecture",
         "followup",
-        "guided-hard-cut",
-        "diagnosis",
-        "planning"
+        "cloud-ready",
+        "p2p",
+        "local-first",
+        "sync",
+        "api-connectivity"
       ],
       "related_notes": [
+        "N0001",
+        "N0002",
+        "N0003",
+        "N0004",
+        "N0005",
         "N0011",
         "N0014"
       ],
@@ -516,7 +523,7 @@
         "099"
       ],
       "promoted_todos": [],
-      "relevance_score": 70,
+      "relevance_score": 90,
       "confidence": "high",
       "created_at": "2026-03-07",
       "updated_at": "2026-03-07",
@@ -571,7 +578,8 @@
       "N0001"
     ],
     "sync": [
-      "N0001"
+      "N0001",
+      "N0015"
     ],
     "future-feature": [
       "N0001"
@@ -689,8 +697,7 @@
       "N0014"
     ],
     "guided-hard-cut": [
-      "N0014",
-      "N0015"
+      "N0014"
     ],
     "documentation": [
       "N0014"
@@ -698,10 +705,16 @@
     "followup": [
       "N0015"
     ],
-    "diagnosis": [
+    "cloud-ready": [
       "N0015"
     ],
-    "planning": [
+    "p2p": [
+      "N0015"
+    ],
+    "local-first": [
+      "N0015"
+    ],
+    "api-connectivity": [
       "N0015"
     ]
   },
@@ -825,6 +838,11 @@
         "N0015"
       ],
       "N0015": [
+        "N0001",
+        "N0002",
+        "N0003",
+        "N0004",
+        "N0005",
         "N0011",
         "N0014"
       ]
@@ -930,7 +948,7 @@
       "review_after": null
     },
     "N0015": {
-      "relevance_score": 70,
+      "relevance_score": 90,
       "confidence": "high",
       "horizon": "mid",
       "last_reviewed_at": null,
