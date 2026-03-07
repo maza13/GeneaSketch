@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-07T22:11:50.204Z",
+  "generated_at": "2026-03-07T22:12:16.735Z",
   "total_entries": 16,
   "by_id": {
     "N0001": {
@@ -494,12 +494,12 @@
       "file": "notes/entries/N0015-note-registrar-una-nota-de-seguimiento-para-retomar-mas-adelante-el-plan-derivado-del-diagnosti.md",
       "title": "Retomar el plan de separacion considerando posibles implicaciones futuras",
       "kind": "note",
-      "phase": "archived",
+      "phase": "active",
       "complexity": "complex",
       "connectivity": "interconnected",
       "horizon": "mid",
-      "active_state": null,
-      "archive_reason": "obsolete",
+      "active_state": "candidate",
+      "archive_reason": null,
       "source_type": "auto_inferred",
       "tags": [
         "architecture",
@@ -527,7 +527,7 @@
       "confidence": "high",
       "created_at": "2026-03-07",
       "updated_at": "2026-03-07",
-      "last_reviewed_at": "2026-03-07",
+      "last_reviewed_at": null,
       "review_after": null
     },
     "N0016": {
@@ -602,6 +602,7 @@
       "N0006",
       "N0010",
       "N0014",
+      "N0015",
       "N0016"
     ],
     "archived": [
@@ -610,8 +611,7 @@
       "N0009",
       "N0011",
       "N0012",
-      "N0013",
-      "N0015"
+      "N0013"
     ]
   },
   "by_tag": {
@@ -1017,7 +1017,7 @@
       "relevance_score": 90,
       "confidence": "high",
       "horizon": "mid",
-      "last_reviewed_at": "2026-03-07",
+      "last_reviewed_at": null,
       "review_after": null
     },
     "N0016": {
