@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "complete"
 priority: "p2"
 issue_id: "108"
 title: "Master system map"
@@ -17,10 +17,12 @@ risk_level: "medium"
 estimated_effort: "m"
 complexity: "complex"
 auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
+commit_confirmed: true
+commit_message: "Close 108: produce master system map for architecture separation diagnosis"
+closed_at: "2026-03-07"
 ---
+
+
 
 # Master system map
 
@@ -92,10 +94,10 @@ Produce `reports/architecture-separation-diagnosis/master-system-map.md` and use
 
 ## Acceptance Criteria
 
-- [ ] `master-system-map.md` exists under `reports/architecture-separation-diagnosis/`.
-- [ ] Each canonical system includes anchors, inputs, outputs, dependencies, and boundary status.
-- [ ] The map is explicitly grounded in `100` and `101`, not a new taxonomy pass.
-- [ ] Work log updated.
+- [x] `master-system-map.md` exists under `reports/architecture-separation-diagnosis/`.
+- [x] Each canonical system includes anchors, inputs, outputs, dependencies, and boundary status.
+- [x] The map is explicitly grounded in `100` and `101`, not a new taxonomy pass.
+- [x] Work log updated.
 
 ## Work Log
 
@@ -117,6 +119,46 @@ Produce `reports/architecture-separation-diagnosis/master-system-map.md` and use
   - `todos/099-pending-p2-post-baseline-architecture-followup.md`
   - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
 
+### 2026-03-07 - Master system map completed
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: ready
+
+**Actions:**
+- Produced the code-anchored master system map under `reports/architecture-separation-diagnosis/`.
+- Bound the existing taxonomy to concrete implementation anchors, observable boundaries, system inputs/outputs, and current boundary status.
+- Added an explicit handoff section for the `109` runtime boundary and coupling audit.
+
+**Evidence:**
+- Artifacts/paths:
+  - `reports/architecture-separation-diagnosis/master-system-map.md`
+  - `todos/108-ready-p2-master-system-map.md`
+  - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
+
 ## Notes
 
 This task should identify system boundaries, not judge them yet. Judgment belongs downstream in `109` and `110`.
+
+### 2026-03-07 - Auto close via todo:close
+
+**By:** Codex
+
+**Status Transition:**
+- from: ready
+- to: complete
+
+**Actions:**
+- Produced the master system map artifact, linked it to the architecture diagnosis chain, and preserved umbrella 099 state in the same closure commit.
+- Closed task with automated status update + rename + commit.
+
+**Evidence:**
+- Command: npm run todo:close -- ...
+- Result: automatic close and commit executed.
+- Artifacts/paths: todos/108-complete-p2-master-system-map.md
+
+**Next Recommendation (generated at closure):**
+- Direct next tasks unblocked by this closure: 109 (p2).
+- Recommended start: 109 (p2).

@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "umbrella"
-status: "pending"
+status: "ready"
 priority: "p2"
 issue_id: "099"
 title: "Architecture separation diagnosis and guided hard-cut planning"
@@ -21,6 +21,7 @@ commit_confirmed: false
 commit_message: null
 closed_at: null
 ---
+
 
 # Architecture separation diagnosis and guided hard-cut planning
 
@@ -183,3 +184,23 @@ Open a second-layer architecture diagnosis under this umbrella. The child chain 
 ## Notes
 
 This umbrella is diagnostic by design. It must not be used to start runtime refactors directly, and it must not create a second umbrella automatically from the guided hard-cut output.
+
+### 2026-03-07 - Umbrella prepared via todo:prepare
+
+**By:** Codex
+
+**Status Transition:**
+- from: pending
+- to: ready
+
+**Actions:**
+- Reviewed hard dependencies before opening the umbrella.
+- Confirmed child execution order: 108, 109, 110, 111, 112, 113.
+- Considered related context: 097:precedent, 100:precedent, 098:parallel, 048:context.
+- Activated eligible child tasks: 108.
+- Left blocked child tasks pending: 109 (blocked by 108), 110 (blocked by 109), 111 (blocked by 110), 112 (blocked by 111), 113 (blocked by 108, 109, 110, 111, 112).
+
+**Evidence:**
+- Hard dependencies complete: 100
+- Activated: 108
+- Blocked: 109 (blocked by 108), 110 (blocked by 109), 111 (blocked by 110), 112 (blocked by 111), 113 (blocked by 108, 109, 110, 111, 112)
