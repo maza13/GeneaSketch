@@ -1,0 +1,491 @@
+﻿import { useEffect, useRef, useState } from "react";
+import { uiDateToGedcom, gedcomDateToUi } from "@/utils/date";
+import type { PendingRelationType } from "@/types/domain";
+import type { GraphDocument } from "@/types/domain";
+import type { PersonEditorPatch, PersonEditorState, PersonRelationInput } from "@/types/editor";
+import type { AiSettings } from "@/types/ai";
+import { BirthRangeRefinementCard } from "@/ui/person/BirthRangeRefinementCard";
+import { SuggestionInput } from "@/ui/components/SuggestionInput";
+import { getNameSuggestions, getPlaceSuggestions, getSurnameSuggestions, normalizePlace } from "@/core/edit/suggestions";
+import { StandardModal, SectionCard } from "@/ui/common/StandardModal";
+
+type Props = {
+  editorState: PersonEditorState;
+  document: GraphDocument | null;
+  aiSettings: AiSettings;
+  onClose: () => void;
+  onSaveEdit: (personId: string, patch: PersonEditorPatch) => void;
+  onSaveRelation: (anchorId: string, type: PendingRelationType, input: PersonRelationInput) => void;
+  onCreateStandalone?: (input: PersonRelationInput) => void;
+};
+
+const CROP_VIEW_W = 220;
+const CROP_VIEW_H = 300;
+const SUPPORTED_IMAGE_EXT = ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "avif", "tif", "tiff", "ico", "heic", "heif"];
+
+function isImageFile(file: File): boolean {
+  if (file.type?.startsWith("image/")) return true;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return SUPPORTED_IMAGE_EXT.includes(ext);
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("No se pudo cargar la imagen."));
+    img.src = src;
+  });
+}
+
+export function PersonDetailPanel({ editorState, document, aiSettings, onClose, onSaveEdit, onSaveRelation, onCreateStandalone }: Props) {
+  const [name, setName] = useState("");
+  const [paternalSurname, setPaternalSurname] = useState("");
+  const [maternalSurname, setMaternalSurname] = useState("");
+  const [sex, setSex] = useState<"M" | "F" | "U">("U");
+  const [lifeStatus, setLifeStatus] = useState<"alive" | "deceased">("alive");
+  const [birthDate, setBirthDate] = useState("");
+  const [birthPlace, setBirthPlace] = useState("");
+  const [deathDate, setDeathDate] = useState("");
+  const [deathPlace, setDeathPlace] = useState("");
+  const [residence, setResidence] = useState("");
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoSourceDataUrl, setPhotoSourceDataUrl] = useState<string | null>(null);
+  const [photoZoom, setPhotoZoom] = useState(1);
+  const [photoOffset, setPhotoOffset] = useState({ x: 0, y: 0 });
+  const [isDragOverPhoto, setIsDragOverPhoto] = useState(false);
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
+  const [imgDim, setImgDim] = useState({ w: 0, h: 0 });
+  const [initialPhotoUrl, setInitialPhotoUrl] = useState<string | null>(null);
+  const [formError, setFormError] = useState("");
+  const [relationType, setRelationType] = useState<PendingRelationType>("child");
+  const [pendingNotesAppend, setPendingNotesAppend] = useState<string[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragStartRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
+
+  useEffect(() => {
+    if (!editorState) return;
+
+    if (editorState.type === "edit") {
+      const p = editorState.person;
+      const birtEvent = p.events.find((e) => e.type === "BIRT");
+      const deatEvent = p.events.find((e) => e.type === "DEAT");
+
+      setName(p.name === "(Sin nombre)" ? "" : p.name);
+      const parts = (p.surname || "").split(" ").filter(Boolean);
+      setPaternalSurname(parts[0] || "");
+      setMaternalSurname(parts.slice(1).join(" ") || "");
+      setSex(p.sex || "U");
+      setLifeStatus(p.lifeStatus === "deceased" || deatEvent ? "deceased" : "alive");
+      setBirthDate(gedcomDateToUi(birtEvent?.date));
+      setBirthPlace(p.birthPlace || birtEvent?.place || "");
+      setDeathDate(gedcomDateToUi(deatEvent?.date));
+      setDeathPlace(p.deathPlace || deatEvent?.place || "");
+      setResidence(p.residence || p.events.find(e => e.type === "RESI")?.place || "");
+
+      const mId = p.mediaRefs?.[0];
+      const currentPhoto = (mId && document?.media?.[mId]) ? (document.media[mId].dataUrl || document.media[mId].fileName || mId) : null;
+      setPhotoDataUrl(currentPhoto);
+      setPhotoSourceDataUrl(currentPhoto);
+      setInitialPhotoUrl(currentPhoto);
+    } else {
+      setName("");
+      setSex("U");
+      setLifeStatus("alive");
+      setBirthDate("");
+      setBirthPlace("");
+      setDeathDate("");
+      setDeathPlace("");
+      setResidence("");
+      setPhotoDataUrl(null);
+      setPhotoSourceDataUrl(null);
+      setInitialPhotoUrl(null);
+
+      if (editorState.type === "add_relation") {
+        setRelationType(editorState.relationType);
+        const sugs = getSurnameSuggestions(document, editorState.anchorId, editorState.relationType);
+        if (sugs.length > 0) {
+          setPaternalSurname(sugs[0].paternal);
+          setMaternalSurname(sugs[0].maternal);
+        } else {
+          setPaternalSurname("");
+          setMaternalSurname("");
+        }
+      } else {
+        setPaternalSurname("");
+        setMaternalSurname("");
+      }
+    }
+
+    setPhotoZoom(1);
+    setPhotoOffset({ x: 0, y: 0 });
+    setImgDim({ w: 0, h: 0 });
+    setFormError("");
+    setPendingNotesAppend([]);
+  }, [editorState, document]);
+
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!isDraggingPhoto || !dragStartRef.current) return;
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      setPhotoOffset({
+        x: dragStartRef.current.ox + dx,
+        y: dragStartRef.current.oy + dy
+      });
+    }
+    function onUp() {
+      setIsDraggingPhoto(false);
+      dragStartRef.current = null;
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [isDraggingPhoto]);
+
+  if (!editorState) return null;
+
+  async function applyPhotoFile(file: File) {
+    if (!isImageFile(file)) {
+      setFormError("Archivo no compatible. Usa una imagen válida.");
+      return;
+    }
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setPhotoSourceDataUrl(dataUrl);
+      setPhotoDataUrl(dataUrl);
+      setPhotoZoom(1);
+      setPhotoOffset({ x: 0, y: 0 });
+      setFormError("");
+    } catch {
+      setFormError("No se pudo cargar la imagen.");
+    }
+  }
+
+  async function buildCroppedImage(source: string): Promise<string> {
+    const img = await loadImage(source);
+    const exportScale = 2;
+    const canvas = window.document.createElement("canvas");
+    const cw = CROP_VIEW_W * exportScale;
+    const ch = CROP_VIEW_H * exportScale;
+    canvas.width = cw;
+    canvas.height = ch;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("No se pudo crear canvas.");
+    const baseScale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+    const scale = baseScale * photoZoom;
+    const drawW = img.naturalWidth * scale;
+    const drawH = img.naturalHeight * scale;
+    const centerX = cw / 2 + photoOffset.x * exportScale;
+    const centerY = ch / 2 + photoOffset.y * exportScale;
+    const dx = centerX - drawW / 2;
+    const dy = centerY - drawH / 2;
+    ctx.drawImage(img, dx, dy, drawW, drawH);
+    return canvas.toDataURL("image/jpeg", 0.92);
+  }
+
+  async function handleSave() {
+    if (!editorState) return;
+    if (!name.trim()) { setFormError("Los nombres son obligatorios."); return; }
+    if (!paternalSurname.trim()) { setFormError("El apellido paterno es obligatorio."); return; }
+
+    const n = name.trim();
+    const p = paternalSurname.trim();
+    const m = maternalSurname.trim();
+    const fullSurname = m ? `${p} ${m}` : p;
+    const bDateGed = uiDateToGedcom(birthDate);
+    const dDateGed = lifeStatus === "deceased" ? uiDateToGedcom(deathDate) : "";
+
+    let finalPhoto: string | null | undefined = undefined;
+    if (photoDataUrl === null) {
+      finalPhoto = null;
+    } else if (photoSourceDataUrl !== initialPhotoUrl || photoZoom !== 1 || photoOffset.x !== 0 || photoOffset.y !== 0) {
+      if (photoSourceDataUrl) {
+        try {
+          finalPhoto = await buildCroppedImage(photoSourceDataUrl);
+        } catch {
+          setFormError("No se pudo aplicar el recorte, se mantuvo la foto actual.");
+          finalPhoto = photoDataUrl;
+        }
+      }
+    }
+
+    const payload: PersonRelationInput = {
+      name: n,
+      surname: fullSurname,
+      sex,
+      birthDate: bDateGed,
+      birthPlace: birthPlace.trim(),
+      deathDate: dDateGed,
+      deathPlace: deathPlace.trim(),
+      residence: residence.trim(),
+      lifeStatus,
+      ...(finalPhoto !== undefined && { photoDataUrl: finalPhoto }),
+      ...(editorState.type === "edit" && pendingNotesAppend.length > 0 ? { notesAppend: pendingNotesAppend } : {})
+    };
+
+    if (editorState.type === "edit") onSaveEdit(editorState.personId, payload);
+    else if (editorState.type === "add_relation") onSaveRelation(editorState.anchorId, relationType, payload);
+    else onCreateStandalone?.(payload);
+
+    onClose();
+  }
+
+  const title = editorState.type === "edit" ? "Ficha de Persona" : editorState.type === "create_standalone" ? "Crear Persona" : "Agregar Familiar";
+
+  const surnameSugs = editorState.type === "add_relation"
+    ? getSurnameSuggestions(document, editorState.anchorId, relationType)
+    : [];
+
+  const sexIcon = sex === "M" ? "male" : sex === "F" ? "female" : "person";
+  const avatarColor = sex === "M" ? "var(--node-male, #1a3a6e)" : sex === "F" ? "var(--node-female, #4a2a6e)" : "var(--gs-paper-elevated, #1e293b)";
+  const isAlive = lifeStatus === "alive";
+  const personIdLabel = editorState.type === "edit" ? editorState.personId : "NUEVA PERSONA";
+
+  const footer = (
+    <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', width: '100%' }}>
+      <button className="secondary-ghost" onClick={onClose}>Cancelar</button>
+      <button className="accent-solid" onClick={() => void handleSave()}>Guardar cambios</button>
+    </div>
+  );
+
+  return (
+    <StandardModal open={true} title={title} onClose={onClose} size="md" footer={footer}>
+      {formError && <div className="gs-alert gs-alert--error" style={{ marginBottom: 16 }}>{formError}</div>}
+
+      {/* -- SECCIÓN 1: Identidad (V2 Hero adaptado a edición) -- */}
+      <SectionCard title="Identidad Básica" icon="face">
+        {editorState.type === "add_relation" && (
+          <div style={{ marginBottom: 16, borderBottom: '1px solid var(--line-soft)', paddingBottom: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink-muted)', display: 'block', marginBottom: 6 }}>
+              Parentesco a crear
+            </label>
+            <select
+              style={{ width: '100%', padding: '6px 10px', borderRadius: 4, border: '1px solid var(--line)', background: 'var(--bg-input)', color: 'var(--ink-0)' }}
+              value={relationType} onChange={(e) => {
+                const newType = e.target.value as PendingRelationType;
+                setRelationType(newType);
+                const sugs = getSurnameSuggestions(document, editorState.anchorId, newType);
+                if (sugs.length > 0) {
+                  setPaternalSurname(sugs[0].paternal);
+                  setMaternalSurname(sugs[0].maternal);
+                }
+              }}>
+              <option value="father">Padre</option>
+              <option value="mother">Madre</option>
+              <option value="spouse">Pareja / Esposo(a)</option>
+              <option value="child">Hijo(a)</option>
+              <option value="sibling">Hermano(a)</option>
+            </select>
+          </div>
+        )}
+
+        <div className="v2-hero" style={{ padding: 0 }}>
+          <div className="v2-avatar" style={{ background: avatarColor, minWidth: 64, height: 64 }}>
+            <span className="material-symbols-outlined v2-avatar-icon" style={{ fontSize: 32 }}>{sexIcon}</span>
+          </div>
+
+          <div className="v2-hero-body" style={{ width: '100%', gap: 8 }}>
+            <span className="v2-gedcom-id">{personIdLabel}</span>
+            <div style={{ display: 'flex', gap: 8, flexDirection: 'column', width: '100%' }}>
+              <SuggestionInput
+                value={name}
+                onChange={setName}
+                suggestions={getNameSuggestions(document, name)}
+                placeholder="Nombre(s)"
+                className="v2-person-name person-editor-input-hero"
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <SuggestionInput
+                  value={paternalSurname}
+                  onChange={setPaternalSurname}
+                  suggestions={[...surnameSugs.map(s => s.paternal), ...getSurnameSuggestions(document, null, null).map(s => s.paternal)].filter(Boolean)}
+                  placeholder="Ap. Paterno"
+                  className="person-editor-input-hero person-meta"
+                />
+                <SuggestionInput
+                  value={maternalSurname}
+                  onChange={setMaternalSurname}
+                  suggestions={[...surnameSugs.map(s => s.maternal)].filter(Boolean)}
+                  placeholder="Ap. Materno"
+                  className="person-editor-input-hero person-meta"
+                />
+              </div>
+            </div>
+
+            <div className="v2-chips">
+              <span className="v2-chip v2-chip--sex" style={{ padding: 0 }}>
+                <select value={sex} onChange={(e) => setSex(e.target.value as "M" | "F" | "U")} style={{ background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', padding: '4px 10px', cursor: 'pointer', outline: 'none' }}>
+                  <option value="U">Sexo Desconocido</option>
+                  <option value="M">Hombre</option>
+                  <option value="F">Mujer</option>
+                </select>
+              </span>
+              <span className={`v2-chip ${isAlive ? "v2-chip--alive" : "v2-chip--deceased"}`} style={{ padding: 0 }}>
+                <select value={lifeStatus} onChange={(e) => setLifeStatus(e.target.value as "alive" | "deceased")} style={{ background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', padding: '4px 10px', cursor: 'pointer', outline: 'none' }}>
+                  <option value="alive">Vivo/a</option>
+                  <option value="deceased">Fallecido/a</option>
+                </select>
+              </span>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* -- SECCIÓN 2: Hechos Vitales (V2 Grid) -- */}
+      <SectionCard title="Hechos Vitales" icon="event">
+        <div className="gs-facts-grid">
+          <div className="gs-fact-row" style={{ alignItems: 'center' }}>
+            <span className="gs-fact-label">F. Nacimiento</span>
+            <span className="gs-fact-value"><input className="person-editor-input" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} placeholder="Ej: 1980, 10 DEC 1980" /></span>
+          </div>
+          <div className="gs-fact-row" style={{ alignItems: 'center' }}>
+            <span className="gs-fact-label">Lugar Nac.</span>
+            <span className="gs-fact-value">
+              <SuggestionInput
+                value={birthPlace}
+                onChange={setBirthPlace}
+                onBlur={() => setBirthPlace(normalizePlace(birthPlace))}
+                suggestions={getPlaceSuggestions(document, birthPlace)}
+                placeholder="Ciudad, Estado, País"
+                className="person-editor-input"
+              />
+            </span>
+          </div>
+
+          {!isAlive && (
+            <>
+              <div className="gs-fact-row" style={{ alignItems: 'center' }}>
+                <span className="gs-fact-label">F. Defunción</span>
+                <span className="gs-fact-value"><input className="person-editor-input" value={deathDate} onChange={(e) => setDeathDate(e.target.value)} placeholder="Ej: 2020, 05 JAN 2020" /></span>
+              </div>
+              <div className="gs-fact-row" style={{ alignItems: 'center' }}>
+                <span className="gs-fact-label">Lugar Def.</span>
+                <span className="gs-fact-value">
+                  <SuggestionInput
+                    value={deathPlace}
+                    onChange={setDeathPlace}
+                    onBlur={() => setDeathPlace(normalizePlace(deathPlace))}
+                    suggestions={getPlaceSuggestions(document, deathPlace)}
+                    placeholder="Ciudad, Estado, País"
+                    className="person-editor-input"
+                  />
+                </span>
+              </div>
+            </>
+          )}
+
+          <div className="gs-fact-row" style={{ alignItems: 'center' }}>
+            <span className="gs-fact-label">Residencia act.</span>
+            <span className="gs-fact-value">
+              <SuggestionInput
+                value={residence}
+                onChange={setResidence}
+                onBlur={() => setResidence(normalizePlace(residence))}
+                suggestions={getPlaceSuggestions(document, residence)}
+                placeholder="Ciudad, Estado, País"
+                className="person-editor-input"
+              />
+            </span>
+          </div>
+        </div>
+
+        {editorState.type === "edit" && document ? (
+          <div style={{ marginTop: 16 }}>
+            <BirthRangeRefinementCard
+              document={document}
+              personId={editorState.personId}
+              aiSettings={aiSettings}
+              onApplyBirthGedcom={setBirthDate}
+              onAppendNote={(note) => setPendingNotesAppend((prev) => [...prev, note])}
+            />
+          </div>
+        ) : null}
+      </SectionCard>
+
+      {/* -- SECCIÓN 3: Recorte de Fotografía -- */}
+      <SectionCard title="Fotografía" icon="image">
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.heic,.heif"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void applyPhotoFile(file);
+              e.target.value = "";
+            }}
+          />
+          <div
+            onDragOver={(e) => { e.preventDefault(); setIsDragOverPhoto(true); }}
+            onDragLeave={() => setIsDragOverPhoto(false)}
+            onDrop={(e) => { e.preventDefault(); setIsDragOverPhoto(false); const file = e.dataTransfer.files?.[0]; if (file) void applyPhotoFile(file); }}
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              border: `1px dashed ${isDragOverPhoto ? "var(--accent)" : "var(--line)"}`,
+              borderRadius: 8, padding: "10px 12px", textAlign: 'center', fontSize: 13,
+              background: isDragOverPhoto ? "var(--accent-soft)" : "var(--bg-elev-2)",
+              cursor: "pointer", marginBottom: 12, color: 'var(--ink-muted)'
+            }}
+          >
+            {photoSourceDataUrl ? "Cambiar imagen..." : "Haz clic o arrastra una foto aquí"}
+          </div>
+
+          {photoSourceDataUrl && (
+            <div style={{ background: 'var(--bg-elev-2)', padding: 12, borderRadius: 8, border: '1px solid var(--line-soft)' }}>
+              <div style={{ fontSize: 12, marginBottom: 8, color: 'var(--ink-muted)' }}>Encuadre (arrastra para mover, usa barra para zoom):</div>
+              <div
+                onMouseDown={(e) => {
+                  setIsDraggingPhoto(true);
+                  dragStartRef.current = { x: e.clientX, y: e.clientY, ox: photoOffset.x, oy: photoOffset.y };
+                }}
+                style={{
+                  width: CROP_VIEW_W, height: CROP_VIEW_H, margin: "0 auto 12px",
+                  borderRadius: 8, border: "2px solid var(--accent)", overflow: "hidden",
+                  position: "relative", background: "var(--bg-black)",
+                  cursor: isDraggingPhoto ? "grabbing" : "grab", touchAction: "none"
+                }}
+              >
+                <img
+                  src={photoSourceDataUrl} alt="preview" draggable={false}
+                  onLoad={(e) => setImgDim({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+                  style={{
+                    position: "absolute", left: "50%", top: "50%",
+                    width: imgDim.w ? imgDim.w * Math.max(CROP_VIEW_W / imgDim.w, CROP_VIEW_H / imgDim.h) * photoZoom : "100%",
+                    height: imgDim.h ? imgDim.h * Math.max(CROP_VIEW_W / imgDim.w, CROP_VIEW_H / imgDim.h) * photoZoom : "100%",
+                    objectFit: imgDim.w ? "fill" : "cover",
+                    transform: `translate(calc(-50% + ${photoOffset.x}px), calc(-50% + ${photoOffset.y}px))`,
+                    transformOrigin: "center center", userSelect: "none", pointerEvents: "none"
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--ink-muted)' }}>zoom_in</span>
+                <input type="range" min={1} max={3} step={0.05} value={photoZoom} onChange={(e) => setPhotoZoom(Number(e.target.value))} style={{ flex: 1 }} />
+                <button type="button" className="secondary-ghost" onClick={() => setPhotoOffset({ x: 0, y: 0 })} style={{ padding: '4px 8px', fontSize: 12, height: 'auto' }}>Centrar</button>
+                <button type="button" className="secondary-ghost danger" onClick={() => { setPhotoDataUrl(null); setPhotoSourceDataUrl(null); setPhotoZoom(1); setPhotoOffset({ x: 0, y: 0 }); }} style={{ padding: '4px 8px', fontSize: 12, height: 'auto' }}>Quitar</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </SectionCard>
+    </StandardModal>
+  );
+}
+
