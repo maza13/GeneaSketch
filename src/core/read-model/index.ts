@@ -1,13 +1,16 @@
 export {
   getReadModelMode,
   projectGraphDocument,
-  setReadModelMode,
   clearGraphProjectionCache,
   selectFamilies,
   selectGraphStats,
   selectPersons,
   selectSearchEntries,
   selectTimelineInput,
+} from "./selectors";
+export { projectLegacyGraphDocument } from "./legacyCompatibility";
+export {
+  setReadModelMode,
 } from "./selectors";
 export type {
   GraphDocument,

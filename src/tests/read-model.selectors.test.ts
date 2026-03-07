@@ -4,9 +4,8 @@ import { documentToGSchema } from "@/core/gschema/GedcomBridge";
 import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import {
   clearGraphProjectionCache,
-  getReadModelMode,
   projectGraphDocument,
-  setReadModelMode,
+  projectLegacyGraphDocument,
   selectFamilies,
   selectGraphStats,
   selectPersons,
@@ -43,7 +42,6 @@ function buildGraph() {
 
 describe("read-model selectors", () => {
   beforeEach(() => {
-    setReadModelMode("direct");
     clearGraphProjectionCache();
   });
 
@@ -95,32 +93,32 @@ describe("read-model selectors", () => {
     expect(third).not.toBe(second);
   });
 
-  it("keeps functional parity between direct and legacy modes for core selector outputs", () => {
+  it("keeps functional parity between direct mainline and legacy compatibility projection for core outputs", () => {
     const graph = buildGraph();
 
-    setReadModelMode("direct");
     const directPersons = selectPersons(graph);
     const directFamilies = selectFamilies(graph);
     const directStats = selectGraphStats(graph);
 
-    setReadModelMode("legacy");
-    const legacyPersons = selectPersons(graph);
-    const legacyFamilies = selectFamilies(graph);
-    const legacyStats = selectGraphStats(graph);
+    const legacyDoc = projectLegacyGraphDocument(graph);
+    const legacyPersons = Object.values(legacyDoc?.persons || {});
+    const legacyFamilies = Object.values(legacyDoc?.families || {});
+    const legacyStats = {
+      persons: legacyPersons.length,
+      families: legacyFamilies.length,
+      living: legacyPersons.filter((person) => person.lifeStatus === "alive").length,
+      deceased: legacyPersons.filter((person) => person.lifeStatus !== "alive").length,
+    };
 
     expect(directPersons).toHaveLength(legacyPersons.length);
     expect(directFamilies).toHaveLength(legacyFamilies.length);
     expect(directStats).toStrictEqual(legacyStats);
   });
 
-  it("supports rollback to legacy mode via central read-model switch", () => {
+  it("keeps legacy compatibility behind an explicit side edge instead of the mainline selector", () => {
     const graph = buildGraph();
-    setReadModelMode("direct");
     const directDoc = projectGraphDocument(graph);
-
-    setReadModelMode("legacy");
-    expect(getReadModelMode()).toBe("legacy");
-    const legacyDoc = projectGraphDocument(graph);
+    const legacyDoc = projectLegacyGraphDocument(graph);
 
     expect(legacyDoc).not.toBeNull();
     expect(directDoc).not.toBe(legacyDoc);
@@ -131,7 +129,6 @@ describe("read-model selectors", () => {
     const graph = GSchemaGraph.create();
     graph.addPersonNode({ uid: "p-no-xref", type: "Person", sex: "F", isLiving: true });
 
-    setReadModelMode("direct");
     const persons = selectPersons(graph);
     const person = persons.find((entry) => entry.id === "IPNOXRE");
     const doc = projectGraphDocument(graph);

@@ -1,4 +1,3 @@
-import { gschemaToDocument as projectLegacyDocument } from "@/core/gschema/GedcomBridge";
 import type { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
 import { clearReadModelCache, getCached, setCached } from "./cache";
 import { buildDirectDocument } from "./directProjection";
@@ -14,21 +13,21 @@ import type {
 
 let lastKey = "";
 let lastDoc: GraphProjectionDocument | null = null;
-let readModelMode: ReadModelMode = "direct";
 
 export function setReadModelMode(mode: ReadModelMode): void {
-  if (mode === readModelMode) return;
-  readModelMode = mode;
+  if (mode !== "direct") {
+    console.warn(`[read-model] Legacy mode request ignored; runtime mainline is direct-only (requested: ${mode}).`);
+  }
   clearGraphProjectionCache();
 }
 
 export function getReadModelMode(): ReadModelMode {
-  return readModelMode;
+  return "direct";
 }
 
 function keyFor(graph: GSchemaGraph | null): string {
   if (!graph) return "";
-  return `${graph.graphId}:${graph.journalLength}:${readModelMode}`;
+  return `${graph.graphId}:${graph.journalLength}:direct`;
 }
 
 function keyedSelector(graph: GSchemaGraph | null, selector: string): string {
@@ -44,9 +43,7 @@ export function projectGraphDocument(graph: GSchemaGraph | null): GraphProjectio
   }
   const key = keyFor(graph);
   if (lastDoc && key === lastKey) return lastDoc;
-  lastDoc = readModelMode === "direct"
-    ? buildDirectDocument(graph)
-    : projectLegacyDocument(graph) as GraphProjectionDocument;
+  lastDoc = buildDirectDocument(graph);
   lastKey = key;
   return lastDoc;
 }

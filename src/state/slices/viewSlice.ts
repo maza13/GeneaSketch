@@ -2,7 +2,7 @@ import { StateCreator } from "zustand";
 import { AppState, ViewSlice } from "../types";
 import { ensureExpanded } from "../helpers/graphHelpers";
 import { withFocusHistory } from "../helpers/sessionHelpers";
-import { projectGraphDocument, setReadModelMode as setGlobalReadModelMode } from "@/core/read-model/selectors";
+import { projectGraphDocument } from "@/core/read-model/selectors";
 import { UiEngine } from "@/core/engine/UiEngine";
 import { createDefaultDtreeConfig } from "@/core/dtree/dtreeConfig";
 import type { ActiveOverlay } from "@/types/domain";
@@ -18,11 +18,13 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
     fitNonce: 0,
 
     setReadModelMode: (mode) => set((state) => {
-        if (state.readModelMode === mode) return {};
-        setGlobalReadModelMode(mode);
+        if (mode !== "direct") {
+            console.warn(`[viewSlice] Ignoring legacy read-model mode request (${mode}); runtime mainline is direct-only.`);
+        }
+        if (state.readModelMode === "direct") return {};
         const projected = projectGraphDocument(state.gschemaGraph);
         return {
-            readModelMode: mode,
+            readModelMode: "direct",
             expandedGraph: state.viewConfig && projected
                 ? ensureExpanded(projected, state.viewConfig)
                 : state.expandedGraph

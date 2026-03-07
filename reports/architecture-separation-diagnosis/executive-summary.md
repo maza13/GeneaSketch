@@ -119,3 +119,14 @@ That decision is now explicit:
 - attack the mixed orchestration seams in the order established by the hotspot analysis
 - strengthen the plan with explicit invariants, live artifacts, and scope discipline
 - open implementation only through a phased guided hard cut, not through an immediate aggressive cut
+
+## Execution Checkpoint After Chain `115`
+
+The guided hard-cut chain has now completed its intended sequence:
+
+- runtime-edge orchestration is narrower than the diagnostic baseline
+- store-side mutation and projected-document apply paths are narrower and more auditable
+- AI no longer depends on the broadest document reapplication bridge
+- the central read-model mainline is now direct-only, with legacy compatibility pushed to an explicit side edge
+
+Residual debt remains, but it is no longer centered on the original hotspot chain. The remaining work is edge cleanup, not unresolved ambiguity in the mainline boundaries chosen by the diagnosis.
