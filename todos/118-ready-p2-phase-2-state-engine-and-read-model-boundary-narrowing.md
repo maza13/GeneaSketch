@@ -1,7 +1,7 @@
 ---
 protocol_version: 2
 task_type: "leaf"
-status: "pending"
+status: "ready"
 priority: "p2"
 issue_id: "118"
 title: "Phase 2 state engine and read-model boundary narrowing"
@@ -21,6 +21,7 @@ commit_confirmed: false
 commit_message: null
 closed_at: null
 ---
+
 
 # Phase 2 state engine and read-model boundary narrowing
 
