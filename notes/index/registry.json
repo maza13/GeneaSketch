@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-07T02:54:21.019Z",
+  "generated_at": "2026-03-07T02:58:58.626Z",
   "total_entries": 15,
   "by_id": {
     "N0001": {
@@ -455,22 +455,29 @@
     },
     "N0014": {
       "file": "notes/entries/N0014-idea-registrar-como-notaidea-futura-la-necesidad-de-mantener-un-mapa-arquitectonico-vivo-y-acc.md",
-      "title": "Registrar como nota/idea futura la necesidad de mantener un mapa arquitectonico vivo y acc",
+      "title": "Mapa arquitectonico vivo por etapas para la separacion guiada",
       "kind": "idea",
       "phase": "active",
       "complexity": "complex",
-      "connectivity": "isolated",
+      "connectivity": "interconnected",
       "horizon": "far",
       "active_state": "candidate",
       "archive_reason": null,
       "source_type": "auto_inferred",
       "tags": [
-        "api",
-        "ai",
-        "ux"
+        "architecture",
+        "mapping",
+        "wiki",
+        "guided-hard-cut",
+        "documentation"
       ],
-      "related_notes": [],
-      "related_todos": [],
+      "related_notes": [
+        "N0011",
+        "N0015"
+      ],
+      "related_todos": [
+        "099"
+      ],
       "promoted_todos": [],
       "relevance_score": 70,
       "confidence": "high",
@@ -481,21 +488,29 @@
     },
     "N0015": {
       "file": "notes/entries/N0015-note-registrar-una-nota-de-seguimiento-para-retomar-mas-adelante-el-plan-derivado-del-diagnosti.md",
-      "title": "Registrar una nota de seguimiento para retomar mas adelante el plan derivado del diagnosti",
+      "title": "Retomar el plan de separacion derivado del diagnostico arquitectonico",
       "kind": "note",
       "phase": "active",
       "complexity": "complex",
-      "connectivity": "isolated",
+      "connectivity": "interconnected",
       "horizon": "mid",
       "active_state": "candidate",
       "archive_reason": null,
       "source_type": "auto_inferred",
       "tags": [
-        "ai",
-        "ux"
+        "architecture",
+        "followup",
+        "guided-hard-cut",
+        "diagnosis",
+        "planning"
       ],
-      "related_notes": [],
-      "related_todos": [],
+      "related_notes": [
+        "N0011",
+        "N0014"
+      ],
+      "related_todos": [
+        "099"
+      ],
       "promoted_todos": [],
       "relevance_score": 70,
       "confidence": "high",
@@ -549,8 +564,7 @@
   },
   "by_tag": {
     "api": [
-      "N0001",
-      "N0014"
+      "N0001"
     ],
     "sync": [
       "N0001"
@@ -581,9 +595,7 @@
       "N0004",
       "N0010",
       "N0012",
-      "N0013",
-      "N0014",
-      "N0015"
+      "N0013"
     ],
     "automation": [
       "N0004"
@@ -630,7 +642,9 @@
     "architecture": [
       "N0008",
       "N0010",
-      "N0011"
+      "N0011",
+      "N0014",
+      "N0015"
     ],
     "read-model": [
       "N0009"
@@ -664,17 +678,33 @@
     "hard-cut": [
       "N0011"
     ],
-    "ux": [
+    "mapping": [
+      "N0014"
+    ],
+    "wiki": [
+      "N0014"
+    ],
+    "guided-hard-cut": [
       "N0014",
+      "N0015"
+    ],
+    "documentation": [
+      "N0014"
+    ],
+    "followup": [
+      "N0015"
+    ],
+    "diagnosis": [
+      "N0015"
+    ],
+    "planning": [
       "N0015"
     ]
   },
   "by_connectivity": {
     "isolated": [
       "N0012",
-      "N0013",
-      "N0014",
-      "N0015"
+      "N0013"
     ],
     "interconnected": [
       "N0001",
@@ -687,7 +717,9 @@
       "N0008",
       "N0009",
       "N0010",
-      "N0011"
+      "N0011",
+      "N0014",
+      "N0015"
     ]
   },
   "by_complexity": {
@@ -784,8 +816,14 @@
       ],
       "N0012": [],
       "N0013": [],
-      "N0014": [],
-      "N0015": []
+      "N0014": [
+        "N0011",
+        "N0015"
+      ],
+      "N0015": [
+        "N0011",
+        "N0014"
+      ]
     }
   },
   "signals": {
