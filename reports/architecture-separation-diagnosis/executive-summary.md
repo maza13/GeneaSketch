@@ -21,6 +21,7 @@ The evidence from `108` through `112` converges on one conclusion:
 
 - the architecture does not need a new taxonomy pass
 - it does need a disciplined separation sequence that removes the highest-risk integration knots before any deeper cut is attempted
+- it also needs plan-governance discipline so later decisions do not quietly reintroduce scope drift
 
 ## Top Hotspots
 
@@ -63,6 +64,38 @@ Recommended order:
 
 This sequence wins because it addresses the highest-risk hotspots in dependency order without stacking too many high-risk cuts into one window.
 
+## Residual Plan Weaknesses That Had To Be Closed
+
+The original packet already had the right hotspot order, but it still left several plan-level weaknesses under-specified:
+
+- it assumed the diagnosis map alone would be enough, without defining a live-map operating model during later phases
+- it did not yet separate present architectural constraints from speculative future implementation lines clearly enough
+- it did not state strongly enough that local/private workspace state must remain distinct from future shareable tree state
+- it did not yet formalize that external, imported, AI-produced, or future shared changes should converge toward validated and auditable entry paths
+
+Those are not reasons to change the chosen sequence. They are reasons to strengthen phase 0 and the cross-phase invariants of the plan.
+
+## Refined Guardrails
+
+The hard-cut route is only solid if the following remain explicit:
+
+- `.gsk` stays a persistence boundary rather than a runtime orchestration center
+- already-valid boundaries remain protected during cleanup
+- future concerns such as cloud, P2P, external APIs, mobile shells, or temporary-repository shared trees only affect the plan where they change current boundaries
+- secrets, credentials, and local-only metadata stay outside the future shareable-tree/package boundary
+- future sharing readiness is treated as a near/mid-term architectural constraint, but transport and infrastructure remain deferred decisions
+
+## Phase 0 Operationalization
+
+Phase 0 of the execution chain now has concrete operating artifacts:
+
+- `live-map-operating-model.md`
+- `live-map.md`
+- `target-map.md`
+- `consideration-log.md`
+
+Those artifacts convert the refined guardrails into execution prerequisites instead of leaving them only as prose expectations inside the plan.
+
 ## Opening Criteria for the Next Phase
 
 Do not open the execution phase until all of the following are true:
@@ -72,6 +105,9 @@ Do not open the execution phase until all of the following are true:
 - the stable boundaries to preserve are explicit and non-negotiable during the cut
 - no hidden dependency discovered in code review is strong enough to reorder the phases
 - adjacent feature expansion in the affected runtime areas can be frozen while boundary cleanup runs
+- a live-map operating model is active instead of relying only on the one-time diagnosis map
+- future-facing considerations have explicit dispositions rather than remaining implicit assumptions
+- the distinction between shareable tree state and local/private workspace state is preserved wherever cleanup touches those boundaries
 
 ## Closing Statement
 
@@ -81,4 +117,5 @@ That decision is now explicit:
 
 - preserve the real boundaries already present
 - attack the mixed orchestration seams in the order established by the hotspot analysis
+- strengthen the plan with explicit invariants, live artifacts, and scope discipline
 - open implementation only through a phased guided hard cut, not through an immediate aggressive cut

@@ -138,5 +138,68 @@
       "reports/architecture-separation-diagnosis/executive-summary.md"
     ],
     "recommended_phase": "phase-0"
+  },
+  {
+    "id": "finding-008",
+    "title": "The plan needs live-map and decision-log governance, not only a one-time diagnosis packet",
+    "severity": "medium",
+    "confidence": "high",
+    "scope": "plan-governance",
+    "systems": [
+      "App Shell",
+      "State Manager",
+      "GSK Package IO",
+      "Read Model",
+      "AI Assistant"
+    ],
+    "evidence": [
+      "reports/architecture-separation-diagnosis/guided-hard-cut-plan.md",
+      "reports/architecture-separation-diagnosis/executive-summary.md",
+      "reports/architecture-separation-diagnosis/live-map-operating-model.md",
+      "reports/architecture-separation-diagnosis/live-map.md"
+    ],
+    "recommended_phase": "phase-0"
+  },
+  {
+    "id": "finding-009",
+    "title": "Future-facing concerns should constrain boundaries now without expanding implementation scope",
+    "severity": "medium",
+    "confidence": "high",
+    "scope": "future-constraint-hygiene",
+    "systems": [
+      "GSK Package IO",
+      "Workspace Profile",
+      "State Manager",
+      "Read Model",
+      "AI Assistant"
+    ],
+    "evidence": [
+      "reports/architecture-separation-diagnosis/separation-options.md",
+      "reports/architecture-separation-diagnosis/guided-hard-cut-plan.md",
+      "reports/architecture-separation-diagnosis/executive-summary.md",
+      "reports/architecture-separation-diagnosis/consideration-log.md"
+    ],
+    "recommended_phase": "phase-0"
+  },
+  {
+    "id": "finding-010",
+    "title": "Shareable tree state must stay distinct from local or sensitive workspace state",
+    "severity": "high",
+    "confidence": "high",
+    "scope": "data-boundary",
+    "systems": [
+      "GSK Package IO",
+      "Workspace Profile",
+      "State Manager",
+      "GSchema Engine"
+    ],
+    "evidence": [
+      "reports/architecture-separation-diagnosis/master-system-map.md",
+      "reports/architecture-separation-diagnosis/boundary-audit.md",
+      "reports/architecture-separation-diagnosis/guided-hard-cut-plan.md",
+      "reports/architecture-separation-diagnosis/consideration-log.md",
+      "reports/architecture-separation-diagnosis/live-map.md"
+    ],
+    "recommended_phase": "phase-0"
   }
 ]
