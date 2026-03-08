@@ -24,7 +24,6 @@ function hasBaseProfileShape(value: Record<string, unknown>): boolean {
   if (typeof value.graphId !== "string" || value.graphId.length === 0) return false;
   if (!isRecord(value.viewConfig)) return false;
   if (!isRecord(value.visualConfig)) return false;
-  if (value.readModelMode !== undefined && value.readModelMode !== "direct" && value.readModelMode !== "legacy") return false;
   if (typeof value.updatedAt !== "string" || value.updatedAt.length === 0) return false;
   if (typeof value.source !== "string") return false;
   return true;

@@ -15,7 +15,6 @@ import {
   selectPersons,
   selectSearchEntries,
   selectTimelineInput,
-  setReadModelMode,
 } from "@/core/read-model";
 import type { GraphFamily, GraphPerson, GraphSearchEntry, GraphStatsSummary, GraphTimelineInput } from "@/core/read-model/types";
 import type { Event, GeneaDocument, GraphDocument, Person } from "@/types/domain";
@@ -31,13 +30,8 @@ type FixtureSummary = {
   category: string;
   persons: number;
   families: number;
-  mismatches: Array<{
-    area: string;
-    path: string;
-    classification: "semantic" | "ordering";
-    legacyValue: unknown;
-    directValue: unknown;
-  }>;
+  searchEntries: number;
+  timelinePersons: number;
 };
 
 function makePerson(overrides: Partial<Person> = {}): Person {
@@ -170,80 +164,6 @@ function summarizeProjection(graph: GenraphGraph): {
   };
 }
 
-function arraysEqual(a: unknown[], b: unknown[]): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
-
-function deepDiff(
-  legacyValue: unknown,
-  directValue: unknown,
-  area: string,
-  currentPath = ""
-): FixtureSummary["mismatches"] {
-  if (JSON.stringify(legacyValue) === JSON.stringify(directValue)) return [];
-
-  if (Array.isArray(legacyValue) && Array.isArray(directValue)) {
-    const maybeOrdering = [...legacyValue].map((x) => JSON.stringify(x)).sort();
-    const maybeOrderingOther = [...directValue].map((x) => JSON.stringify(x)).sort();
-    if (arraysEqual(maybeOrdering, maybeOrderingOther)) {
-      return [{
-        area,
-        path: currentPath || "$",
-        classification: "ordering",
-        legacyValue,
-        directValue,
-      }];
-    }
-    const len = Math.max(legacyValue.length, directValue.length);
-    const mismatches: FixtureSummary["mismatches"] = [];
-    for (let i = 0; i < len; i += 1) {
-      mismatches.push(...deepDiff(legacyValue[i], directValue[i], area, `${currentPath}[${i}]`));
-    }
-    return mismatches;
-  }
-
-  if (
-    legacyValue &&
-    directValue &&
-    typeof legacyValue === "object" &&
-    typeof directValue === "object" &&
-    !Array.isArray(legacyValue) &&
-    !Array.isArray(directValue)
-  ) {
-    const keys = new Set([
-      ...Object.keys(legacyValue as Record<string, unknown>),
-      ...Object.keys(directValue as Record<string, unknown>),
-    ]);
-    const mismatches: FixtureSummary["mismatches"] = [];
-    for (const key of [...keys].sort()) {
-      const nextPath = currentPath ? `${currentPath}.${key}` : key;
-      mismatches.push(
-        ...deepDiff(
-          (legacyValue as Record<string, unknown>)[key],
-          (directValue as Record<string, unknown>)[key],
-          area,
-          nextPath
-        )
-      );
-    }
-    return mismatches;
-  }
-
-  return [{
-    area,
-    path: currentPath || "$",
-    classification: "semantic",
-    legacyValue,
-    directValue,
-  }];
-}
-
-function withMode<T>(mode: "direct" | "legacy", fn: () => T): T {
-  setReadModelMode(mode);
-  clearGraphProjectionCache();
-  return fn();
-}
-
 function loadCanonicalGraph(baseName: "basico" | "tipico" | "edgecases"): GenraphGraph {
   const root = path.resolve(process.cwd(), "docs/wiki-gsk/ejemplos/canon");
   const data = JSON.parse(fs.readFileSync(path.join(root, `${baseName}.graph.json`), "utf8"));
@@ -334,36 +254,23 @@ const fixtures: ParityFixture[] = [
 ];
 
 describe("read-model parity audit", () => {
-  it("produces a repeatable direct-vs-legacy parity report for complex fixtures", async () => {
+  it("produces a repeatable direct-only audit report for complex fixtures", async () => {
     const fixtureSummaries: FixtureSummary[] = [];
 
     for (const fixture of fixtures) {
       const graph = await fixture.graphFactory();
-      const direct = withMode("direct", () => summarizeProjection(graph));
-      const legacy = withMode("legacy", () => summarizeProjection(graph));
-
-      const mismatches = [
-        ...deepDiff(legacy.persons, direct.persons, "persons"),
-        ...deepDiff(legacy.families, direct.families, "families"),
-        ...deepDiff(legacy.stats, direct.stats, "stats"),
-        ...deepDiff(legacy.search, direct.search, "search"),
-        ...deepDiff(legacy.timeline, direct.timeline, "timeline"),
-      ];
+      clearGraphProjectionCache();
+      const direct = summarizeProjection(graph);
 
       fixtureSummaries.push({
         id: fixture.id,
         category: fixture.category,
-        persons: legacy.document ? Object.keys(legacy.document.persons).length : 0,
-        families: legacy.document ? Object.keys(legacy.document.families).length : 0,
-        mismatches,
+        persons: direct.document ? Object.keys(direct.document.persons).length : 0,
+        families: direct.document ? Object.keys(direct.document.families).length : 0,
+        searchEntries: direct.search.length,
+        timelinePersons: Array.isArray(direct.timeline.persons) ? direct.timeline.persons.length : 0,
       });
     }
-
-    const semanticMismatches = fixtureSummaries.flatMap((fixture) =>
-      fixture.mismatches
-        .filter((mismatch) => mismatch.classification === "semantic")
-        .map((mismatch) => ({ fixtureId: fixture.id, ...mismatch }))
-    );
 
     const reportRoot = path.resolve(process.cwd(), "reports/super-analysis-0.5.0");
     fs.mkdirSync(reportRoot, { recursive: true });
@@ -371,41 +278,29 @@ describe("read-model parity audit", () => {
     const reportJson = {
       generatedAt: new Date().toISOString(),
       fixtureCount: fixtureSummaries.length,
-      semanticMismatchCount: semanticMismatches.length,
       fixtures: fixtureSummaries,
     };
 
     fs.writeFileSync(
       path.join(reportRoot, "dimension-2-read-model-parity.json"),
       JSON.stringify(reportJson, null, 2),
-      "utf8"
+      "utf8",
     );
 
     const lines = [
-      "# Super Analysis 0.5.0 - Dimension 2 Read-model parity",
+      "# Super Analysis 0.5.0 - Dimension 2 Read-model audit",
       "",
       `- generatedAt: ${reportJson.generatedAt}`,
       `- fixtureCount: ${reportJson.fixtureCount}`,
-      `- semanticMismatchCount: ${reportJson.semanticMismatchCount}`,
       "",
-      "| Fixture | Category | Persons | Families | Total mismatches | Semantic mismatches |",
+      "| Fixture | Category | Persons | Families | Search entries | Timeline persons |",
       "| :--- | :--- | ---: | ---: | ---: | ---: |",
-      ...fixtureSummaries.map((fixture) => {
-        const semanticCount = fixture.mismatches.filter((m) => m.classification === "semantic").length;
-        return `| ${fixture.id} | ${fixture.category} | ${fixture.persons} | ${fixture.families} | ${fixture.mismatches.length} | ${semanticCount} |`;
-      }),
+      ...fixtureSummaries.map((fixture) =>
+        `| ${fixture.id} | ${fixture.category} | ${fixture.persons} | ${fixture.families} | ${fixture.searchEntries} | ${fixture.timelinePersons} |`,
+      ),
       "",
+      "The audit tracks the direct-only projection path that defines the active runtime.",
     ];
-
-    if (semanticMismatches.length === 0) {
-      lines.push("No semantic mismatches were detected across the audit corpus.");
-    } else {
-      lines.push("## Semantic mismatches");
-      lines.push("");
-      for (const mismatch of semanticMismatches) {
-        lines.push(`- ${mismatch.fixtureId} :: ${mismatch.area} :: ${mismatch.path}`);
-      }
-    }
 
     fs.writeFileSync(path.join(reportRoot, "dimension-2-read-model-parity.md"), `${lines.join("\n")}\n`, "utf8");
 

@@ -5,8 +5,6 @@ import type {
   RecentPayloadV2,
 } from "@/types/domain";
 
-export type ReadModelMode = "direct" | "legacy";
-
 export type GraphDocument = GeneaDocument;
 export type GraphProjectionDocument = GraphDocument & {
   xrefToUid?: Record<string, string>;

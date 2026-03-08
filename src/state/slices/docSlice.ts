@@ -1,6 +1,6 @@
 import { StateCreator } from "zustand";
 import { AppState, DocSlice } from "../types";
-import { GeneaEngine } from "@/core/engine/GeneaEngine";
+import { createNewTree } from "@/core/edit/commands";
 import { documentToGenraph } from "@/core/genraph/GedcomBridge";
 import { GraphMutations } from "@/core/genraph/GraphMutations";
 import { buildLoadedGraphState, runGraphMutation } from "../helpers/graphStateTransitions";
@@ -24,7 +24,7 @@ export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, ge
     },
 
     createNewTreeDoc: () => {
-        const newDoc = GeneaEngine.createNewTree();
+        const newDoc = createNewTree();
         get().applyProjectedDocument(newDoc, "mock");
     },
 

@@ -1,11 +1,8 @@
-﻿import { useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { applyDiagnosticFixes } from "@/core/diagnostics/fixExecutor";
 import { projectGraphDocument } from "@/core/read-model/selectors";
-import { inferTimelineEvents, inferTimelineStatus } from "@/core/timeline/livingPresence";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
-import { DEFAULT_COLOR_THEME, useAppShellController } from "@/hooks/useAppShellController";
+import { useAppShellController } from "@/hooks/useAppShellController";
 import { useAppShellShortcuts } from "@/hooks/useAppShellShortcuts";
 import { useFileLoadRuntime } from "@/hooks/useFileLoadRuntime";
 import { useGskFile } from "@/hooks/useGskFile";
@@ -13,12 +10,17 @@ import { useMenuConfig } from "@/hooks/useMenuConfig";
 import { useWorkspacePersistenceEffects } from "@/hooks/useWorkspacePersistenceEffects";
 import { useAppStore } from "@/state/store";
 import type { SearchFilterState, SearchSortDirection, SearchSortField } from "@/ui/search/searchEngine";
-import type {
-  AppShellFacade,
-  TimelinePresenceResult,
-} from "./types";
+import type { AppShellFacade } from "./types";
+import { useShellAiFeature } from "./useShellAiFeature";
+import { useShellCanvasFeature } from "./useShellCanvasFeature";
+import { useShellChromeFeature } from "./useShellChromeFeature";
 import { useShellDerivedViewModels } from "./useShellDerivedViewModels";
+import { useShellDiagnosticsFeature } from "./useShellDiagnosticsFeature";
+import { useShellNavigationFeature } from "./useShellNavigationFeature";
+import { useShellPersonFeature } from "./useShellPersonFeature";
 import { useShellSessionFlow } from "./useShellSessionFlow";
+import { useShellStatsFeature } from "./useShellStatsFeature";
+import { useShellWorkspaceFeature } from "./useShellWorkspaceFeature";
 
 export function useAppShellFacade(): AppShellFacade {
   const genraphGraph = useAppStore((state) => state.genraphGraph);
@@ -273,9 +275,10 @@ export function useAppShellFacade(): AppShellFacade {
     menuLayout: shellController.menuLayout,
     setMenuLayout: shellController.setMenuLayout,
   });
+
   const {
     visiblePersonIds,
-    normalizedDtreeConfig,
+    normalizedKindraConfig,
     leftPanelViewModel,
     selectedPersonPanelViewModel,
     timelineViewModel,
@@ -316,373 +319,217 @@ export function useAppShellFacade(): AppShellFacade {
     picker: shellController.picker,
   });
 
+  const chrome = useShellChromeFeature({
+    colorTheme: shellController.colorTheme,
+    leftCollapsed,
+    rightCollapsed,
+    viewConfig,
+    menus,
+    menuActions,
+    menuLayout: shellController.menuLayout,
+    setMenuLayout: shellController.setMenuLayout,
+    status,
+    document,
+    leftPanelViewModel,
+    toggleLeftSection: actions.toggleLeftSection,
+    setLeftSectionState: actions.setLeftSectionState,
+    setKindraOrientation: actions.setKindraOrientation,
+    setPreset: actions.setPreset,
+    setDepth: actions.setDepth,
+    setInclude: actions.setInclude,
+    setGridEnabled: actions.setGridEnabled,
+    clearNodePositions: actions.clearNodePositions,
+    selectedPersonPanelViewModel,
+    toggleRightStackSection: () => actions.toggleRightStackSection("details"),
+    openPersonEditor: shellController.openPersonEditor,
+    openPersonDetail: (personId) => shellController.setWorkspacePersonId(personId),
+    openAddRelationEditor: shellController.openAddRelationEditor,
+    setPicker: shellController.setPicker,
+    unlinkRelation: actions.unlinkRelation,
+    setStatus,
+    showColorThemeMenu: shellController.showColorThemeMenu,
+    setColorTheme: shellController.setColorTheme,
+    setShowColorThemeMenu: shellController.setShowColorThemeMenu,
+    showAboutModalV3: shellController.showAboutModalV3,
+    setShowAboutModalV3: shellController.setShowAboutModalV3,
+    showWikiPanel: shellController.showWikiPanel,
+    setShowWikiPanel: shellController.setShowWikiPanel,
+    showFamilySearchPanel: shellController.showFamilySearchPanel,
+    setShowFamilySearchPanel: shellController.setShowFamilySearchPanel,
+    toggleShellPanel: actions.toggleShellPanel,
+  });
+
+  const navigation = useShellNavigationFeature({
+    searchViewModel,
+    setShowSearchPanel: shellController.setShowSearchPanel,
+    inspectPerson: actions.inspectPerson,
+    setWorkspacePersonId: shellController.setWorkspacePersonId,
+    setQuery: setSearchQuery,
+    setSortField: setSearchSortField,
+    toggleSortDirection: () => setSearchSortDirection((prev) => (prev === "asc" ? "desc" : "asc")),
+    patchFilters: (patch) => setSearchFilters((prev) => ({ ...prev, ...patch })),
+    resetSearch: () => {
+      setSearchQuery("");
+      setSearchSortField("id");
+      setSearchSortDirection("asc");
+      setSearchFilters({ sex: "any", lifeStatus: "any", surname: "any" });
+    },
+    nodeMenuState: shellController.nodeMenuState
+      ? {
+          open: true,
+          x: shellController.nodeMenuState.x,
+          y: shellController.nodeMenuState.y,
+          nodeKind: shellController.nodeMenuState.nodeKind,
+          title: shellController.nodeMenuState.title,
+          items: shellController.nodeMenuState.items,
+        }
+      : null,
+    setNodeMenu: shellController.setNodeMenu,
+  });
+
+  const workspace = useShellWorkspaceFeature({
+    bootStatus,
+    openFileInputRef,
+    importFileInputRef,
+    openAndReplace,
+    importForMerge,
+    restoreBanner: {
+      visible: sessionFlow.restoreBanner.visible,
+      message: sessionFlow.restoreBanner.message,
+      onDismiss: sessionFlow.restoreBanner.onDismiss,
+      onStartFresh: sessionFlow.restoreBanner.onStartFresh,
+    },
+    exportWarningsCount: exportWarnings.length,
+    dismissExportWarnings: () => setExportWarnings([]),
+    showPdfExport: shellController.showPdfExport,
+    pdfOptions: { scope: pdfOptions.scope, paperSize: pdfOptions.paperSize },
+    setPdfScope: (scope) => setPdfOptions((prev) => ({ ...prev, scope })),
+    setPdfPaperSize: (paperSize) => setPdfOptions((prev) => ({ ...prev, paperSize })),
+    exportPdfNow,
+    closePdfExport: () => shellController.setShowPdfExport(false),
+    importIncomingDoc,
+    document,
+    importReviewViewModel,
+    clearMergeFocus: shellController.clearMergeFocusOverlay,
+    setMergeDraft: actions.setMergeDraft,
+    onFocusChange: shellController.handleMergeFocusChange,
+    onApply: handleMergeApply,
+    onClearImportIncomingDoc: () => setImportIncomingDoc(null),
+    clearMergeDraft: actions.clearMergeDraft,
+    aiUndoVisible: Boolean(aiUndoSnapshot),
+    undoAiBatch,
+    kinshipVisible: Boolean(shellController.pendingKinshipSourceId && document),
+    kinshipMessage: shellController.pendingKinshipSourceId && document
+      ? `Selecciona a otra persona para calcular parentesco con ${document.persons[shellController.pendingKinshipSourceId]?.name || ""}`.trim()
+      : "",
+    dismissKinship: () => shellController.setPendingKinshipSourceId(null),
+  });
+
+  const diagnostics = useShellDiagnosticsFeature({
+    open: shellController.showDiagnostics,
+    viewModel: diagnosticsViewModel,
+    document,
+    setShowDiagnostics: shellController.setShowDiagnostics,
+    setSelectedPerson: actions.setSelectedPerson,
+    applyProjectedDocument: (nextDoc) => actions.applyProjectedDocument(nextDoc, "merge"),
+  });
+
+  const stats = useShellStatsFeature({
+    document,
+    viewConfig,
+    visiblePersonIds,
+    globalStatsOpen: shellController.showGlobalStatsPanel,
+    globalStatsViewModel,
+    setShowGlobalStatsPanel: shellController.setShowGlobalStatsPanel,
+    personStatsViewModel,
+    setShowPersonStatsPersonId: shellController.setShowPersonStatsPersonId,
+    timelineViewModel,
+    setTimelineView: actions.setTimelineView,
+    setTimelineScaleZoom: actions.setTimelineScaleZoom,
+    setTimelineScaleOffset: actions.setTimelineScaleOffset,
+    handleTimelineHighlight: shellController.handleTimelineHighlight,
+    setTimelineStatus: actions.setTimelineStatus,
+    toggleRightStackSection: actions.toggleRightStackSection,
+    clearOverlayType: actions.clearOverlayType,
+    setTimelinePanelOpen: actions.setTimelinePanelOpen,
+  });
+
+  const ai = useShellAiFeature({
+    openSettings: showAiSettingsModal,
+    aiSettings,
+    setAiSettings: actions.setAiSettings,
+    setStatus,
+    closeSettings: () => setShowAiSettingsModal(false),
+    assistantViewModel: aiAssistantViewModel,
+    closeAssistant: () => setShowAiAssistantModal(false),
+    applyAiBatch,
+    openSettingsModal: () => setShowAiSettingsModal(true),
+  });
+
+  const person = useShellPersonFeature({
+    personEditorViewModel,
+    closePersonEditor: () => shellController.setPersonDetailModal(null),
+    updatePersonById: actions.updatePersonById,
+    addRelationFromAnchor: actions.addRelationFromAnchor,
+    createStandalonePerson: actions.createStandalonePerson,
+    personWorkspaceViewModel,
+    personWorkspaceViewModelV3,
+    closeWorkspace: () => shellController.setWorkspacePersonId(null),
+    closeWorkspaceV3: () => shellController.setWorkspacePersonIdV3(null),
+    setSelectedPerson: actions.setSelectedPerson,
+    openWorkspace: shellController.setWorkspacePersonId,
+    openWorkspaceV3: shellController.setWorkspacePersonIdV3,
+    focusPersonInCanvas: shellController.focusPersonInCanvas,
+    updateFamilyById: actions.updateFamilyById,
+    createPersonRecord: actions.createPersonRecord,
+    openAddRelationEditor: shellController.openAddRelationEditor,
+    personPickerViewModel,
+    picker: shellController.picker,
+    setOverlay: actions.setOverlay,
+    linkExistingRelation: actions.linkExistingRelation,
+    setStatus,
+    setPicker: shellController.setPicker,
+    branchExportViewModel,
+    branchAnchorId: shellController.branchAnchorId,
+    exportBranchGsk,
+    setBranchAnchorId: shellController.setBranchAnchorId,
+  });
+
+  const canvas = useShellCanvasFeature({
+    expandedGraph,
+    document,
+    fitNonce,
+    selectedPersonId,
+    focusPersonId: viewConfig?.focusPersonId ?? null,
+    focusFamilyId: viewConfig?.focusFamilyId ?? null,
+    colorTheme: shellController.colorTheme,
+    normalizedKindraConfig,
+    showMockTools: shellController.showMockTools,
+    setNodeMenu: shellController.setNodeMenu,
+    clearVisualModes: actions.clearVisualModes,
+    onNodeClick: shellController.handleNodeClick,
+    onNodeContextMenu: shellController.handleNodeContextMenu,
+    onSvgReady: (svg) => {
+      graphSvgRef.current = svg;
+    },
+  });
+
   return {
-    chrome: {
-      appRootStyle: {
-        "--canvas-bg-custom": shellController.colorTheme.background,
-        "--node-fill-custom": shellController.colorTheme.personNode,
-        "--node-text-custom": shellController.colorTheme.text,
-        "--edge-color-custom": shellController.colorTheme.edges,
-      } as CSSProperties,
-      leftCollapsed,
-      rightCollapsed,
-      detailsMode: viewConfig?.rightStack?.detailsMode ?? "expanded",
-      timelineMode: viewConfig?.rightStack?.timelineMode ?? "compact",
-      topbar: {
-        menus,
-        actions: menuActions,
-        menuLayout: shellController.menuLayout,
-        onChangeLayout: shellController.setMenuLayout,
-      },
-      footer: {
-        statusMessage: status,
-        personCount: document ? Object.keys(document.persons).length : null,
-        familyCount: document ? Object.keys(document.families).length : null,
-        sourceCount: document ? Object.keys(document.sources ?? {}).length : null,
-        engineMode: viewConfig ? "Kindra" : null,
-        isSaved: false,
-        appVersion: "0.4.5",
-      },
-      leftPanel: {
-        viewModel: leftPanelViewModel,
-        commands: {
-          onToggleSection: actions.toggleLeftSection,
-          onSetSections: actions.setLeftSectionState,
-          onDTreeOrientation: actions.setKindraOrientation,
-          onPreset: actions.setPreset,
-          onDepth: actions.setDepth,
-          onInclude: actions.setInclude,
-          onGridEnabled: actions.setGridEnabled,
-          onClearPositions: actions.clearNodePositions,
-        },
-      },
-      rightPanel: {
-        viewModel: selectedPersonPanelViewModel,
-        commands: {
-          onToggleDetailsExpanded: () => actions.toggleRightStackSection("details"),
-          onEditPerson: shellController.openPersonEditor,
-          onViewPersonDetail: (personId) => shellController.setWorkspacePersonId(personId),
-          onAddRelation: shellController.openAddRelationEditor,
-          onLinkExistingRelation: (anchorId, type) => shellController.setPicker({ anchorId, type }),
-          onUnlinkRelation: (personId, relatedId, type) => {
-            actions.unlinkRelation(personId, relatedId, type);
-            setStatus(`Relacion desvinculada: ${type}`);
-          },
-        },
-      },
-      colorThemeMenu: {
-        open: shellController.showColorThemeMenu,
-        value: shellController.colorTheme,
-        onChange: shellController.setColorTheme,
-        onReset: () => shellController.setColorTheme(DEFAULT_COLOR_THEME),
-        onClose: () => shellController.setShowColorThemeMenu(false),
-      },
-      dialogs: {
-        about: { open: shellController.showAboutModalV3, onClose: () => shellController.setShowAboutModalV3(false) },
-        wiki: { open: shellController.showWikiPanel, onClose: () => shellController.setShowWikiPanel(false) },
-        familySearch: {
-          open: shellController.showFamilySearchPanel,
-          onClose: () => shellController.setShowFamilySearchPanel(false),
-          onImport: () => shellController.setShowFamilySearchPanel(false),
-        },
-      },
-      shellCommands: {
-        onToggleLeft: () => actions.toggleShellPanel("left"),
-        onToggleRight: () => actions.toggleShellPanel("right"),
-      },
-    },
-    navigation: {
-      search: {
-        viewModel: searchViewModel,
-        commands: {
-          onClose: () => shellController.setShowSearchPanel(false),
-          onSelectPerson: (personId) => {
-            actions.inspectPerson(personId);
-            shellController.setWorkspacePersonId(personId);
-          },
-          onQueryChange: setSearchQuery,
-          onSortFieldChange: setSearchSortField,
-          onSortDirectionToggle: () => setSearchSortDirection((prev) => (prev === "asc" ? "desc" : "asc")),
-          onFiltersChange: (patch) => setSearchFilters((prev) => ({ ...prev, ...patch })),
-          onReset: () => {
-            setSearchQuery("");
-            setSearchSortField("id");
-            setSearchSortDirection("asc");
-            setSearchFilters({ sex: "any", lifeStatus: "any", surname: "any" });
-          },
-        },
-      },
-      nodeMenu: {
-        state: shellController.nodeMenuState
-          ? {
-              open: true,
-              x: shellController.nodeMenuState.x,
-              y: shellController.nodeMenuState.y,
-              nodeKind: shellController.nodeMenuState.nodeKind,
-              title: shellController.nodeMenuState.title,
-              items: shellController.nodeMenuState.items,
-            }
-          : null,
-        onClose: () => shellController.setNodeMenu(null),
-      },
-    },
-    workspace: {
-      boot: {
-        status: bootStatus,
-      },
-      hiddenInputs: {
-        openFile: {
-          ref: openFileInputRef,
-          onChange: (event) => {
-            const file = event.currentTarget.files?.[0];
-            if (file) void openAndReplace(file);
-            event.currentTarget.value = "";
-          },
-        },
-        importFile: {
-          ref: importFileInputRef,
-          onChange: (event) => {
-            const file = event.currentTarget.files?.[0];
-            if (file) void importForMerge(file);
-            event.currentTarget.value = "";
-          },
-        },
-      },
-      restoreBanner: {
-        visible: sessionFlow.restoreBanner.visible,
-        message: sessionFlow.restoreBanner.message,
-        onDismiss: sessionFlow.restoreBanner.onDismiss,
-        onStartFresh: sessionFlow.restoreBanner.onStartFresh,
-      },
-      exportWarningsBanner: {
-        visible: exportWarnings.length > 0,
-        count: exportWarnings.length,
-        onDismiss: () => setExportWarnings([]),
-      },
-      pdfExport: {
-        open: shellController.showPdfExport,
-        options: { scope: pdfOptions.scope, paperSize: pdfOptions.paperSize },
-        onScopeChange: (scope) => setPdfOptions((prev) => ({ ...prev, scope })),
-        onPaperSizeChange: (paperSize) => setPdfOptions((prev) => ({ ...prev, paperSize })),
-        onExportNow: exportPdfNow,
-        onClose: () => shellController.setShowPdfExport(false),
-      },
-      importReview: {
-        open: Boolean(importIncomingDoc && document),
-        viewModel: importReviewViewModel,
-        clearMergeFocus: shellController.clearMergeFocusOverlay,
-        onDraftChange: actions.setMergeDraft,
-        onFocusChange: shellController.handleMergeFocusChange,
-        onApply: handleMergeApply,
-        onClose: () => {
-          shellController.clearMergeFocusOverlay();
-          setImportIncomingDoc(null);
-        },
-        onClearDraft: actions.clearMergeDraft,
-      },
-      banners: {
-        aiUndo: {
-          visible: Boolean(aiUndoSnapshot),
-          onUndo: undoAiBatch,
-        },
-        kinship: {
-          visible: Boolean(shellController.pendingKinshipSourceId && document),
-          message: shellController.pendingKinshipSourceId && document
-            ? `Selecciona a otra persona para calcular parentesco con ${document.persons[shellController.pendingKinshipSourceId]?.name || ""}`.trim()
-            : "",
-          onDismiss: () => shellController.setPendingKinshipSourceId(null),
-        },
-      },
-    },
+    chrome,
+    navigation,
+    workspace,
     features: {
-      diagnostics: {
-        open: shellController.showDiagnostics,
-        viewModel: diagnosticsViewModel,
-        commands: {
-          onClose: () => shellController.setShowDiagnostics(false),
-          onSelectPerson: (personId) => {
-            actions.setSelectedPerson(personId);
-            shellController.setShowDiagnostics(false);
-          },
-          onSelectFamily: (familyId) => {
-            const family = document?.families[familyId];
-            const candidate = family?.husbandId || family?.wifeId || family?.childrenIds[0];
-            if (candidate) actions.setSelectedPerson(candidate);
-            shellController.setShowDiagnostics(false);
-          },
-          onApplyActions: (diagnosticActions, _options) => {
-            if (!document) return null;
-            const { nextDoc, result } = applyDiagnosticFixes(document, diagnosticActions);
-            actions.applyProjectedDocument(nextDoc, "merge");
-            return result;
-          },
-          resolveEntityLabel: (entityId) => {
-            if (!document) return undefined;
-            if (entityId.startsWith("@I")) return document.persons[entityId]?.name;
-            if (entityId.startsWith("@F")) return entityId;
-            return undefined;
-          },
-        },
-      },
-      globalStats: {
-        open: shellController.showGlobalStatsPanel,
-        viewModel: globalStatsViewModel,
-        onClose: () => shellController.setShowGlobalStatsPanel(false),
-      },
-      personStats: {
-        open: personStatsViewModel.kind === "ready",
-        viewModel: personStatsViewModel,
-        onClose: () => shellController.setShowPersonStatsPersonId(null),
-      },
-      ai: {
-        settingsModal: {
-          open: showAiSettingsModal,
-          settings: aiSettings,
-          onSave: (next) => {
-            actions.setAiSettings(next);
-            setStatus("Ajustes AncestrAI guardados.");
-          },
-          onClose: () => setShowAiSettingsModal(false),
-          onStatus: setStatus,
-        },
-        assistantModal: {
-          viewModel: aiAssistantViewModel,
-          onClose: () => setShowAiAssistantModal(false),
-          onStatus: setStatus,
-          onApplyBatch: applyAiBatch,
-          onOpenSettings: () => setShowAiSettingsModal(true),
-        },
-      },
-      personEditor: {
-        viewModel: personEditorViewModel,
-        commands: {
-          onClose: () => shellController.setPersonDetailModal(null),
-          onSaveEdit: actions.updatePersonById,
-          onSaveRelation: actions.addRelationFromAnchor,
-          onCreateStandalone: actions.createStandalonePerson,
-        },
-      },
-      personWorkspace: {
-        open: Boolean(personWorkspaceViewModel),
-        viewModel: personWorkspaceViewModel,
-        commands: {
-          onClose: () => shellController.setWorkspacePersonId(null),
-          onSelectPerson: actions.setSelectedPerson,
-          onSetAsFocus: shellController.focusPersonInCanvas,
-          onSavePerson: actions.updatePersonById,
-          onSaveFamily: actions.updateFamilyById,
-          onCreatePerson: actions.createPersonRecord,
-          onQuickAddRelation: (anchorId, relationType) => {
-            shellController.setWorkspacePersonId(null);
-            shellController.openAddRelationEditor(anchorId, relationType);
-          },
-        },
-      },
-      personWorkspaceV3: {
-        open: Boolean(personWorkspaceViewModelV3),
-        viewModel: personWorkspaceViewModelV3,
-        commands: {
-          onClose: () => shellController.setWorkspacePersonIdV3(null),
-          onSelectPerson: (personId) => {
-            actions.setSelectedPerson(personId);
-            shellController.setWorkspacePersonIdV3(personId);
-          },
-          onSetAsFocus: shellController.focusPersonInCanvas,
-          onSavePerson: actions.updatePersonById,
-          onSaveFamily: actions.updateFamilyById,
-          onCreatePerson: actions.createPersonRecord,
-          onQuickAddRelation: (anchorId, relationType) => {
-            shellController.setWorkspacePersonIdV3(null);
-            shellController.openAddRelationEditor(anchorId, relationType);
-          },
-        },
-      },
-      personPicker: {
-        viewModel: personPickerViewModel,
-        onLink: (existingPersonId) => {
-          if (!shellController.picker) return;
-          if (shellController.picker.type === "kinship") {
-            actions.setOverlay({
-              id: "kinship-standard",
-              type: "kinship",
-              priority: 90,
-              config: { person1Id: shellController.picker.anchorId, person2Id: existingPersonId },
-            });
-            setStatus("Calculando parentesco...");
-            return;
-          }
-          actions.linkExistingRelation(shellController.picker.anchorId, existingPersonId, shellController.picker.type);
-          setStatus("Persona vinculada");
-        },
-        onClose: () => shellController.setPicker(null),
-      },
-      branchExport: {
-        viewModel: branchExportViewModel,
-        onExport: (direction) => {
-          if (!shellController.branchAnchorId) return;
-          void exportBranchGsk(shellController.branchAnchorId, direction);
-          shellController.setBranchAnchorId(null);
-        },
-        onClose: () => shellController.setBranchAnchorId(null),
-      },
-      timeline: {
-        viewModel: timelineViewModel,
-        commands: {
-          onTimelineView: actions.setTimelineView,
-          onTimelineScaleZoom: actions.setTimelineScaleZoom,
-          onTimelineScaleOffset: actions.setTimelineScaleOffset,
-          onTimelineHighlight: shellController.handleTimelineHighlight,
-          onTimelinePresence: (value, mode): TimelinePresenceResult => {
-            if (!document) {
-              return { livingIds: [], deceasedIds: [], eventIds: [], livingCount: 0, effectiveValue: value };
-            }
-            const effectiveValue = mode === "decade" ? Math.floor(value / 10) * 10 : Math.floor(value);
-            const scope = viewConfig?.timeline.scope ?? "visible";
-            const visibleSet = new Set(visiblePersonIds);
-            const { living, deceased } = inferTimelineStatus(document, effectiveValue);
-            const events = inferTimelineEvents(document, effectiveValue);
-            const filterIds = (ids: Iterable<string>) => {
-              const next = Array.from(ids);
-              return scope === "all" ? next : next.filter((id) => visibleSet.has(id));
-            };
-            return {
-              livingIds: filterIds(living),
-              deceasedIds: filterIds(deceased),
-              eventIds: filterIds(events),
-              livingCount: filterIds(living).length,
-              effectiveValue,
-            };
-          },
-          onApplyPresence: (result) => actions.setTimelineStatus(result.livingIds, result.deceasedIds, result.effectiveValue, result.eventIds),
-          onToggleTimelineExpanded: () => actions.toggleRightStackSection("timeline"),
-          onClosePanel: () => {
-            actions.clearOverlayType("timeline");
-            actions.setTimelinePanelOpen(false);
-          },
-        },
-      },
-      canvas: {
-        graph: expandedGraph,
-        documentView: document,
-        fitNonce,
-        selectedPersonId,
-        focusPersonId: viewConfig?.focusPersonId ?? null,
-        focusFamilyId: viewConfig?.focusFamilyId ?? null,
-        colorTheme: shellController.colorTheme,
-        kindraConfig: normalizedDtreeConfig,
-        modeBadge: viewConfig ? "Kindra" : null,
-        showMockTools: shellController.showMockTools,
-        commands: {
-          onNodeClick: shellController.handleNodeClick,
-          onNodeContextMenu: shellController.handleNodeContextMenu,
-          onBgClick: () => shellController.setNodeMenu(null),
-          onBgDoubleClick: actions.clearVisualModes,
-          onSvgReady: (svg) => {
-            graphSvgRef.current = svg;
-          },
-        },
-      },
+      diagnostics,
+      globalStats: stats.globalStats,
+      personStats: stats.personStats,
+      ai,
+      personEditor: person.personEditor,
+      personWorkspace: person.personWorkspace,
+      personWorkspaceV3: person.personWorkspaceV3,
+      personPicker: person.personPicker,
+      branchExport: person.branchExport,
+      timeline: stats.timeline,
+      canvas,
     },
   };
 }
-

@@ -1,5 +1,4 @@
 export {
-  getReadModelMode,
   projectGraphDocument,
   clearGraphProjectionCache,
   selectFamilies,
@@ -7,10 +6,6 @@ export {
   selectPersons,
   selectSearchEntries,
   selectTimelineInput,
-} from "./selectors";
-export { projectLegacyGraphDocument } from "./legacyCompatibility";
-export {
-  setReadModelMode,
 } from "./selectors";
 export type {
   GraphDocument,
@@ -22,6 +17,5 @@ export type {
   GraphTimelineInput,
   GraphSource,
   GraphPayload,
-  ReadModelMode,
   RecentPayloadV2,
 } from "./types";

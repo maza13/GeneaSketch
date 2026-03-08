@@ -63,7 +63,7 @@ type Params = {
 
 type Result = {
   visiblePersonIds: string[];
-  normalizedDtreeConfig: NonNullable<ViewConfig["kindra"]> | undefined;
+  normalizedKindraConfig: NonNullable<ViewConfig["kindra"]> | undefined;
   leftPanelViewModel: LeftPanelViewModel;
   selectedPersonPanelViewModel: SelectedPersonPanelViewModel;
   timelineViewModel: TimelinePanelViewModel;
@@ -89,7 +89,7 @@ export function useShellDerivedViewModels(params: Params): Result {
     () => buildVisiblePersonIds(params.document, params.expandedGraph),
     [params.document, params.expandedGraph],
   );
-  const normalizedDtreeConfig = useMemo(
+  const normalizedKindraConfig = useMemo(
     () => (params.viewConfig ? normalizeKindraConfig(params.viewConfig.kindra) : undefined),
     [params.viewConfig],
   );
@@ -167,7 +167,7 @@ export function useShellDerivedViewModels(params: Params): Result {
 
   return {
     visiblePersonIds,
-    normalizedDtreeConfig,
+    normalizedKindraConfig,
     leftPanelViewModel,
     selectedPersonPanelViewModel,
     timelineViewModel,

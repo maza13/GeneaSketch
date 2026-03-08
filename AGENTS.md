@@ -5,6 +5,11 @@ It summarizes build/lint/test commands (including single-test workflows) and cod
 ## 1) Project Snapshot
 - Stack: Tauri desktop shell + React 18 + TypeScript + Vite + Vitest + Zustand.
 - Domain: local-first genealogy app with `.gsk` as native package format and GEDCOM interoperability.
+- Current subsystem naming:
+  - `Genraph` = core engine
+  - `Kindra` = visual engine
+  - `Kindra v3.1` = current visual runtime
+  - `AncestrAI` = AI subsystem
 - CI workflow (`.github/workflows/baseline-qa001.yml`) uses Node `24` and runs `npm run build` plus `npm run test:baseline:qa001`.
 - TypeScript is strict (`strict`, `noUnusedLocals`, `noUnusedParameters` in `tsconfig.json`).
 - Path alias `@/* -> src/*` is configured in `tsconfig.json` and `vite.config.ts`.
@@ -72,12 +77,18 @@ npm test -- src/tests/kindra-v31
 ### Project-specific scripts
 ```bash
 npm run test:baseline:qa001
+npm run test:ci
+npm run check:genraph:internals
+npm run plan:kindra-v31:validate
 npm run test:perf:layout
 npm run test:perf:overlays
 npm run test:perf:all
 ```
 - `test:baseline:qa001`: CI baseline set.
-- `test:perf:*`: targeted perf checks, not full regression.
+- `test:ci`: local CI-equivalent gate (`build` + baseline).
+- `check:genraph:internals`: guard against internal property bypass in the Genraph engine.
+- `plan:kindra-v31:validate`: validate the Kindra v3.1 control-plan chain.
+- `test:perf:*`: targeted perf checks, not full regression. These are intentionally skipped during plain `npm test` and should be run through the dedicated scripts above.
 
 ## 5) Lint / Formatting Status
 - No `lint` script exists in `package.json`.
@@ -130,7 +141,7 @@ Agent behavior in this repo:
 - Use Vitest primitives (`describe`, `it`, `expect`, `beforeEach`, `vi`).
 - Prefer deterministic fixtures/helpers over ad-hoc setup.
 - Validate behavior and invariants, not internal implementation details.
-- Migration/compat areas should include both valid and legacy-invalid payload cases.
+- Hard-cut migrations should prefer explicit rejection tests for unsupported legacy payloads rather than maintaining silent compatibility.
 
 ## 7) UX and Docs Governance
 - UX governance contract: `docs/wiki-uxdesign/12_instrucciones_agentes_ia.md`.
@@ -149,6 +160,7 @@ If those files are added later, treat them as high-priority agent instructions a
 - `src/main.tsx`, `src/App.tsx`
 - `src/state/store.ts`, `src/state/slices/*`
 - `src/core/genraph/*`, `src/core/genraph/GedcomBridge.ts`
+- `src/core/kindra/*`, `src/views/kindra-v31/*`
 - `src/tests/*`
 - `src/styles/tokens.css`
 - `src-tauri/src/main.rs`

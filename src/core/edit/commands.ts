@@ -1,18 +1,6 @@
 import type { Event, Family, GeneaDocument, PendingRelationType, Person } from "@/types/domain";
 import { normalizePersonSurnames } from "@/core/naming/surname";
-
-export type PersonInput = {
-  name: string;
-  surname?: string;
-  birthDate?: string;
-  birthPlace?: string;
-  deathDate?: string;
-  deathPlace?: string;
-  residence?: string;
-  sex?: "M" | "F" | "U";
-  lifeStatus?: "alive" | "deceased";
-  photoDataUrl?: string | null;
-};
+import type { PersonInput, PersonPatch } from "./types";
 
 export type FamilyUnionStatus = "partner" | "married" | "divorced";
 
@@ -205,24 +193,7 @@ export function createPerson(doc: GeneaDocument, input: PersonInput): { next: Ge
 export function updatePerson(
   doc: GeneaDocument,
   personId: string,
-  patch: {
-    name?: string;
-    surname?: string;
-    surnamePaternal?: string;
-    surnameMaternal?: string;
-    surnameOrder?: "paternal_first" | "maternal_first" | "single";
-    birthDate?: string;
-    birthPlace?: string;
-    deathDate?: string;
-    deathPlace?: string;
-    residence?: string;
-    lifeStatus?: "alive" | "deceased";
-    isPlaceholder?: boolean;
-    sex?: "M" | "F" | "U";
-    photoDataUrl?: string | null;
-    notesAppend?: string[];
-    notesReplace?: string[];
-    notesInlineReplace?: string[];
+  patch: PersonPatch & {
     sourceRefs?: Person["sourceRefs"];
     mediaRefs?: string[];
     noteRefs?: string[];

@@ -5,7 +5,6 @@ import type {
   GraphFamily,
   GraphPerson,
   GraphProjectionDocument,
-  ReadModelMode,
   GraphSearchEntry,
   GraphStatsSummary,
   GraphTimelineInput,
@@ -13,17 +12,6 @@ import type {
 
 let lastKey = "";
 let lastDoc: GraphProjectionDocument | null = null;
-
-export function setReadModelMode(mode: ReadModelMode): void {
-  if (mode !== "direct") {
-    console.warn(`[read-model] Legacy mode request ignored; runtime mainline is direct-only (requested: ${mode}).`);
-  }
-  clearGraphProjectionCache();
-}
-
-export function getReadModelMode(): ReadModelMode {
-  return "direct";
-}
 
 function keyFor(graph: GenraphGraph | null): string {
   if (!graph) return "";

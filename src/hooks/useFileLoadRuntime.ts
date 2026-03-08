@@ -37,12 +37,11 @@ function normalizeHydratedViewConfig(viewConfig: ViewConfig | null | undefined):
 
 export function resolveProfileHydration(
   state: AppState,
-  profile?: Pick<WorkspaceProfileV2, "viewConfig" | "visualConfig" | "colorTheme" | "readModelMode"> | null,
+  profile?: Pick<WorkspaceProfileV2, "viewConfig" | "visualConfig" | "colorTheme"> | null,
   gskMeta?: LegacyGskMeta,
 ): {
   nextViewConfig: ViewConfig | null;
   nextVisualConfig: VisualConfig;
-  nextReadModelMode: "direct";
   nextTheme?: ColorThemeConfig;
 } {
   const nextViewConfig = profile?.viewConfig ?? gskMeta?.viewConfig ?? state.viewConfig;
@@ -51,7 +50,6 @@ export function resolveProfileHydration(
   return {
     nextViewConfig: normalizeHydratedViewConfig(nextViewConfig),
     nextVisualConfig,
-    nextReadModelMode: "direct",
     nextTheme,
   };
 }

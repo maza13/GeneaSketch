@@ -7,7 +7,6 @@ import { computeLayout } from "@/core/layout";
 import {
   clearGraphProjectionCache,
   projectGraphDocument,
-  setReadModelMode,
 } from "@/core/read-model";
 import { MockTreeGenerator, type GeneratorConfig } from "@/core/testing/mockGenerator";
 import { measureColdWarmRuns, type PerfStats } from "@/tests/perf/common/perfStats";
@@ -148,7 +147,6 @@ describe("perf/dense-tree audit", () => {
     // Pure read-model projection from an already-built graph.
     const graphProjection = await measureColdWarmRuns(() => {
       clearGraphProjectionCache();
-      setReadModelMode("direct");
       projectGraphDocument(graph);
     });
 
@@ -156,7 +154,6 @@ describe("perf/dense-tree audit", () => {
     const ttvProxy = await measureColdWarmRuns(() => {
       const rebuilt = documentToGenraph(document, "7.0.x").graph;
       clearGraphProjectionCache();
-      setReadModelMode("direct");
       const projected = projectGraphDocument(rebuilt);
       computeLayout({
         graph: expanded,

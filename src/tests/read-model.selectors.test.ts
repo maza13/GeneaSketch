@@ -5,7 +5,6 @@ import { GenraphGraph } from "@/core/genraph/GenraphGraph";
 import {
   clearGraphProjectionCache,
   projectGraphDocument,
-  projectLegacyGraphDocument,
   selectFamilies,
   selectGraphStats,
   selectPersons,
@@ -93,36 +92,13 @@ describe("read-model selectors", () => {
     expect(third).not.toBe(second);
   });
 
-  it("keeps functional parity between direct mainline and legacy compatibility projection for core outputs", () => {
-    const graph = buildGraph();
-
-    const directPersons = selectPersons(graph);
-    const directFamilies = selectFamilies(graph);
-    const directStats = selectGraphStats(graph);
-
-    const legacyDoc = projectLegacyGraphDocument(graph);
-    const legacyPersons = Object.values(legacyDoc?.persons || {});
-    const legacyFamilies = Object.values(legacyDoc?.families || {});
-    const legacyStats = {
-      persons: legacyPersons.length,
-      families: legacyFamilies.length,
-      living: legacyPersons.filter((person) => person.lifeStatus === "alive").length,
-      deceased: legacyPersons.filter((person) => person.lifeStatus !== "alive").length,
-    };
-
-    expect(directPersons).toHaveLength(legacyPersons.length);
-    expect(directFamilies).toHaveLength(legacyFamilies.length);
-    expect(directStats).toStrictEqual(legacyStats);
-  });
-
-  it("keeps legacy compatibility behind an explicit side edge instead of the mainline selector", () => {
+  it("projects a stable document for downstream selectors", () => {
     const graph = buildGraph();
     const directDoc = projectGraphDocument(graph);
-    const legacyDoc = projectLegacyGraphDocument(graph);
 
-    expect(legacyDoc).not.toBeNull();
-    expect(directDoc).not.toBe(legacyDoc);
-    expect(Object.keys(legacyDoc?.persons || {}).length).toBe(Object.keys(directDoc?.persons || {}).length);
+    expect(directDoc).not.toBeNull();
+    expect(Object.keys(directDoc?.persons || {}).length).toBe(2);
+    expect(Object.keys(directDoc?.families || {}).length).toBe(1);
   });
 
   it("uses shared synthetic xref fallback when xref is missing in direct projection", () => {

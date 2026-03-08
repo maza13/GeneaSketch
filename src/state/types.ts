@@ -12,6 +12,7 @@ import type {
     VisualConfig
 } from "@/types/domain";
 import type { GenraphGraph } from "@/core/genraph";
+import type { PersonInput, PersonPatch } from "@/core/edit/types";
 import type { GraphDocument, GraphPayload, GraphSource, RecentPayloadV2 } from "@/core/read-model/types";
 
 export type RightStackState = {
@@ -21,7 +22,6 @@ export type RightStackState = {
 };
 import type { AiSettings } from "@/types/ai";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
-import { PersonPatch, PersonInput } from "@/core/engine/GeneaEngine";
 
 export interface DocSlice {
     /**

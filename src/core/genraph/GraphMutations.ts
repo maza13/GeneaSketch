@@ -1,5 +1,5 @@
 import { GenraphGraph } from "./GenraphGraph";
-import type { PersonInput, PersonPatch } from "@/core/engine/GeneaEngine";
+import type { PersonInput, PersonPatch } from "@/core/edit/types";
 import type { FamilyPatch } from "@/core/edit/commands";
 import { PersonPredicates, UnionPredicates } from "./predicates";
 import { parseGedDate } from "./GedcomBridge";

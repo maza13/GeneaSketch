@@ -56,13 +56,23 @@ Suite completa:
 npm test
 ```
 
+Gate principal local:
+
+```bash
+npm run test:ci
+```
+
 Ejemplos utiles:
 
 ```bash
 npm test -- src/tests/store.test.ts
 npm test -- src/tests/workspace-profile.integration.test.ts
-npx vite build
+npm run test:perf:all
 ```
+
+Nota:
+- `npm test` corre la suite funcional/general.
+- `test:perf:*` corre checks de performance dedicados y no forma parte de la suite general por defecto.
 
 ## Arquitectura breve
 
@@ -85,14 +95,14 @@ Puntos estructurales importantes:
 
 ## Estructura del repositorio
 
-- `src/core/genraph`: API publica actual del motor canonico
-- `src/core/genraph`: implementacion interna actual del motor, journal, validacion y migraciones
+- `src/core/genraph`: API publica e implementacion actual del motor, journal, validacion y migraciones
+- `src/core/kindra`: configuracion y contratos del visual engine
 - `src/core/read-model`: proyeccion del grafo a documento consumible
 - `src/core/edit`: comandos, merges, revision e importacion
 - `src/app-shell`: facade y componentes de composicion del shell
 - `src/state`: store Zustand y slices
 - `src/ui`: paneles, modales y componentes de interfaz
-- `src/views`: canvas y render genealogico
+- `src/views/kindra-v31`: runtime visual actual de `Kindra v3.1`
 - `src-tauri`: shell desktop
 
 ## Notas

@@ -31,7 +31,6 @@ describe("workspace profile hydration precedence", () => {
 
     expect(result.nextViewConfig?.focusPersonId).toBe("local-person");
     expect(result.nextVisualConfig.gridEnabled).toBe(true);
-    expect(result.nextReadModelMode).toBe("direct");
     expect(result.nextTheme?.background).toBe("#111");
   });
 
@@ -45,7 +44,6 @@ describe("workspace profile hydration precedence", () => {
 
     expect(result.nextViewConfig?.focusPersonId).toBe("legacy-focus");
     expect(result.nextVisualConfig.gridEnabled).toBe(true);
-    expect(result.nextReadModelMode).toBe("direct");
     expect(result.nextTheme?.background).toBe("#333");
   });
 
@@ -55,7 +53,6 @@ describe("workspace profile hydration precedence", () => {
 
     expect(result.nextViewConfig).toStrictEqual(state.viewConfig);
     expect(result.nextVisualConfig).toBe(state.visualConfig);
-    expect(result.nextReadModelMode).toBe("direct");
     expect(result.nextTheme).toBeUndefined();
   });
 
