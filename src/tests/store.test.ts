@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { documentToGenraph, genraphToDocument } from "@/core/genraph/GedcomBridge";
 import { createNewTree } from "@/core/edit/commands";
 import { projectGraphDocument } from "@/core/read-model";
-import { UiEngine } from "@/core/engine/UiEngine";
 import { SessionService } from "@/io/sessionService";
 import { useAppStore } from "@/state/store";
+import { createDefaultViewConfig, createDefaultVisualConfig } from "@/state/workspaceDefaults";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
 import type { SessionSnapshot } from "@/types/domain";
 
@@ -654,8 +654,8 @@ describe("session autosave/restore robustness", () => {
     restoreValue = {
       schemaVersion: 8,
       graph: snapshotGraph(doc),
-      viewConfig: UiEngine.createDefaultViewConfig("@I1@"),
-      visualConfig: UiEngine.createDefaultVisualConfig(),
+      viewConfig: createDefaultViewConfig("@I1@"),
+      visualConfig: createDefaultVisualConfig(),
       focusHistory: ["@I1@"],
       focusIndex: 0,
     };

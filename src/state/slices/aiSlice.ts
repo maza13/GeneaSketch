@@ -1,7 +1,8 @@
 import { StateCreator } from "zustand";
 import { AppState, AiSlice } from "../types";
-import { UiEngine } from "@/core/engine/UiEngine";
+import { mergeAiSettings } from "@/state/workspaceDefaults";
 import type { AiProvider } from "@/types/ai";
+import { chooseProviderModel } from "@/core/ai/modelSelection";
 
 export const createAiSlice: StateCreator<AppState, [], [], AiSlice> = (set) => ({
     aiSettings: undefined as any, // Will be initialized in store.ts
@@ -11,7 +12,7 @@ export const createAiSlice: StateCreator<AppState, [], [], AiSlice> = (set) => (
     clearMergeDraft: () => set({ mergeDraft: null }),
 
     setAiSettings: (settings) => set((state) => {
-        const merged = UiEngine.normalizeAiSettings(state.aiSettings, settings);
+        const merged = mergeAiSettings(state.aiSettings, settings);
         const nextCatalog = {
             ...merged.modelCatalog,
             ...(settings.modelCatalog || {})
@@ -23,11 +24,7 @@ export const createAiSlice: StateCreator<AppState, [], [], AiSlice> = (set) => (
             const incoming = nextCatalog[provider] || [];
             if (!incoming.length) continue;
             const selected = providerModels[provider];
-            const exists = incoming.some((entry) => entry.id === selected);
-            if (!exists) {
-                const recommended = incoming.find((entry) => entry.recommended)?.id;
-                providerModels[provider] = recommended || incoming[0].id;
-            }
+            providerModels[provider] = chooseProviderModel(incoming, selected);
         }
 
         return {

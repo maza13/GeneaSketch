@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { UiEngine } from "@/core/engine/UiEngine";
 import { resolveProfileHydration } from "@/hooks/useFileLoadRuntime";
 import type { AppState } from "@/state/types";
+import { createDefaultViewConfig, createDefaultVisualConfig } from "@/state/workspaceDefaults";
 
 function baseState(): AppState {
-  const viewConfig = UiEngine.createDefaultViewConfig("root");
-  const visualConfig = UiEngine.createDefaultVisualConfig();
+  const viewConfig = createDefaultViewConfig("root");
+  const visualConfig = createDefaultVisualConfig();
   return {
     viewConfig,
     visualConfig

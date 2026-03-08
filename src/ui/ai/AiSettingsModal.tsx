@@ -9,6 +9,7 @@ import {
 } from "@/services/aiRuntime";
 import { AiUsageDashboard } from "./AiUsageDashboard";
 import { createDefaultAiSettings, DEFAULT_CHATGPT_MODEL } from "@/core/ai/defaults";
+import { chooseProviderModel } from "@/core/ai/modelSelection";
 import {
   AiBirthRefinementLevel,
   AiBirthRefinementNotesScope,
@@ -221,16 +222,6 @@ function statusCodeFromMessage(message: string): number | undefined {
 
 function providerLabel(provider: AiProvider): string {
   return provider === "chatgpt" ? "OpenAI" : "Gemini";
-}
-
-function chooseProviderModel(
-  catalog: AiModelCatalogEntry[],
-  currentModel: string
-): string {
-  if (catalog.some((entry) => entry.id === currentModel)) return currentModel;
-  const recommended = catalog.find((entry) => entry.recommended)?.id;
-  if (recommended) return recommended;
-  return catalog[0]?.id ?? currentModel;
 }
 
 type HelpTarget = { targetId: string };

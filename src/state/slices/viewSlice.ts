@@ -2,9 +2,9 @@ import { StateCreator } from "zustand";
 import { AppState, ViewSlice } from "../types";
 import { withFocusHistory } from "../helpers/sessionHelpers";
 import { withExpandedGraphForView } from "../helpers/viewStateTransitions";
-import { UiEngine } from "@/core/engine/UiEngine";
 import { createDefaultKindraConfig } from "@/core/kindra/kindraConfig";
 import type { ActiveOverlay } from "@/types/domain";
+import { createDefaultVisualConfig } from "@/state/workspaceDefaults";
 
 const defaultKindra = () => createDefaultKindraConfig();
 const defaultRightStack = () => ({ detailsMode: "expanded" as const, timelineMode: "compact" as const, detailsAutoCompactedByTimeline: false });
@@ -15,7 +15,7 @@ const withNormalizedKindra = (kindra: Partial<ReturnType<typeof createDefaultKin
 
 export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) => ({
     viewConfig: null,
-    visualConfig: UiEngine.createDefaultVisualConfig(),
+    visualConfig: createDefaultVisualConfig(),
     selectedPersonId: null,
     fitNonce: 0,
 

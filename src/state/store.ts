@@ -6,7 +6,7 @@ import { createViewSlice } from "./slices/viewSlice";
 import { createSessionSlice } from "./slices/sessionSlice";
 import { createAiSlice } from "./slices/aiSlice";
 import { createDefaultAiSettings } from "@/core/ai/defaults";
-import { UiEngine } from "@/core/engine/UiEngine";
+import { createDefaultVisualConfig } from "./workspaceDefaults";
 
 export const useAppStore = create<AppState>()(
     devtools(
@@ -23,7 +23,7 @@ export const useAppStore = create<AppState>()(
 // Initialize some defaults that might not be in slices or need cross-slice coordination
 useAppStore.setState({
     aiSettings: createDefaultAiSettings(),
-    visualConfig: UiEngine.createDefaultVisualConfig()
+    visualConfig: createDefaultVisualConfig()
 });
 
 // Re-export types for convenience

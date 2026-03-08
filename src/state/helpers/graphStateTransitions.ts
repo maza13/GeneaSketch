@@ -1,4 +1,4 @@
-import { UiEngine } from "@/core/engine/UiEngine";
+import { createDefaultViewConfig } from "@/state/workspaceDefaults";
 import type { GenraphGraph } from "@/core/genraph";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { AppState } from "../types";
@@ -23,7 +23,7 @@ export function buildLoadedGraphState(state: AppState, graph: GenraphGraph | nul
   const firstPersonId = Object.keys(projected.persons)[0] || "";
   let viewConfig = state.viewConfig;
   if (!viewConfig) {
-    viewConfig = UiEngine.createDefaultViewConfig(firstPersonId);
+    viewConfig = createDefaultViewConfig(firstPersonId);
   } else if (!viewConfig.focusPersonId) {
     viewConfig = { ...viewConfig, focusPersonId: firstPersonId, homePersonId: firstPersonId };
   }

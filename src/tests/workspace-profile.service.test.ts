@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UiEngine } from "@/core/engine/UiEngine";
+import { createDefaultViewConfig, createDefaultVisualConfig } from "@/state/workspaceDefaults";
 import type { WorkspaceProfileV2 } from "@/types/workspaceProfile";
 import { WORKSPACE_PROFILE_SCHEMA_VERSION } from "@/types/workspaceProfile";
 
@@ -37,8 +37,8 @@ function buildProfile(graphId: string): WorkspaceProfileV2 {
   return {
     profileSchemaVersion: WORKSPACE_PROFILE_SCHEMA_VERSION,
     graphId,
-    viewConfig: UiEngine.createDefaultViewConfig("p1"),
-    visualConfig: UiEngine.createDefaultVisualConfig(),
+    viewConfig: createDefaultViewConfig("p1"),
+    visualConfig: createDefaultVisualConfig(),
     colorTheme: {
       background: "#111111",
       personNode: "#222222",

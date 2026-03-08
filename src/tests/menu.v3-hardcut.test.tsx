@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useMenuConfig, type MenuConfigParams } from "@/hooks/useMenuConfig";
-import { UiEngine } from "@/core/engine/UiEngine";
+import { createDefaultViewConfig } from "@/state/workspaceDefaults";
 import type { MenuGroup } from "@/ui/TopMenuBar";
 
 function collectIds(items: any[] = []): string[] {
@@ -25,7 +25,7 @@ function collectLabels(items: any[] = []): string[] {
 }
 
 function buildParams(): MenuConfigParams {
-  const viewConfig = UiEngine.createDefaultViewConfig("P1");
+  const viewConfig = createDefaultViewConfig("P1");
   return {
     document: null,
     viewConfig,

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { UiEngine } from "@/core/engine/UiEngine";
 import { createDefaultAiSettings } from "@/core/ai/defaults";
 import type { ActiveOverlay, GeneaDocument } from "@/types/domain";
+import { createDefaultViewConfig, createDefaultVisualConfig } from "@/state/workspaceDefaults";
 
 const mockController = vi.hoisted(() => ({
   colorTheme: {
@@ -219,8 +219,8 @@ describe("useAppShellFacade contract", () => {
     fakeState.current = {
       __document: doc,
       genraphGraph: { graphId: "graph-1", journalLength: 1, persons: doc.persons, families: doc.families },
-      viewConfig: UiEngine.createDefaultViewConfig("@I1@"),
-      visualConfig: UiEngine.createDefaultVisualConfig(),
+      viewConfig: createDefaultViewConfig("@I1@"),
+      visualConfig: createDefaultVisualConfig(),
       expandedGraph: { nodes: [{ id: "@I1@", canonicalId: "@I1@", type: "person" }], edges: [] },
       selectedPersonId: "@I1@",
       fitNonce: 0,
