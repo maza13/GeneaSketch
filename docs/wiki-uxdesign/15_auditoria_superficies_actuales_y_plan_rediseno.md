@@ -227,4 +227,63 @@ La siguiente fase ya no debe volver a discutir estas bases; debe entrar directam
 ---
 
 ## Navegación
+## 15.11 PatrÃ³n inicial del Workspace oficial V3
+
+Para la primera consolidaciÃ³n del `Workspace` oficial de persona, `PersonWorkspacePanelV3` debe adoptar un patrÃ³n de dossier progresivo:
+
+- encabezado hero con identidad estable, estado vital, fechas y acciones rÃ¡pidas
+- bloque de resumen del expediente
+- secciones expandibles dentro del mismo workspace
+- estado visible por secciÃ³n: `operativo`, `parcial` o `prÃ³ximamente`
+
+Familias iniciales esperadas del dossier:
+- identidad
+- vÃ­nculos
+- eventos
+- fuentes
+- notas
+- multimedia
+- timeline
+- anÃ¡lisis
+- auditorÃ­a
+- extensiones
+- claims
+- journal
+
+Regla:
+- el workspace V3 no debe volver al modelo de tabs profundas como patrÃ³n dominante
+- debe sentirse como una sola superficie de trabajo profundo, no como varias fichas paralelas
+- `claims` y `journal` pueden existir como placeholders visibles en esta primera fase para cerrar taxonomÃ­a sin fingir cobertura funcional total
+
+---
+
 [<- 14_rediseno_conceptual_interfaz_genealogica](./14_rediseno_conceptual_interfaz_genealogica.md) | [Volver a README ->](./README.md)
+
+## 15.12 Ajuste del expediente V3 como workspace profundo editable
+
+La consolidacion posterior cambia el patron inicial del V3 y lo acerca al expediente clasico:
+
+- `PersonWorkspacePanelV3` usa tabs/secciones principales como navegacion base
+- el mismo panel soporta `modo normal` y `modo expandido/fullscreen`
+- fullscreen no abre otra superficie: transforma el mismo expediente en workspace profundo de analisis y edicion en contexto
+- `RightPanel` queda como ficha rapida de lectura, sin edicion directa
+- `PersonDetailPanel` pasa a ser legacy de compatibilidad y deja de competir con el expediente
+
+Reglas operativas:
+
+- seleccion simple de persona -> inspector/ficha rapida
+- accion explicita `abrir expediente` -> expediente V3 en modo normal
+- accion `expandir` -> expediente V3 en fullscreen, conservando persona y seccion activa
+- edicion estructurada y analisis profundo ocurren dentro del expediente, no en una superficie paralela
+
+Implicacion UX:
+
+- el `Workspace` de persona deja de ser solo una lectura profunda y evoluciona a la superficie principal de trabajo por persona
+- `Inspector` conserva lectura rapida y contexto
+- `Editor` deja de ser la via principal para trabajo profundo por persona
+
+### 15.12.1 Split visual obligatorio por modo
+
+- `window dossier`: header sobrio, tabs, contenido principal y sin sidecar analitico persistente
+- `fullscreen workbench`: mismo expediente, pero con sidecar/contexto, quick actions de analisis y carriles visibles para capacidades futuras
+- la taxonomia de tabs no cambia entre modos; cambia la densidad, el contexto suplementario y la prioridad visual del trabajo analitico

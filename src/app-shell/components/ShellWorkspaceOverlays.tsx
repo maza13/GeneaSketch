@@ -4,7 +4,6 @@ import { MergeReviewErrorBoundary } from "@/ui/MergeReviewErrorBoundary";
 
 const ImportReviewPanel = lazy(() => import("@/ui/ImportReviewPanel").then((module) => ({ default: module.ImportReviewPanel })));
 const PersonDetailPanel = lazy(() => import("@/ui/PersonDetailPanel").then((module) => ({ default: module.PersonDetailPanel })));
-const PersonWorkspacePanel = lazy(() => import("@/ui/PersonWorkspacePanel").then((module) => ({ default: module.PersonWorkspacePanel })));
 const PersonWorkspacePanelV3 = lazy(() => import("@/ui/PersonWorkspacePanelV3").then((module) => ({ default: module.PersonWorkspacePanelV3 })));
 
 type Props = {
@@ -24,6 +23,9 @@ export function ShellWorkspaceOverlays({
   personWorkspace,
   personWorkspaceV3,
 }: Props) {
+  const activeWorkspaceViewModel = personWorkspaceV3.viewModel ?? personWorkspace.viewModel;
+  const shouldRenderWorkspaceV3 = Boolean(activeWorkspaceViewModel && (personWorkspaceV3.open || personWorkspace.open));
+
   return (
     <>
       <input
@@ -99,12 +101,8 @@ export function ShellWorkspaceOverlays({
           <PersonDetailPanel viewModel={personEditor.viewModel} commands={personEditor.commands} />
         ) : null}
 
-        {personWorkspaceV3.open && personWorkspaceV3.viewModel ? (
-          <PersonWorkspacePanelV3 viewModel={personWorkspaceV3.viewModel} commands={personWorkspaceV3.commands} />
-        ) : null}
-
-        {personWorkspace.open && personWorkspace.viewModel ? (
-          <PersonWorkspacePanel viewModel={personWorkspace.viewModel} commands={personWorkspace.commands} />
+        {shouldRenderWorkspaceV3 && activeWorkspaceViewModel ? (
+          <PersonWorkspacePanelV3 viewModel={activeWorkspaceViewModel} commands={personWorkspaceV3.commands} />
         ) : null}
       </Suspense>
     </>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { SelectedPersonPanelViewModel } from "@/app-shell/facade/types";
 import type { PendingRelationType } from "@/types/domain";
 
@@ -13,18 +13,16 @@ type Props = {
   onUnlinkRelation: (personId: string, relatedId: string, type: "parent" | "child" | "spouse") => void;
 };
 
-export function RightPanel({
-  viewModel,
-  detailsMode,
-  onToggleDetailsExpanded,
-  onEditPerson,
-  onViewPersonDetail,
-  onAddRelation,
-  onLinkExistingRelation,
-  onUnlinkRelation,
-}: Props) {
+function formatLifeLine(viewModel: Extract<SelectedPersonPanelViewModel, { kind: "selected" }>) {
+  const birth = viewModel.person.birthDate || "Fecha desconocida";
+  const death = viewModel.person.deathDate || (viewModel.person.lifeStatus === "alive" ? "Presente" : "Fecha desconocida");
+  return `${birth} - ${death}`;
+}
+
+export function RightPanel(props: Props) {
+  const { viewModel, detailsMode, onToggleDetailsExpanded, onViewPersonDetail } = props;
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    bio: true,
+    life: true,
     parents: true,
     spouses: true,
     children: true,
@@ -46,24 +44,29 @@ export function RightPanel({
           style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: 0.5, textAlign: "center", padding: "40px 20px" }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: 48, marginBottom: 12 }}>person_search</span>
-          <p style={{ fontSize: 13, lineHeight: 1.5 }}>Selecciona a una persona en el arbol para ver sus detalles y familiares.</p>
+          <p style={{ fontSize: 13, lineHeight: 1.5 }}>Selecciona a una persona en el arbol para ver su ficha rapida.</p>
         </div>
       </div>
     );
   }
 
   const { person, parents, spouses, children } = viewModel;
+  const summaryCounts = useMemo(
+    () => [
+      { label: "Padres", value: parents.length, icon: "escalator_warning" },
+      { label: "Parejas", value: spouses.length, icon: "favorite" },
+      { label: "Hijos", value: children.length, icon: "child_care" },
+    ],
+    [children.length, parents.length, spouses.length],
+  );
 
   return (
     <div className="gs-panel" style={{ height: "100%" }}>
       <div className="gs-panel-header">
         <span className="material-symbols-outlined gs-panel-header-icon">contact_page</span>
-        <span className="gs-panel-header-title">Detalles</span>
+        <span className="gs-panel-header-title">Ficha rapida</span>
         <div className="gs-panel-header-actions">
-          <button className="panel-icon-btn" onClick={() => onEditPerson(person.id)} title="Editar persona">
-            <span className="material-symbols-outlined">edit</span>
-          </button>
-          <button className="panel-icon-btn" onClick={() => onViewPersonDetail(person.id)} title="Ficha completa">
+          <button className="panel-icon-btn" onClick={() => onViewPersonDetail(person.id)} title="Abrir expediente">
             <span className="material-symbols-outlined">open_in_new</span>
           </button>
           <div className="gs-panel-divider--v" />
@@ -74,18 +77,35 @@ export function RightPanel({
       </div>
 
       <div className="gs-panel-body" style={{ padding: "0 0 20px 0" }}>
-        <div style={{ padding: "20px 16px", borderBottom: "1px solid var(--line-soft)", background: "var(--bg-panel-alt)" }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--gs-ink-primary)" }}>{person.name}</h2>
-          <div style={{ display: "flex", gap: "8px", color: "var(--gs-ink-muted)", fontSize: 12 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>fingerprint</span>
+        <div className="right-panel-summary">
+          <div className="right-panel-summary__header">
+            <h2>{person.name}</h2>
+            <button type="button" className="panel-header-btn" onClick={() => onViewPersonDetail(person.id)}>
+              <span className="material-symbols-outlined">description</span>
+              Abrir expediente
+            </button>
+          </div>
+          <div className="right-panel-summary__meta">
+            <span className="material-symbols-outlined">fingerprint</span>
             <code>{person.id}</code>
-            <span style={{ opacity: 0.3 }}>|</span>
+            <span aria-hidden="true">•</span>
             <span>{person.sex === "M" ? "Hombre" : person.sex === "F" ? "Mujer" : "No definido"}</span>
+            <span aria-hidden="true">•</span>
+            <span>{formatLifeLine(viewModel)}</span>
+          </div>
+          <div className="right-panel-summary__stats">
+            {summaryCounts.map((item) => (
+              <div key={item.label} className="right-panel-summary__stat">
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className={`gs-panel-section ${openSections.bio ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
-          <div className="gs-panel-section-header" onClick={() => toggleSection("bio")}>
+        <div className={`gs-panel-section ${openSections.life ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
+          <div className="gs-panel-section-header" onClick={() => toggleSection("life")}>
             <span className="material-symbols-outlined gs-panel-section-icon">badge</span>
             <span className="gs-panel-section-label">Vida</span>
             <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
@@ -113,51 +133,34 @@ export function RightPanel({
         </div>
 
         {[
-          { key: "parents", label: "Padres", items: parents, unlinkType: "parent" as const, addTypes: ["father", "mother"] as const },
-          { key: "spouses", label: "Parejas", items: spouses, unlinkType: "spouse" as const, addTypes: ["spouse"] as const },
-          { key: "children", label: "Hijos", items: children, unlinkType: "child" as const, addTypes: ["child"] as const },
+          { key: "parents", label: "Padres", items: parents, icon: "escalator_warning" },
+          { key: "spouses", label: "Parejas", items: spouses, icon: "favorite" },
+          { key: "children", label: "Hijos", items: children, icon: "child_care" },
         ].map((section) => (
           <div key={section.key} className={`gs-panel-section ${openSections[section.key] ? "gs-panel-section--open" : "gs-panel-section--closed"}`}>
             <div className="gs-panel-section-header" onClick={() => toggleSection(section.key)}>
-              <span className="material-symbols-outlined gs-panel-section-icon">
-                {section.key === "parents" ? "escalator_warning" : section.key === "spouses" ? "favorite" : "child_care"}
-              </span>
+              <span className="material-symbols-outlined gs-panel-section-icon">{section.icon}</span>
               <span className="gs-panel-section-label">{section.label} ({section.items.length})</span>
               <span className="material-symbols-outlined gs-panel-section-chevron">expand_more</span>
             </div>
             <div className="gs-panel-section-body" style={{ padding: "8px 12px" }}>
-              {section.items.map((related) => (
-                <div key={related.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 8px", borderRadius: "6px" }} className="gs-list-item">
-                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                    {section.key === "parents" ? (related.sex === "M" ? "male" : "female") : section.key === "spouses" ? "favorite" : "child_care"}
-                  </span>
-                  <span style={{ fontSize: 13, flex: 1, cursor: "pointer" }} onClick={() => onViewPersonDetail(related.id)}>{related.name}</span>
-                  <button className="panel-icon-btn" onClick={() => onUnlinkRelation(person.id, related.id, section.unlinkType)} title="Desvincular">
-                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link_off</span>
-                  </button>
-                </div>
-              ))}
-
-              {section.key === "parents" ? (
-                <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <button className="gs-panel-btn-subtle" onClick={() => onAddRelation(person.id, "father")}>+ Padre</button>
-                    <button className="gs-panel-btn-subtle" style={{ fontSize: 9 }} onClick={() => onLinkExistingRelation(person.id, "father")}>Vincular existente</button>
-                  </div>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <button className="gs-panel-btn-subtle" onClick={() => onAddRelation(person.id, "mother")}>+ Madre</button>
-                    <button className="gs-panel-btn-subtle" style={{ fontSize: 9 }} onClick={() => onLinkExistingRelation(person.id, "mother")}>Vincular existente</button>
-                  </div>
-                </div>
+              {section.items.length === 0 ? (
+                <div className="right-panel-related-empty">Sin registros vinculados.</div>
               ) : (
-                <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
-                  <button className="gs-panel-btn-subtle" style={{ flex: 1 }} onClick={() => onAddRelation(person.id, section.addTypes[0])}>
-                    {section.key === "spouses" ? "+ Pareja" : "+ Hijo"}
+                section.items.map((related) => (
+                  <button
+                    key={related.id}
+                    type="button"
+                    className="right-panel-related-link gs-list-item"
+                    onClick={() => onViewPersonDetail(related.id)}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                      {section.key === "parents" ? (related.sex === "M" ? "male" : related.sex === "F" ? "female" : "person") : section.icon}
+                    </span>
+                    <span className="right-panel-related-link__name">{related.name}</span>
+                    <span className="material-symbols-outlined right-panel-related-link__arrow">chevron_right</span>
                   </button>
-                  <button className="gs-panel-btn-subtle" style={{ flex: 1, fontSize: 10 }} onClick={() => onLinkExistingRelation(person.id, section.addTypes[0])}>
-                    Vincular existente
-                  </button>
-                </div>
+                ))
               )}
             </div>
           </div>

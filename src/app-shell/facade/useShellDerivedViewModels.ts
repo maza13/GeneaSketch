@@ -98,8 +98,8 @@ export function useShellDerivedViewModels(params: Params): Result {
     [params.document, params.viewConfig, params.visualConfig],
   );
   const selectedPersonPanelViewModel = useMemo(
-    () => buildSelectedPersonPanelViewModel(params.document, params.workspacePersonId || params.selectedPersonId),
-    [params.document, params.selectedPersonId, params.workspacePersonId],
+    () => buildSelectedPersonPanelViewModel(params.document, params.workspacePersonIdV3 || params.workspacePersonId || params.selectedPersonId),
+    [params.document, params.selectedPersonId, params.workspacePersonId, params.workspacePersonIdV3],
   );
   const timelineViewModel = useMemo(
     () => buildTimelinePanelViewModel(params.document, params.expandedGraph, params.viewConfig),

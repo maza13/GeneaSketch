@@ -19,6 +19,8 @@ interface StandardModalProps {
     footer?: ReactNode;
     children: ReactNode;
     className?: string;
+    fullscreen?: boolean;
+    onToggleFullscreen?: () => void;
 }
 
 /**
@@ -36,7 +38,9 @@ export function StandardModal({
     headerActions,
     footer,
     children,
-    className = ""
+    className = "",
+    fullscreen = false,
+    onToggleFullscreen,
 }: StandardModalProps) {
     if (!open) return null;
 
@@ -47,7 +51,7 @@ export function StandardModal({
     const modalContent = (
         <div className="gs-modal-overlay" onClick={handleOverlayClick}>
             <div
-                className={`gs-modal-panel gs-modal-panel--${size} ${className}`}
+                className={`gs-modal-panel gs-modal-panel--${size} ${fullscreen ? "gs-modal-panel--fullscreen" : ""} ${className}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -55,6 +59,11 @@ export function StandardModal({
                     <h3>{title}</h3>
                     <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
                         {headerActions}
+                        {onToggleFullscreen ? (
+                            <button className="icon-btn" onClick={onToggleFullscreen} aria-label={fullscreen ? "Restaurar" : "Pantalla completa"}>
+                                <span className="material-symbols-outlined">{fullscreen ? "fullscreen_exit" : "fullscreen"}</span>
+                            </button>
+                        ) : null}
                         <button className="icon-btn" onClick={onClose} aria-label="Cerrar">
                             <span className="material-symbols-outlined">close</span>
                         </button>

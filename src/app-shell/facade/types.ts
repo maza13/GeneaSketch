@@ -81,6 +81,37 @@ export type PersonWorkspaceSectionModels = {
   };
 };
 
+export type PersonWorkspaceV3SectionId =
+  | "identity"
+  | "family_links"
+  | "events"
+  | "sources"
+  | "notes"
+  | "media"
+  | "timeline"
+  | "analysis"
+  | "audit"
+  | "extensions"
+  | "claims"
+  | "journal";
+
+export type PersonWorkspaceV3SectionStatus = "operativo" | "parcial" | "placeholder";
+export type PersonWorkspaceV3EntryMode = "summary" | "full" | "placeholder";
+
+export type PersonWorkspaceV3SectionDescriptor = {
+  id: PersonWorkspaceV3SectionId;
+  label: string;
+  icon: string;
+  status: PersonWorkspaceV3SectionStatus;
+  defaultExpanded: boolean;
+  badgeCount?: number;
+  entryMode: PersonWorkspaceV3EntryMode;
+  workbenchPriority?: number;
+  futureAnalysis?: boolean;
+  contextRole?: "core" | "analysis" | "support" | "future";
+  summary: string;
+};
+
 export type RelatedPersonListItem = {
   id: string;
   name: string;
@@ -201,8 +232,10 @@ export type PersonWorkspaceViewModel = {
   personId: string;
   person: Person | null;
   aiSettings: AiSettings;
+  layoutMode: "window" | "fullscreen";
   documentView: PersonWorkspaceDocumentView;
   sections: PersonWorkspaceSectionModels;
+  v3Sections: PersonWorkspaceV3SectionDescriptor[];
 };
 
 export type ImportReviewViewModel = {
@@ -460,7 +493,10 @@ export type ShellFeaturesFacade = {
   personWorkspaceV3: {
     open: boolean;
     viewModel: PersonWorkspaceViewModel | null;
-    commands: ShellFeaturesFacade["personWorkspace"]["commands"];
+    commands: ShellFeaturesFacade["personWorkspace"]["commands"] & {
+      onEditPerson: (personId: string) => void;
+      onOpenAiAssistant: (personId: string) => void;
+    };
   };
   personPicker: {
     viewModel: PersonPickerViewModel | null;

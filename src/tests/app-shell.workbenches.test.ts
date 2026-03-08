@@ -97,6 +97,7 @@ describe("app shell workbenches", () => {
     expect(model?.personId).toBe("@I1@");
     expect(model?.person).toBe(doc.persons["@I1@"]);
     expect(model?.aiSettings).toBe(aiSettings);
+    expect(model?.layoutMode).toBe("window");
     expect(model?.documentView).toBe(doc);
     expect(model?.sections.identity.person.id).toBe("@I1@");
     expect(model?.sections.familyLinks.personId).toBe("@I1@");
@@ -109,6 +110,25 @@ describe("app shell workbenches", () => {
     expect(model?.sections.analysis.documentView).toBe(doc);
     expect(model?.sections.audit.person.id).toBe("@I1@");
     expect(model?.sections.history.person.id).toBe("@I1@");
+    expect(model?.v3Sections.map((section) => section.id)).toEqual([
+      "identity",
+      "family_links",
+      "events",
+      "sources",
+      "notes",
+      "media",
+      "timeline",
+      "analysis",
+      "audit",
+      "extensions",
+      "claims",
+      "journal",
+    ]);
+    expect(model?.v3Sections.find((section) => section.id === "events")?.badgeCount).toBe(1);
+    expect(model?.v3Sections.find((section) => section.id === "claims")?.status).toBe("placeholder");
+    expect(model?.v3Sections.find((section) => section.id === "analysis")?.contextRole).toBe("analysis");
+    expect(model?.v3Sections.find((section) => section.id === "analysis")?.workbenchPriority).toBeGreaterThan(0);
+    expect(model?.v3Sections.find((section) => section.id === "journal")?.futureAnalysis).toBe(true);
   });
 
   it("buildImportReviewViewModel preserves inputs", () => {

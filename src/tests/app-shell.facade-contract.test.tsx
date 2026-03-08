@@ -269,6 +269,12 @@ describe("useAppShellFacade contract", () => {
     facade!.features.personWorkspace.commands.onQuickAddRelation("@I1@", "child");
     expect(mockController.setWorkspacePersonId).toHaveBeenCalledWith(null);
     expect(mockController.openAddRelationEditor).toHaveBeenCalledWith("@I1@", "child");
+
+    expect(facade!.features.personWorkspaceV3.viewModel?.v3Sections.find((section) => section.id === "identity")?.status).toBe("operativo");
+    facade!.features.personWorkspaceV3.commands.onEditPerson("@I1@");
+    expect(mockController.openPersonEditor).toHaveBeenCalledWith("@I1@");
+    facade!.features.personWorkspaceV3.commands.onOpenAiAssistant("@I1@");
+    expect(mockAiAssistant.openLocalAiAssistant).toHaveBeenCalledWith("@I1@");
   });
 
   it("exposes import review and ai assistant contracts with delegated commands", async () => {

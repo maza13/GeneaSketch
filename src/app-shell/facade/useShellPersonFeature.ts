@@ -11,6 +11,8 @@ type Params = {
   personWorkspaceViewModelV3: AppShellFacade["features"]["personWorkspaceV3"]["viewModel"];
   closeWorkspace: () => void;
   closeWorkspaceV3: () => void;
+  openPersonEditor: (personId: string) => void;
+  openLocalAiAssistant: (personId: string) => void;
   setSelectedPerson: (personId: string | null) => void;
   openWorkspace: (personId: string) => void;
   openWorkspaceV3: (personId: string) => void;
@@ -31,6 +33,11 @@ type Params = {
 };
 
 export function useShellPersonFeature(params: Params): Pick<AppShellFacade["features"], "personEditor" | "personWorkspace" | "personWorkspaceV3" | "personPicker" | "branchExport"> {
+  const closeAllWorkspaces = () => {
+    params.closeWorkspace();
+    params.closeWorkspaceV3();
+  };
+
   return {
     personEditor: {
       viewModel: params.personEditorViewModel,
@@ -45,14 +52,14 @@ export function useShellPersonFeature(params: Params): Pick<AppShellFacade["feat
       open: Boolean(params.personWorkspaceViewModel),
       viewModel: params.personWorkspaceViewModel,
       commands: {
-        onClose: params.closeWorkspace,
+        onClose: closeAllWorkspaces,
         onSelectPerson: params.setSelectedPerson,
         onSetAsFocus: params.focusPersonInCanvas,
         onSavePerson: params.updatePersonById,
         onSaveFamily: params.updateFamilyById,
         onCreatePerson: params.createPersonRecord,
         onQuickAddRelation: (anchorId, relationType) => {
-          params.closeWorkspace();
+          closeAllWorkspaces();
           params.openAddRelationEditor(anchorId, relationType);
         },
       },
@@ -61,9 +68,10 @@ export function useShellPersonFeature(params: Params): Pick<AppShellFacade["feat
       open: Boolean(params.personWorkspaceViewModelV3),
       viewModel: params.personWorkspaceViewModelV3,
       commands: {
-        onClose: params.closeWorkspaceV3,
+        onClose: closeAllWorkspaces,
         onSelectPerson: (personId) => {
           params.setSelectedPerson(personId);
+          params.closeWorkspace();
           params.openWorkspaceV3(personId);
         },
         onSetAsFocus: params.focusPersonInCanvas,
@@ -71,9 +79,11 @@ export function useShellPersonFeature(params: Params): Pick<AppShellFacade["feat
         onSaveFamily: params.updateFamilyById,
         onCreatePerson: params.createPersonRecord,
         onQuickAddRelation: (anchorId, relationType) => {
-          params.closeWorkspaceV3();
+          closeAllWorkspaces();
           params.openAddRelationEditor(anchorId, relationType);
         },
+        onEditPerson: params.openPersonEditor,
+        onOpenAiAssistant: params.openLocalAiAssistant,
       },
     },
     personPicker: {

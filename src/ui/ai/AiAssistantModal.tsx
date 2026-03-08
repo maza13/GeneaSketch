@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { applyApprovedAiReview } from "@/core/ai/apply";
 import { AiPipelineStageError, runAiGlobalFocusDetection, runAiPipeline } from "@/core/ai/orchestrator";
 import { rankFocusCandidatesByName } from "@/core/ai/matching";
@@ -308,7 +309,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
     })
     : [];
 
-  return (
+  const modal = (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-panel ai-assistant-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header" style={{ padding: "16px 24px", borderBottom: "1px solid var(--border-color-dim)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -617,6 +618,12 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
       </div>
     </div>
   );
+
+  if (typeof globalThis.document === "undefined" || !globalThis.document.body) {
+    return modal;
+  }
+
+  return createPortal(modal, globalThis.document.body);
 }
 
 
