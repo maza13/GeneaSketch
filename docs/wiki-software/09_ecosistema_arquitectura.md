@@ -95,6 +95,10 @@ Este documento es un resumen operativo. La base mas completa de taxonomia e inte
 - `notes/reports/gsk-ecosystem-architecture-2026-03-06.md`
 - `todos/100` a `104`
 
+La direccion para evolucionar hacia un shared core reusable sin abrir una extraccion prematura vive en:
+- [11_shared_core_direction](./11_shared_core_direction.md)
+- Su lectura es obligatoria antes de cambios que puedan afectar fronteras entre core, read model, visual engine y app shell.
+
 ---
 
 ## Navegacion

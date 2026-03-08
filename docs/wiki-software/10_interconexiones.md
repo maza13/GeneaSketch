@@ -15,5 +15,7 @@ Mapear como se conecta la guia de usuario con la wiki tecnica de formato.
 ## Regla de uso
 Ir siempre de necesidad de usuario -> referencia tecnica -> codigo, sin duplicar contratos.
 
+Para cambios que puedan afectar fronteras entre nucleo compartible y app desktop, leer primero [11_shared_core_direction](./11_shared_core_direction.md). Esa lectura es obligatoria.
+
 ## Navegacion
-[<- 08_atajos_y_productividad](./08_atajos_y_productividad.md) | [Siguiente: glosario_usuario ->](./glosario_usuario.md)
+[<- 09_ecosistema_arquitectura](./09_ecosistema_arquitectura.md) | [Siguiente: 11_shared_core_direction ->](./11_shared_core_direction.md)

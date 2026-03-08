@@ -3,7 +3,7 @@
 ## Resumen
 Esta wiki describe el uso del producto para investigacion genealogica local-first.
 
-- **Version del software:** `0.4.5`
+- **Version del software:** `0.4.6`
 - **Formato nativo de trabajo:** `.gsk`
 - **Estado documental:** estable
 
@@ -16,15 +16,18 @@ Esta wiki describe el uso del producto para investigacion genealogica local-firs
 6. [06_analisis_temporal](./06_analisis_temporal.md)
 7. [07_inteligencia_artificial](./07_inteligencia_artificial.md)
 8. [08_atajos_y_productividad](./08_atajos_y_productividad.md)
-9. [10_interconexiones](./10_interconexiones.md)
-10. [glosario_usuario](./glosario_usuario.md)
-11. [CHANGELOG](./CHANGELOG.md)
-12. [manual_testing_plan](./manual_testing_plan.md)
+9. [09_ecosistema_arquitectura](./09_ecosistema_arquitectura.md)
+10. [10_interconexiones](./10_interconexiones.md)
+11. [11_shared_core_direction](./11_shared_core_direction.md)
+12. [glosario_usuario](./glosario_usuario.md)
+13. [CHANGELOG](./CHANGELOG.md)
+14. [manual_testing_plan](./manual_testing_plan.md)
 
 ## Convencion editorial
 - Esta wiki describe experiencia de uso, flujos y buenas practicas de producto.
 - Cuando se requiera contrato tecnico de datos, se enlaza a `../wiki-gsk/*`.
 - No se duplica especificacion tecnica del formato en esta wiki.
+- `11_shared_core_direction.md` es lectura obligatoria antes de cambios que puedan afectar fronteras entre core compartible y app desktop.
 
 ## Estado por capitulo
 | Capitulo | Estado | Enfoque |
@@ -37,7 +40,9 @@ Esta wiki describe el uso del producto para investigacion genealogica local-firs
 | [06](./06_analisis_temporal.md) | vigente | Timeline y validaciones temporales |
 | [07](./07_inteligencia_artificial.md) | vigente | AncestrAI y revision |
 | [08](./08_atajos_y_productividad.md) | vigente | Atajos y eficiencia |
+| [09](./09_ecosistema_arquitectura.md) | vigente | Fronteras entre motor, visual, shell y estado |
 | [10](./10_interconexiones.md) | vigente | Puentes con wiki tecnica |
+| [11](./11_shared_core_direction.md) | vigente | Guardrails para un futuro shared core reusable |
 
 ## Navegacion
 [Siguiente: 01_conceptos_fundamentales ->](./01_conceptos_fundamentales.md)

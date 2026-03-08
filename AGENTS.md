@@ -13,6 +13,7 @@ It summarizes build/lint/test commands (including single-test workflows) and cod
 - CI workflow (`.github/workflows/baseline-qa001.yml`) uses Node `24` and runs `npm run build` plus `npm run test:baseline:qa001`.
 - TypeScript is strict (`strict`, `noUnusedLocals`, `noUnusedParameters` in `tsconfig.json`).
 - Path alias `@/* -> src/*` is configured in `tsconfig.json` and `vite.config.ts`.
+- Shared-core direction lives in `docs/wiki-software/11_shared_core_direction.md`; reading it is mandatory before architectural work that can affect core/app boundaries.
 
 ## 2) Install
 ```bash
@@ -161,9 +162,12 @@ If those files are added later, treat them as high-priority agent instructions a
 - `src/state/store.ts`, `src/state/slices/*`
 - `src/core/genraph/*`, `src/core/genraph/GedcomBridge.ts`
 - `src/core/kindra/*`, `src/views/kindra-v31/*`
+- `docs/wiki-software/11_shared_core_direction.md`
 - `src/tests/*`
 - `src/styles/tokens.css`
 - `src-tauri/src/main.rs`
 
 Keep changes scoped, verified, and aligned with existing conventions.
+
+For any work that can affect shared-core boundaries, read `docs/wiki-software/11_shared_core_direction.md` first. This is mandatory.
 
