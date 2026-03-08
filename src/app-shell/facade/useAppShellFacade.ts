@@ -24,7 +24,7 @@ export function useAppShellFacade(): AppShellFacade {
 
   const document = useMemo(
     () => projectGraphDocument(state.genraphGraph),
-    [state.genraphGraph?.graphId, state.genraphGraph?.journalLength],
+    [state.genraphGraph, state.graphRevision],
   );
 
   const leftCollapsed = state.viewConfig?.shellPanels?.leftCollapsed ?? false;

@@ -5,6 +5,7 @@ export function useShellFacadeState() {
   const baseState = useAppStore(
     useShallow((state) => ({
       genraphGraph: state.genraphGraph,
+      graphRevision: state.graphRevision,
       viewConfig: state.viewConfig,
       visualConfig: state.visualConfig,
       expandedGraph: state.expandedGraph,

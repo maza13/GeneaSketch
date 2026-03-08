@@ -3,7 +3,7 @@ import { AppState, DocSlice } from "../types";
 import { createNewTree } from "@/core/edit/commands";
 import { documentToGenraph } from "@/core/genraph/GedcomBridge";
 import { GraphMutations } from "@/core/genraph/GraphMutations";
-import { buildLoadedGraphState, runGraphMutation } from "../helpers/graphStateTransitions";
+import { buildLoadedGraphStateForSource, runGraphMutation } from "../helpers/graphStateTransitions";
 
 function mapRelType(type: string): "parent" | "child" | "spouse" {
     if (["father", "mother", "parent"].includes(type)) return "parent";
@@ -16,7 +16,7 @@ export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, ge
     graphRevision: 0,
     expandedGraph: { nodes: [], edges: [] },
 
-    loadGraph: (payload) => set((state) => buildLoadedGraphState(state, payload.graph)),
+    loadGraph: (payload) => set((state) => buildLoadedGraphStateForSource(state, payload.graph, payload.source)),
     applyProjectedDocument: (document, source) => {
         const gedVersion = document.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
         const graph = documentToGenraph(document, gedVersion).graph;

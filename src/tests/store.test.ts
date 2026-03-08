@@ -208,6 +208,33 @@ beforeEach(() => {
 });
 
 describe("store explicit id actions", () => {
+  it("loadGraph resets stale view and visual state when opening an external graph", () => {
+    const staleViewConfig = createDefaultViewConfig("@OLD@");
+    staleViewConfig.focusPersonId = "@OLD@";
+    staleViewConfig.homePersonId = "@OLD@";
+
+    useAppStore.setState({
+      viewConfig: staleViewConfig,
+      visualConfig: {
+        nodePositions: { "@OLD@": { x: 999, y: 999 } },
+        gridEnabled: true,
+        gridSize: 80,
+        canonicalOverrides: { "@OLD@": "@CANON@" },
+      },
+      selectedPersonId: "@OLD@",
+    });
+
+    const doc = buildDocWithTwoPersons();
+    loadDoc(doc);
+
+    const state = useAppStore.getState();
+    expect(state.viewConfig?.focusPersonId).toBe("@I1@");
+    expect(state.viewConfig?.homePersonId).toBe("@I1@");
+    expect(state.selectedPersonId).toBe("@I1@");
+    expect(state.visualConfig.nodePositions).toEqual({});
+    expect(state.visualConfig.gridEnabled).toBe(false);
+  });
+
   it("createNewTreeDoc initializes the placeholder root as the selected focus", () => {
     useAppStore.getState().createNewTreeDoc();
 
