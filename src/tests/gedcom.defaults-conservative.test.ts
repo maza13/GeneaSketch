@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GeneaDocument } from "../types/domain";
-import { documentToGSchema } from "../core/gschema/GedcomBridge";
+import { documentToGenraph } from "../core/genraph/GedcomBridge";
 
 describe("GEDCOM defaults policy", () => {
     const baseDoc: GeneaDocument = {
@@ -57,7 +57,7 @@ describe("GEDCOM defaults policy", () => {
     } as GeneaDocument;
 
     it("uses conservative defaults (UNK/uncertain) and records assumptions", () => {
-        const { graph, warnings } = documentToGSchema(baseDoc, "5.5.1", undefined, { gedcomDefaultPolicy: "conservative" });
+        const { graph, warnings } = documentToGenraph(baseDoc, "5.5.1", undefined, { gedcomDefaultPolicy: "conservative" });
         const edges = graph.allEdges().filter((e) => e.type === "ParentChild") as any[];
         expect(edges.length).toBeGreaterThan(0);
         expect(edges[0].nature).toBe("UNK");
@@ -68,7 +68,7 @@ describe("GEDCOM defaults policy", () => {
     });
 
     it("keeps legacy aggressive defaults when configured", () => {
-        const { graph } = documentToGSchema(baseDoc, "5.5.1", undefined, { gedcomDefaultPolicy: "legacy-aggressive" });
+        const { graph } = documentToGenraph(baseDoc, "5.5.1", undefined, { gedcomDefaultPolicy: "legacy-aggressive" });
         const edges = graph.allEdges().filter((e) => e.type === "ParentChild") as any[];
         expect(edges[0].nature).toBe("BIO");
         expect(edges[0].certainty).toBe("high");

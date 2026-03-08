@@ -19,12 +19,13 @@ type UseWorkspacePersistenceEffectsArgs = {
 };
 
 function sanitizeWorkspaceProfileViewConfig(viewConfig: ViewConfig): ViewConfig {
-  if (!viewConfig.dtree) return viewConfig;
+  const kindra = viewConfig.kindra;
+  if (!kindra) return viewConfig;
   return {
     ...viewConfig,
-    dtree: {
-      ...viewConfig.dtree,
-      overlays: (viewConfig.dtree.overlays || []).filter((overlay) => overlay.type !== "merge_focus"),
+    kindra: {
+      ...kindra,
+      overlays: (kindra.overlays || []).filter((overlay) => overlay.type !== "merge_focus"),
     },
   };
 }

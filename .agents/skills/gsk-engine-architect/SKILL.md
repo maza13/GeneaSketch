@@ -1,17 +1,17 @@
-﻿---
+---
 name: gsk-engine-architect
-description: Guardrails for GeneaSketch GSchema engine, `.gsk` format contract, and wiki-first discipline. Use this skill for schema/runtime contract work and hand off to UX/docs skills when scope extends beyond GSK internals.
+description: Guardrails for GeneaSketch Genraph engine, `.gsk` format contract, and wiki-first discipline. Use this skill for schema/runtime contract work and hand off to UX/docs skills when scope extends beyond GSK internals.
 ---
 
 # GSK Engine Architect
 
 Use this skill when working in:
-- `src/core/gschema/*`
+- `src/core/genraph/*`
 - `docs/wiki-gsk/*`
 
 ## Mandatory checks before changes
 1. Read `docs/wiki-gsk/02_formato.md`, `03_modelo.md`, `04_operaciones.md`.
-2. Cross-check operation/type names in `src/core/gschema/types.ts`.
+2. Cross-check operation/type names in `src/core/genraph/types.ts`.
 3. Confirm changelog scope policy before updating docs.
 
 ## Non-negotiable contract rules
@@ -29,7 +29,7 @@ Use this skill when working in:
    - `CHANGELOG.md` => release global/public
 
 ## Verification protocol
-- `npx vitest run src/tests/gschema.golden.test.ts src/tests/gschema.strict.test.ts src/tests/gschema.regression.test.ts`
+- `npx vitest run src/tests/genraph.golden.test.ts src/tests/genraph.strict.test.ts src/tests/genraph.regression.test.ts`
 - `python .agents/skills/geneasketch-docs-manager/scripts/check_links.py`
 - If release metadata changed, run preflight/build-process checks.
 
@@ -39,7 +39,7 @@ Use this skill when working in:
 
 ## Skill orchestration matrix (routes + keywords)
 - Lead `gsk-engine-architect`:
-  - Paths: `src/core/gschema/**`, `docs/wiki-gsk/**`
+  - Paths: `src/core/genraph/**`, `docs/wiki-gsk/**`
   - Keywords: schema, journal, opSeq, claim lifecycle, GEDCOM contract
 - Lead `geneasketch-ux-governor`:
   - Paths: `src/ui/**`, `src/styles/**`, `index.html`, `docs/wiki-uxdesign/**`

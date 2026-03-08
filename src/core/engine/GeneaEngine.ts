@@ -62,7 +62,7 @@ export const GeneaEngine = {
     updateNoteRecord,
 
     /**
-     * Normalizes legacy document fields for GSchema 0.3.x compatibility.
+     * Normalizes legacy document fields for Genraph 0.3.x compatibility.
      */
     normalizeDocument(document: GeneaDocument | null): GeneaDocument | null {
         if (!document) return null;

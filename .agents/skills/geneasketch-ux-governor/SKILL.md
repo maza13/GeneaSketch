@@ -1,4 +1,4 @@
-﻿---
+---
 name: geneasketch-ux-governor
 description: Governance skill for GeneaSketch UX/UI standards. Use this skill whenever tasks touch UI components, styling, layout, themes, icons, interaction patterns, or UX docs (for example changes in `src/ui/**`, `src/styles/**`, `*.module.css`, `index.html`, or `docs/wiki-uxdesign/**`). Always anchor decisions to `docs/wiki-uxdesign/12_instrucciones_agentes_ia.md` and the chapterized UX wiki before implementing.
 ---
@@ -60,7 +60,7 @@ For any non-trivial UX change, provide:
 
 ## Skill orchestration matrix (routes + keywords)
 - Lead `gsk-engine-architect`:
-  - Paths: `src/core/gschema/**`, `docs/wiki-gsk/**`
+  - Paths: `src/core/genraph/**`, `docs/wiki-gsk/**`
   - Keywords: schema, journal, opSeq, claim lifecycle, GEDCOM contract
 - Lead `geneasketch-ux-governor`:
   - Paths: `src/ui/**`, `src/styles/**`, `index.html`, `docs/wiki-uxdesign/**`

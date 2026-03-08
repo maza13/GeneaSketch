@@ -1,8 +1,8 @@
-import { lazy, Suspense } from "react";
+﻿import { lazy, Suspense } from "react";
 import type { ShellFeaturesFacade, ShellWorkspaceFacade } from "@/app-shell/facade/types";
 
 const MockToolsPanel = lazy(() => import("@/ui/MockToolsPanel").then((module) => ({ default: module.MockToolsPanel })));
-const DTreeViewV3 = lazy(() => import("@/views/DTreeViewV3").then((module) => ({ default: module.DTreeViewV3 })));
+const KindraViewV31 = lazy(() => import("@/views/KindraViewV31").then((module) => ({ default: module.KindraViewV31 })));
 
 type Props = {
   workspace: Pick<ShellWorkspaceFacade, "boot" | "restoreBanner" | "exportWarningsBanner" | "banners">;
@@ -93,7 +93,7 @@ export function ShellCanvasStage({ workspace, canvas }: Props) {
 
       {workspace.boot.status === "ready" && hasDocument ? (
         <Suspense fallback={<div className="empty-state">Cargando lienzo...</div>}>
-          <DTreeViewV3
+          <KindraViewV31
             graph={canvas.graph}
             document={canvas.documentView}
             fitNonce={canvas.fitNonce}
@@ -103,7 +103,7 @@ export function ShellCanvasStage({ workspace, canvas }: Props) {
             focusFamilyId={canvas.focusFamilyId}
             selectedPersonId={canvas.selectedPersonId}
             colorTheme={canvas.colorTheme}
-            dtreeConfig={canvas.dtreeConfig}
+            kindraConfig={canvas.kindraConfig}
             onBgClick={canvas.commands.onBgClick}
             onBgDoubleClick={canvas.commands.onBgDoubleClick}
             onSvgReady={canvas.commands.onSvgReady}
@@ -113,3 +113,4 @@ export function ShellCanvasStage({ workspace, canvas }: Props) {
     </>
   );
 }
+

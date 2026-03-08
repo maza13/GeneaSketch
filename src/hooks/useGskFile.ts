@@ -1,9 +1,9 @@
-﻿import { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useAppStore, type AppState } from "@/state/store";
 import { useShallow } from "zustand/react/shallow";
 import { FileIOService } from "@/io/fileIOService";
-import { gschemaToDocument, documentToGSchema } from "@/core/gschema/GedcomBridge";
-import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
+import { documentToGenraph, genraphToDocument } from "@/core/genraph/GedcomBridge";
+import { GenraphGraph } from "@/core/genraph";
 import { extractSubTree, type ExtractDirection } from "@/core/edit/generators";
 import { downloadBlob } from "@/utils/download";
 import { exportSvgAsPdf, exportSvgAsRaster } from "@/utils/svgExport";
@@ -23,7 +23,7 @@ export type PdfExportState = {
   customHeight: number;
 };
 
-export function hasMeaningfulTree(graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null): boolean {
+export function hasMeaningfulTree(graph: GenraphGraph | null): boolean {
   if (!graph) return false;
   const nodes = graph.allNodes();
   let personCount = 0;
@@ -64,7 +64,7 @@ function mergeProvenance(document: GraphDocument, fileName: string, sourceVersio
 }
 
 function makeRecentPayload(
-  graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph,
+  graph: GenraphGraph,
   fileName: string,
   kind: "open" | "import",
   sourceVersion: SourceGedVersion,
@@ -88,7 +88,7 @@ function inferSourceByFileName(fileName: string): GraphSource {
   return "session";
 }
 
-function projectOrNull(graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null): GraphDocument | null {
+function projectOrNull(graph: GenraphGraph | null): GraphDocument | null {
   return projectGraphDocument(graph);
 }
 
@@ -110,7 +110,7 @@ export function useGskFile(
     customHeight: 595,
   });
 
-  const gschemaGraph = useAppStore((state) => state.gschemaGraph);
+  const genraphGraph = useAppStore((state) => state.genraphGraph);
 
   const { setParseErrors, setParseWarnings, addRecentFile, openRecentFile } = useAppStore(
     useShallow((state: AppState) => ({
@@ -125,7 +125,7 @@ export function useGskFile(
     async (
       file: File,
     ): Promise<{
-      graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null;
+      graph: GenraphGraph | null;
       source: GraphSource;
       errors: Array<{ line: number; entity?: string; message: string }>;
       warnings: Array<{ code: string; message: string }>;
@@ -140,7 +140,7 @@ export function useGskFile(
           ? mergeProvenance(gedRes.document as GraphDocument, file.name, sourceVersion)
           : null;
         const versionForBridge = sourceVersion.startsWith("7") ? "7.0.x" : "5.5.1";
-        const graph = enrichedDoc ? documentToGSchema(enrichedDoc, versionForBridge).graph : null;
+        const graph = enrichedDoc ? documentToGenraph(enrichedDoc, versionForBridge).graph : null;
         return {
           graph,
           source: "ged",
@@ -169,7 +169,7 @@ export function useGskFile(
     async (file: File, onColorThemeLoad?: (theme: ColorThemeConfig) => void) => {
       setStatus(`Abriendo ${file.name}...`);
       try {
-        if (hasMeaningfulTree(gschemaGraph)) {
+        if (hasMeaningfulTree(genraphGraph)) {
           const ok = window.confirm("¿Seguro que deseas cerrar el árbol actual y abrir uno nuevo? Se perderán cambios no guardados.");
           if (!ok) {
             setStatus("Apertura cancelada.");
@@ -216,12 +216,12 @@ export function useGskFile(
         setStatus(`Error crítico: ${message}`);
       }
     },
-    [gschemaGraph, parseInputFile, setParseErrors, setParseWarnings, runtime, addRecentFile],
+    [genraphGraph, parseInputFile, setParseErrors, setParseWarnings, runtime, addRecentFile],
   );
 
   const importForMerge = useCallback(
     async (file: File, onColorThemeLoad?: (theme: ColorThemeConfig) => void) => {
-      if (!gschemaGraph || !hasMeaningfulTree(gschemaGraph)) {
+      if (!genraphGraph || !hasMeaningfulTree(genraphGraph)) {
         await openAndReplace(file, onColorThemeLoad);
         return;
       }
@@ -254,28 +254,28 @@ export function useGskFile(
         setStatus(`Error crítico: ${message}`);
       }
     },
-    [gschemaGraph, openAndReplace, parseInputFile, addRecentFile, setParseErrors],
+    [genraphGraph, openAndReplace, parseInputFile, addRecentFile, setParseErrors],
   );
 
   const saveGsk = useCallback(
     async (_customTheme?: ColorThemeConfig) => {
-      if (!gschemaGraph) return;
+      if (!genraphGraph) return;
       try {
-        const blob = await FileIOService.exportGsk(gschemaGraph);
+        const blob = await FileIOService.exportGsk(genraphGraph);
         downloadBlob(blob, "geneasketch.gsk");
         setStatus("Guardado .gsk");
       } catch (error) {
         setStatus(`No se pudo guardar .gsk: ${error instanceof Error ? error.message : String(error)}`);
       }
     },
-    [gschemaGraph],
+    [genraphGraph],
   );
 
   const exportGed = useCallback(
     async (version: GedExportVersion = "7.0.3") => {
-      if (!gschemaGraph) return;
+      if (!genraphGraph) return;
       const targetVer: SourceGedVersion = version.startsWith("7") ? "7.0.x" : "5.5.1";
-      const result = await FileIOService.exportGed(gschemaToDocument(gschemaGraph, targetVer), { version });
+      const result = await FileIOService.exportGed(genraphToDocument(genraphGraph, targetVer), { version });
       const suffix = version === "5.5.1" ? "-5.5.1" : "";
       downloadBlob(result.blob, `geneasketch-export${suffix}.ged`);
       if (result.warnings.length > 0) {
@@ -286,24 +286,24 @@ export function useGskFile(
       setExportWarnings([]);
       setStatus(`Exportado GED ${version}`);
     },
-    [gschemaGraph],
+    [genraphGraph],
   );
 
   const exportBranchGsk = useCallback(
     async (personId: string, direction: ExtractDirection, _customTheme?: ColorThemeConfig) => {
-      if (!gschemaGraph) {
+      if (!genraphGraph) {
         setStatus("Grafo no disponible para exportar.");
         return;
       }
       setStatus("Extrayendo rama...");
-      const legacyDoc = gschemaToDocument(gschemaGraph);
+      const legacyDoc = genraphToDocument(genraphGraph);
       const branchDocument = extractSubTree(legacyDoc, personId, direction);
-      const branchGraph = documentToGSchema(branchDocument, "7.0.x").graph;
+      const branchGraph = documentToGenraph(branchDocument, "7.0.x").graph;
       const blob = await FileIOService.exportGsk(branchGraph);
       downloadBlob(blob, `Rama_${direction}.gsk`);
       setStatus("Rama extraída y descargada");
     },
-    [gschemaGraph],
+    [genraphGraph],
   );
 
   const exportRaster = useCallback(
@@ -358,7 +358,7 @@ export function useGskFile(
         return;
       }
 
-      const recentGraph = GSchemaGraph.fromData(opened.payload.graph.data, opened.payload.graph.journal);
+      const recentGraph = GenraphGraph.fromData(opened.payload.graph.data, opened.payload.graph.journal);
 
       if (opened.entry.kind === "open") {
         void (async () => {
@@ -374,7 +374,7 @@ export function useGskFile(
         return;
       }
 
-      if (!gschemaGraph || !hasMeaningfulTree(gschemaGraph)) {
+      if (!genraphGraph || !hasMeaningfulTree(genraphGraph)) {
         void (async () => {
           const loadedTheme = await runtime.applyLoadedPayload({
             graph: recentGraph,
@@ -396,7 +396,7 @@ export function useGskFile(
       setImportIncomingDoc(incomingDoc);
       setStatus(`Importado reciente: ${opened.entry.name}`);
     },
-    [gschemaGraph, openRecentFile, runtime],
+    [genraphGraph, openRecentFile, runtime],
   );
 
   const handleMergeApply = useCallback(

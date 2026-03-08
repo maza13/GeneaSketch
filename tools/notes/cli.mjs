@@ -40,11 +40,11 @@ const ALLOWED = {
 };
 
 const MOJIBAKE_REPLACEMENTS = [
-  ["Ã¡", "á"], ["Ã©", "é"], ["Ã­", "í"], ["Ã³", "ó"], ["Ãº", "ú"],
-  ["Ã", "Á"], ["Ã‰", "É"], ["Ã", "Í"], ["Ã“", "Ó"], ["Ãš", "Ú"],
-  ["Ã±", "ñ"], ["Ã‘", "Ñ"], ["Ã¼", "ü"], ["Ãœ", "Ü"],
-  ["Â¿", "¿"], ["Â¡", "¡"],
-  ["â", "'"], ["â", "'"], ["â", "\""], ["â", "\""], ["Â", ""]
+  ["ÃƒÂ¡", "Ã¡"], ["ÃƒÂ©", "Ã©"], ["ÃƒÂ­", "Ã­"], ["ÃƒÂ³", "Ã³"], ["ÃƒÂº", "Ãº"],
+  ["ÃƒÂ", "Ã"], ["Ãƒâ€°", "Ã‰"], ["ÃƒÂ", "Ã"], ["Ãƒâ€œ", "Ã“"], ["ÃƒÅ¡", "Ãš"],
+  ["ÃƒÂ±", "Ã±"], ["Ãƒâ€˜", "Ã‘"], ["ÃƒÂ¼", "Ã¼"], ["ÃƒÅ“", "Ãœ"],
+  ["Ã‚Â¿", "Â¿"], ["Ã‚Â¡", "Â¡"],
+  ["Ã¢Â€Â™", "'"], ["Ã¢Â€Â˜", "'"], ["Ã¢Â€Âœ", "\""], ["Ã¢Â€Â", "\""], ["Ã‚", ""]
 ];
 
 function fail(message) {
@@ -922,7 +922,7 @@ function inferTagsFromText(text) {
   const tags = [];
   const map = [
     ["api", ["api", "integracion", "wikitree", "familysearch"]],
-    ["core", ["core", "engine", "schema", "gschema", "modelo"]],
+    ["core", ["core", "engine", "schema", "genraph", "modelo"]],
     ["ai", ["ai", "ia", "agent", "autonom"]],
     ["social", ["social", "cooperativo", "familia"]],
     ["gamification", ["gamification", "gamificacion", "achievement", "retention"]],
@@ -1158,7 +1158,7 @@ function writeReport(name, lines) {
 }
 
 function suspiciousCount(text) {
-  const m = text.match(/[ÃÂ�]/g);
+  const m = text.match(/[ÃƒÃ‚ï¿½]/g);
   return m ? m.length : 0;
 }
 

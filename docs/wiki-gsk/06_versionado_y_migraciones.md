@@ -1,9 +1,9 @@
 ﻿# 06. Versionado y Migraciones del Formato `.gsk`
 
 ## Fuentes de verdad (codigo)
-- Migrador legacy: `src/core/gschema/LegacyMigrator.ts`
-- Version de schema activa en grafo/runtime: `src/core/gschema/GSchemaGraph.ts`
-- Politica de import: `src/core/gschema/GskPackage.ts`
+- Migrador legacy: `src/core/genraph/LegacyMigrator.ts`
+- Version de schema activa en grafo/runtime: `src/core/genraph/GenraphGraph.ts`
+- Politica de import: `src/core/genraph/GskPackage.ts`
 
 ## Estado de confianza
 - **Estado:** Contrato 0.5.0 activo en runtime de export/import
@@ -52,3 +52,4 @@ No usar comparacion lexicografica simple de strings.
 
 ## Navegacion
 [<- Anterior: 05_interoperabilidad_gedcom](./05_interoperabilidad_gedcom.md) | [Siguiente: 07_error_catalog ->](./07_error_catalog.md)
+

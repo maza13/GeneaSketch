@@ -1,4 +1,4 @@
-import type { CSSProperties, ChangeEventHandler, RefObject } from "react";
+﻿import type { CSSProperties, ChangeEventHandler, RefObject } from "react";
 import type { FamilyPatch } from "@/core/edit/commands";
 import type { DiagnosticFixAction, DiagnosticFixExecutionResult, DiagnosticFixOption, DiagnosticReport } from "@/core/diagnostics/types";
 import type { ExtractDirection } from "@/core/edit/generators";
@@ -493,7 +493,7 @@ export type ShellFeaturesFacade = {
     focusPersonId: string | null;
     focusFamilyId: string | null;
     colorTheme: ColorThemeConfig;
-    dtreeConfig: NonNullable<ViewConfig["dtree"]> | undefined;
+    kindraConfig: NonNullable<ViewConfig["kindra"]> | undefined;
     modeBadge: string | null;
     showMockTools: boolean;
     commands: {
@@ -512,3 +512,4 @@ export type AppShellFacade = {
   workspace: ShellWorkspaceFacade;
   features: ShellFeaturesFacade;
 };
+

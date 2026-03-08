@@ -11,7 +11,7 @@ export type ReleaseInfo = {
 export const RELEASE_INFO: ReleaseInfo = {
   technicalVersion: "0.4.5",
   channel: "beta",
-  codename: "gschema",
-  displayLabel: "Beta GSchema",
-  releaseTag: "v0.4.5-beta-gschema"
+  codename: "genraph",
+  displayLabel: "Beta Genraph",
+  releaseTag: "v0.4.5-beta-genraph"
 };

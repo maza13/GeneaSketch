@@ -1,4 +1,4 @@
-﻿---
+---
 name: geneasketch-docs-manager
 description: Document manager for keeping code, wiki-gsk, wiki-software, and wiki-uxdesign synchronized under wiki-first policy. Use this skill for docs/changelog updates and hand off to UX or GSK skills when path/keyword scope indicates.
 ---
@@ -18,7 +18,7 @@ Use this skill when changing docs, changelogs, or user-visible behavior that imp
 2. Use relative markdown links for internal docs.
 3. Keep changelog scope separated (technical vs user vs release-global).
 4. Keep software/wiki versions aligned with `package.json` and release metadata.
-5. For recovery/format claims, validate with `src/core/gschema/*` and tests.
+5. For recovery/format claims, validate with `src/core/genraph/*` and tests.
 
 ## Required checks for substantial docs updates
 - `python .agents/skills/geneasketch-docs-manager/scripts/check_links.py`
@@ -34,7 +34,7 @@ Use this skill when changing docs, changelogs, or user-visible behavior that imp
 
 ## Skill orchestration matrix (routes + keywords)
 - Lead `gsk-engine-architect`:
-  - Paths: `src/core/gschema/**`, `docs/wiki-gsk/**`
+  - Paths: `src/core/genraph/**`, `docs/wiki-gsk/**`
   - Keywords: schema, journal, opSeq, claim lifecycle, GEDCOM contract
 - Lead `geneasketch-ux-governor`:
   - Paths: `src/ui/**`, `src/styles/**`, `index.html`, `docs/wiki-uxdesign/**`

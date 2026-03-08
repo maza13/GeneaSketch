@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createNewTree } from "@/core/edit/commands";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
-import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
+import { documentToGenraph } from "@/core/genraph/GedcomBridge";
+import { GenraphGraph } from "@/core/genraph/GenraphGraph";
 import {
   clearGraphProjectionCache,
   projectGraphDocument,
@@ -36,7 +36,7 @@ function buildGraph() {
     events: [],
   };
   doc.persons["@I1@"].fams = ["@F1@"];
-  const { graph } = documentToGSchema(doc, "7.0.x");
+  const { graph } = documentToGenraph(doc, "7.0.x");
   return graph;
 }
 
@@ -78,7 +78,7 @@ describe("read-model selectors", () => {
       uid: "note-cache-1",
       text: "before",
       deleted: false,
-    } as import("@/core/gschema/types").NoteNode);
+    } as import("@/core/genraph/types").NoteNode);
 
     const first = projectGraphDocument(graph);
     const second = projectGraphDocument(graph);
@@ -126,7 +126,7 @@ describe("read-model selectors", () => {
   });
 
   it("uses shared synthetic xref fallback when xref is missing in direct projection", () => {
-    const graph = GSchemaGraph.create();
+    const graph = GenraphGraph.create();
     graph.addPersonNode({ uid: "p-no-xref", type: "Person", sex: "F", isLiving: true });
 
     const persons = selectPersons(graph);

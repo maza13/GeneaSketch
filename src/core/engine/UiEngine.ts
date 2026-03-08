@@ -16,6 +16,12 @@ export const UiEngine = {
     },
 
     createDefaultViewConfig(homePersonId: string = ""): ViewConfig {
+        const kindra = {
+            isVertical: true,
+            layoutEngine: "vnext" as const,
+            collapsedNodeIds: [],
+            overlays: []
+        };
         return {
             mode: "tree",
             preset: "family_origin",
@@ -47,12 +53,7 @@ export const UiEngine = {
                 scaleZoom: 1,
                 scaleOffset: 0
             },
-            dtree: {
-                isVertical: true,
-                layoutEngine: "vnext",
-                collapsedNodeIds: [],
-                overlays: []
-            }
+            kindra
         };
     },
 

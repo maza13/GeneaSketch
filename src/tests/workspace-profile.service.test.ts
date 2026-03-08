@@ -87,15 +87,15 @@ describe("WorkspaceProfileService", () => {
     expect(loaded).toBeNull();
   });
 
-  it("migrates legacy v1 payloads to v2 and writes back sanitized dtree", async () => {
+  it("rejects legacy v1 payloads under the hard cut", async () => {
     const legacyProfile = buildProfile("graph-legacy");
     storeData.set("graph-legacy", {
       ...legacyProfile,
       profileSchemaVersion: 1,
       viewConfig: {
         ...legacyProfile.viewConfig,
-        dtree: {
-          ...(legacyProfile.viewConfig.dtree || {}),
+        kindra: {
+          ...(legacyProfile.viewConfig.kindra || {}),
           layoutEngine: "v2",
           renderVersion: "v2"
         }
@@ -103,13 +103,9 @@ describe("WorkspaceProfileService", () => {
     });
 
     const loaded = await WorkspaceProfileService.load("graph-legacy");
-    const persisted = storeData.get("graph-legacy") as WorkspaceProfileV2 | undefined;
 
-    expect(loaded?.profileSchemaVersion).toBe(WORKSPACE_PROFILE_SCHEMA_VERSION);
-    expect(loaded?.viewConfig.dtree?.layoutEngine).toBe("vnext");
-    expect((loaded?.viewConfig.dtree as any)?.renderVersion).toBeUndefined();
-    expect(persisted?.profileSchemaVersion).toBe(WORKSPACE_PROFILE_SCHEMA_VERSION);
-    expect(persisted?.viewConfig.dtree?.layoutEngine).toBe("vnext");
+    expect(loaded).toBeNull();
+    expect((storeData.get("graph-legacy") as WorkspaceProfileV2 | undefined)?.profileSchemaVersion).toBe(1);
   });
 
   it("keeps profiles isolated per graphId", async () => {

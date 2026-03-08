@@ -1,17 +1,17 @@
-# 05. Interoperabilidad con GEDCOM (Importación / Exportación)
+﻿# 05. Interoperabilidad con GEDCOM (Importación / Exportación)
 
 ## Fuentes de verdad (código)
-- Puente bidireccional: `src/core/gschema/GedcomBridge.ts`
+- Puente bidireccional: `src/core/genraph/GedcomBridge.ts`
 - Serializador GEDCOM: `src/core/gedcom/serializer.ts`
 
 ## Estado de confianza
 - **Estado:** Hardened (Schema 0.4.0)
 
 ## Propósito
-Definir cómo GeneaSketch proyecta datos entre GSchema y GEDCOM minimizando pérdida de información y preservando casos no mapeados.
+Definir cómo GeneaSketch proyecta datos entre Genraph y GEDCOM minimizando pérdida de información y preservando casos no mapeados.
 
 ## Conceptos clave
-- **GedcomBridge:** traduce `GeneaDocument <-> GSchemaGraph`.
+- **GedcomBridge:** traduce `GeneaDocument <-> GenraphGraph`.
 - **Quarantine AST:** tags no mapeados se almacenan como árbol (`QuarantineAstNode`) con niveles GEDCOM.
 - **Targets de exportación:** `GEDCOM 5.5.1` y `GEDCOM 7.0.x`.
 - **Conflictos de claims:** se exporta una claim preferida en campo estándar y las no preferidas activas en proyección extendida.
@@ -65,7 +65,7 @@ Para mantener GeneaSketch como **lossless**, las claims no preferidas no se desc
 ### Formato del payload
 `GSK_CONFLICT|v1|<predicate>|<json_payload>`
 
-- `<predicate>`: path GSchema (ej: `person.event.birth.date`).
+- `<predicate>`: path Genraph (ej: `person.event.birth.date`).
 - `<json_payload>`: claim serializada en JSON compacto.
 
 ### Reglas de chunking (fragmentación)
@@ -152,7 +152,7 @@ Export GSK -> GEDCOM:
 
 ## Regla de síntesis mandatoria de nombres (Fase 1)
 
-Para garantizar la integridad semántica de GSchema, el importador debe asegurar que toda persona tenga afirmaciones atómicas de nombre.
+Para garantizar la integridad semántica de Genraph, el importador debe asegurar que toda persona tenga afirmaciones atómicas de nombre.
 
 - **Regla:** Si un registro GEDCOM contiene una línea `1 NAME` con delimitadores de apellidos (`/ /`) pero carece de etiquetas explícitas `2 GIVN` o `2 SURN`, el importador **debe sintetizar** estas partes algorítmicamente.
 - **Acción del Puente (Bridge):**
@@ -160,7 +160,7 @@ Para garantizar la integridad semántica de GSchema, el importador debe asegurar
   - La parte capturada como nombre de pila (before slashes + after slashes) debe registrarse obligatoriamente como `PersonPredicates.NAME_GIVEN`.
   - La parte capturada entre barras debe registrarse como `PersonPredicates.NAME_SURNAME`.
 - **Propósito:** Prevenir que la UI degrade el campo "Nombre(s)" mostrando el nombre completo por falta de datos atómicos en el grafo.
-| Entrada GEDCOM | GSchema Predicate | Nota |
+| Entrada GEDCOM | Genraph Predicate | Nota |
 | :--- | :--- | :--- |
 | `INDI.NAME /.../` | `person.name.full` | Original preservado. |
 | `INDI.NAME.GIVN` | `person.name.given` | Nombre de pila explícito. |
@@ -172,7 +172,7 @@ GeneaSketch extrae metadatos estructurales y honoríficos para enriquecer la bú
 
 ### Mapeo de Etiquetas Explícitas
 
-| GEDCOM Tag | GSchema Predicate | Propósito |
+| GEDCOM Tag | Genraph Predicate | Propósito |
 | :--- | :--- | :--- |
 | `INDI.NAME.NPFX` | `person.name.prefix` | Prefijos (Dr., Sr., Don). |
 | `INDI.NAME.NSFX` | `person.name.suffix` | Sufijos (Jr., III, Esq). |
@@ -205,3 +205,4 @@ Para campos `PLAC`, el motor intentará separar componentes mediante comas (`,`)
 ---
 **Navegación:**  
 [← Anterior: 04_operaciones](./04_operaciones.md) | [Siguiente: 06_versionado_y_migraciones →](./06_versionado_y_migraciones.md)
+

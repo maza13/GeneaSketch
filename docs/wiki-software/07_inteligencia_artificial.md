@@ -1,7 +1,11 @@
-﻿# 07 - Inteligencia Artificial y AI Web Bridge
+# 07 - AncestrAI y AI Web Bridge
 
 ## Objetivo
-Documentar como usar IA para proponer cambios sin perder control editorial.
+Documentar como usar AncestrAI para proponer cambios sin perder control editorial.
+
+## Nota de nomenclatura
+- AncestrAI es el nombre oficial del assistant/subsystema.
+- IA sigue siendo el termino generico para hablar de la capacidad.
 
 ## Flujo recomendado
 1. Preparar contexto acotado y claro.

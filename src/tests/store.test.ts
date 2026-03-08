@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { documentToGSchema, gschemaToDocument } from "@/core/gschema/GedcomBridge";
+import { documentToGenraph, genraphToDocument } from "@/core/genraph/GedcomBridge";
 import { createNewTree } from "@/core/edit/commands";
 import { projectGraphDocument } from "@/core/read-model";
 import { UiEngine } from "@/core/engine/UiEngine";
@@ -30,12 +30,12 @@ function buildDocWithTwoPersons() {
 
 function loadDoc(doc: any) {
   const version = doc?.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-  useAppStore.getState().loadGraph({ graph: documentToGSchema(doc, version).graph, source: "ged" });
+  useAppStore.getState().loadGraph({ graph: documentToGenraph(doc, version).graph, source: "ged" });
 }
 
 function snapshotGraph(doc: any) {
   const version = doc?.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-  const graph = documentToGSchema(doc, version).graph;
+  const graph = documentToGenraph(doc, version).graph;
   return {
     data: graph.toData(),
     journal: [...graph.getJournal()]
@@ -190,7 +190,7 @@ beforeEach(() => {
 
   useAppStore.setState((s) => ({
     ...s,
-    gschemaGraph: null,
+    genraphGraph: null,
     viewConfig: null,
     expandedGraph: { nodes: [], edges: [] },
     selectedPersonId: null,
@@ -212,7 +212,7 @@ describe("store explicit id actions", () => {
     useAppStore.getState().createNewTreeDoc();
 
     const state = useAppStore.getState();
-    const projected = state.gschemaGraph ? projectGraphDocument(state.gschemaGraph) : null;
+    const projected = state.genraphGraph ? projectGraphDocument(state.genraphGraph) : null;
     expect(projected?.persons["@I1@"]).toBeDefined();
     expect(projected?.persons["@I1@"]?.name).toBe("(Sin nombre)");
     expect(projected?.persons["@I1@"]?.isPlaceholder).toBe(true);
@@ -226,7 +226,7 @@ describe("store explicit id actions", () => {
     useAppStore.getState().applyProjectedDocument(doc, "ai");
 
     const state = useAppStore.getState();
-    const projected = state.gschemaGraph ? projectGraphDocument(state.gschemaGraph) : null;
+    const projected = state.genraphGraph ? projectGraphDocument(state.genraphGraph) : null;
     expect(projected?.persons["@I1@"]?.name).toBe("Root");
     expect(projected?.persons["@I2@"]?.name).toBe("Anchor");
     expect(state.selectedPersonId).toBe("@I1@");
@@ -241,8 +241,8 @@ describe("store explicit id actions", () => {
     useAppStore.getState().updatePersonById("@I2@", { name: "Updated Anchor" });
 
     const state = useAppStore.getState();
-    expect((state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.persons["@I2@"].name).toBe("Updated Anchor");
-    expect((state.gschemaGraph ? gschemaToDocument(state.gschemaGraph!) : undefined)?.persons["@I1@"].name).toBe("Root");
+    expect((state.genraphGraph ? genraphToDocument(state.genraphGraph!) : undefined)?.persons["@I2@"].name).toBe("Updated Anchor");
+    expect((state.genraphGraph ? genraphToDocument(state.genraphGraph!) : undefined)?.persons["@I1@"].name).toBe("Root");
     expect(state.selectedPersonId).toBe("@I1@");
   });
 
@@ -258,7 +258,7 @@ describe("store explicit id actions", () => {
     const newPersonId = state.selectedPersonId;
     expect(newPersonId).toBeDefined();
     expect(newPersonId).not.toBeNull();
-    const projected = state.gschemaGraph ? projectGraphDocument(state.gschemaGraph) : null;
+    const projected = state.genraphGraph ? projectGraphDocument(state.genraphGraph) : null;
     const created = projected?.persons[newPersonId!];
     expect(created).toBeDefined();
     expect(created?.famc.length).toBe(1);
@@ -277,7 +277,7 @@ describe("legacy restore normalization", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 7,
+      schemaVersion: 8,
       graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
@@ -310,8 +310,8 @@ describe("legacy restore normalization", () => {
     expect(viewConfig?.depth.unclesGreatUncles).toBe(0);
     expect(viewConfig?.depth.siblingsNephews).toBe(0);
     expect(viewConfig?.depth.unclesCousins).toBe(0);
-    expect((useAppStore.getState().gschemaGraph ? gschemaToDocument(useAppStore.getState().gschemaGraph!) : undefined)?.persons["@I1@"].sex).toBe("U");
-    expect((useAppStore.getState().gschemaGraph ? gschemaToDocument(useAppStore.getState().gschemaGraph!) : undefined)?.persons["@I1@"].lifeStatus).toBe("alive");
+    expect((useAppStore.getState().genraphGraph ? genraphToDocument(useAppStore.getState().genraphGraph!) : undefined)?.persons["@I1@"].sex).toBe("U");
+    expect((useAppStore.getState().genraphGraph ? genraphToDocument(useAppStore.getState().genraphGraph!) : undefined)?.persons["@I1@"].lifeStatus).toBe("alive");
   });
 
   it("normalizes missing sex/lifeStatus to valid runtime values", async () => {
@@ -354,7 +354,7 @@ describe("legacy restore normalization", () => {
     };
 
     await useAppStore.getState().restoreSession();
-    const restored = (useAppStore.getState().gschemaGraph ? gschemaToDocument(useAppStore.getState().gschemaGraph!) : undefined)?.persons["@I1@"];
+    const restored = (useAppStore.getState().genraphGraph ? genraphToDocument(useAppStore.getState().genraphGraph!) : undefined)?.persons["@I1@"];
     expect(["M", "F", "U"]).toContain(restored?.sex);
     expect(["alive", "deceased"]).toContain(restored?.lifeStatus);
   });
@@ -388,9 +388,9 @@ describe("legacy restore normalization", () => {
           scaleZoom: 1,
           scaleOffset: 0
         },
-        dtree: {
+        kindra: {
           isVertical: true,
-          layoutEngine: "v2",
+          layoutEngine: "vnext",
           collapsedNodeIds: [],
           overlays: [
             {
@@ -414,20 +414,20 @@ describe("legacy restore normalization", () => {
 
     const timelineOverlay = useAppStore
       .getState()
-      .viewConfig?.dtree?.overlays.find((overlay) => overlay.type === "timeline");
+      .viewConfig?.kindra?.overlays.find((overlay) => overlay.type === "timeline");
     expect(timelineOverlay).toBeDefined();
     expect(timelineOverlay?.config.year).toBe(1988);
     expect(timelineOverlay?.config.currentYear).toBeUndefined();
-    expect(useAppStore.getState().viewConfig?.dtree?.layoutEngine).toBe("vnext");
+    expect(useAppStore.getState().viewConfig?.kindra?.layoutEngine).toBe("vnext");
   });
 
-  it("normalizes legacy dtree flags by dropping renderVersion and forcing vnext", async () => {
+  it("drops unsupported Kindra runtime flags during restore", async () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 7,
+      schemaVersion: 8,
       graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
@@ -450,10 +450,10 @@ describe("legacy restore normalization", () => {
           scaleZoom: 1,
           scaleOffset: 0
         },
-        dtree: {
+        kindra: {
           isVertical: true,
           renderVersion: "v2",
-          layoutEngine: "v2",
+          layoutEngine: "vnext",
           collapsedNodeIds: [],
           overlays: []
         }
@@ -463,17 +463,17 @@ describe("legacy restore normalization", () => {
     };
 
     await useAppStore.getState().restoreSession();
-    expect(useAppStore.getState().viewConfig?.dtree?.layoutEngine).toBe("vnext");
-    expect((useAppStore.getState().viewConfig?.dtree as any)?.renderVersion).toBeUndefined();
+    expect(useAppStore.getState().viewConfig?.kindra?.layoutEngine).toBe("vnext");
+    expect((useAppStore.getState().viewConfig?.kindra as any)?.renderVersion).toBeUndefined();
   });
 
-  it("normalizes invalid legacy layoutEngine values to vnext during restore", async () => {
+  it("normalizes invalid Kindra layoutEngine values to vnext during restore", async () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 7,
+      schemaVersion: 8,
       graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
@@ -496,7 +496,7 @@ describe("legacy restore normalization", () => {
           scaleZoom: 1,
           scaleOffset: 0
         },
-        dtree: {
+        kindra: {
           isVertical: true,
           layoutEngine: "broken-value",
           collapsedNodeIds: [],
@@ -508,7 +508,7 @@ describe("legacy restore normalization", () => {
     };
 
     await useAppStore.getState().restoreSession();
-    expect(useAppStore.getState().viewConfig?.dtree?.layoutEngine).toBe("vnext");
+    expect(useAppStore.getState().viewConfig?.kindra?.layoutEngine).toBe("vnext");
   });
 
   it("restores merge draft snapshot when present", async () => {
@@ -692,7 +692,7 @@ describe("session autosave/restore robustness", () => {
   });
 
   it("does not save autosession while restoring without active state", async () => {
-    useAppStore.setState({ gschemaGraph: null, viewConfig: null, isRestoring: true });
+    useAppStore.setState({ genraphGraph: null, viewConfig: null, isRestoring: true });
 
     await useAppStore.getState().saveAutosessionNow();
 
@@ -761,7 +761,7 @@ describe("timeline contract", () => {
 
     const timelineOverlay = useAppStore
       .getState()
-      .viewConfig?.dtree?.overlays.find((overlay) => overlay.type === "timeline");
+      .viewConfig?.kindra?.overlays.find((overlay) => overlay.type === "timeline");
     expect(timelineOverlay).toBeDefined();
     expect(timelineOverlay?.config.year).toBe(1995);
     expect(timelineOverlay?.config.currentYear).toBeUndefined();
@@ -782,9 +782,9 @@ describe("timeline contract", () => {
     };
 
     useAppStore.getState().setOverlay(overlay);
-    const firstRef = useAppStore.getState().viewConfig?.dtree?.overlays;
+    const firstRef = useAppStore.getState().viewConfig?.kindra?.overlays;
     useAppStore.getState().setOverlay(overlay);
-    const secondRef = useAppStore.getState().viewConfig?.dtree?.overlays;
+    const secondRef = useAppStore.getState().viewConfig?.kindra?.overlays;
 
     expect(secondRef?.length).toBe(1);
     expect(secondRef).toBe(firstRef);
@@ -812,7 +812,7 @@ describe("timeline contract", () => {
     await useAppStore.getState().saveAutosessionNow();
     const calls = vi.mocked(SessionService.saveAutosession).mock.calls;
     const lastSnapshot = calls[calls.length - 1]?.[0] as SessionSnapshot | undefined;
-    const overlayTypes = lastSnapshot?.viewConfig?.dtree?.overlays.map((overlay) => overlay.type) || [];
+    const overlayTypes = lastSnapshot?.viewConfig?.kindra?.overlays.map((overlay) => overlay.type) || [];
     expect(overlayTypes.includes("merge_focus")).toBe(false);
     expect(overlayTypes.includes("timeline")).toBe(true);
   });
@@ -823,9 +823,9 @@ describe("timeline contract", () => {
     doc.persons["@I1@"].isPlaceholder = false;
     loadDoc(doc);
 
-    const before = useAppStore.getState().viewConfig?.dtree?.overlays;
+    const before = useAppStore.getState().viewConfig?.kindra?.overlays;
     useAppStore.getState().clearOverlayType("merge_focus");
-    const after = useAppStore.getState().viewConfig?.dtree?.overlays;
+    const after = useAppStore.getState().viewConfig?.kindra?.overlays;
     expect(after).toBe(before);
     expect(after).toEqual([]);
   });
@@ -836,9 +836,9 @@ describe("timeline contract", () => {
     doc.persons["@I1@"].isPlaceholder = false;
     loadDoc(doc);
 
-    const before = useAppStore.getState().viewConfig?.dtree?.overlays;
+    const before = useAppStore.getState().viewConfig?.kindra?.overlays;
     useAppStore.getState().removeOverlay("missing-id");
-    const after = useAppStore.getState().viewConfig?.dtree?.overlays;
+    const after = useAppStore.getState().viewConfig?.kindra?.overlays;
     expect(after).toBe(before);
     expect(after).toEqual([]);
   });
@@ -849,7 +849,7 @@ describe("timeline contract", () => {
     doc.persons["@I1@"].isPlaceholder = false;
 
     restoreValue = {
-      schemaVersion: 7,
+      schemaVersion: 8,
       graph: snapshotGraph(doc),
       viewConfig: {
         mode: "tree",
@@ -904,7 +904,7 @@ describe("timeline contract", () => {
     expect(
       useAppStore
         .getState()
-        .viewConfig?.dtree?.overlays.some((overlay) => overlay.type === "timeline")
+        .viewConfig?.kindra?.overlays.some((overlay) => overlay.type === "timeline")
     ).toBe(true);
 
     useAppStore.getState().setTimelinePanelOpen(false);
@@ -915,7 +915,7 @@ describe("timeline contract", () => {
     expect(
       useAppStore
         .getState()
-        .viewConfig?.dtree?.overlays.some((overlay) => overlay.type === "timeline")
+        .viewConfig?.kindra?.overlays.some((overlay) => overlay.type === "timeline")
     ).toBe(false);
   });
 
@@ -954,7 +954,7 @@ describe("timeline contract", () => {
     expect(after.viewConfig?.focusPersonId).toBe(before.viewConfig?.focusPersonId);
     expect(after.viewConfig?.timelinePanelOpen).toBe(false);
     expect(after.viewConfig?.focusFamilyId).toBeNull();
-    expect(after.viewConfig?.dtree?.overlays).toEqual([]);
+    expect(after.viewConfig?.kindra?.overlays).toEqual([]);
   });
 
   it("clearVisualModes restores details to expanded when auto-compacted by timeline", () => {

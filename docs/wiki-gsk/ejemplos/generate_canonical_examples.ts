@@ -2,22 +2,22 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import JSZip from "jszip";
-import { GSchemaGraph } from "../../../src/core/gschema/GSchemaGraph";
-import { exportGskPackage } from "../../../src/core/gschema/GskPackage";
-import type { GSchemaGraph as GSchemaGraphData, GSchemaOperation } from "../../../src/core/gschema/types";
+import { GenraphGraph } from "../../../src/core/genraph/GenraphGraph";
+import { exportGskPackage } from "../../../src/core/genraph/GskPackage";
+import type { GenraphGraph as GenraphGraphData, GenraphOperation } from "../../../src/core/genraph/types";
 
 type ExampleFixture = {
     name: string;
-    data: GSchemaGraphData;
-    ops: GSchemaOperation[];
+    data: GenraphGraphData;
+    ops: GenraphOperation[];
 };
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
 const OUT_DIR = ROOT;
 const CANON_DIR = path.join(ROOT, "canon");
 
-function stableGraph(data: GSchemaGraphData, ops: GSchemaOperation[]): GSchemaGraph {
-    return GSchemaGraph.fromData(data, ops);
+function stableGraph(data: GenraphGraphData, ops: GenraphOperation[]): GenraphGraph {
+    return GenraphGraph.fromData(data, ops);
 }
 
 async function writePackageAndCanon(example: ExampleFixture): Promise<void> {
@@ -49,7 +49,7 @@ async function writePackageAndCanon(example: ExampleFixture): Promise<void> {
 }
 
 function fixtures(): ExampleFixture[] {
-    const basicoData: GSchemaGraphData = {
+    const basicoData: GenraphGraphData = {
         schemaVersion: "0.4.0",
         graphId: "graph-basico-0001",
         createdAt: "2026-03-03T10:00:00.000Z",
@@ -90,7 +90,7 @@ function fixtures(): ExampleFixture[] {
         quarantine: [],
     };
 
-    const basicoOps: GSchemaOperation[] = [
+    const basicoOps: GenraphOperation[] = [
         {
             opId: "op-basico-0000",
             opSeq: 0,
@@ -109,7 +109,7 @@ function fixtures(): ExampleFixture[] {
         },
     ];
 
-    const tipicoData: GSchemaGraphData = {
+    const tipicoData: GenraphGraphData = {
         schemaVersion: "0.4.0",
         graphId: "graph-tipico-0001",
         createdAt: "2026-03-03T11:00:00.000Z",
@@ -239,7 +239,7 @@ function fixtures(): ExampleFixture[] {
         quarantine: [],
     };
 
-    const tipicoOps: GSchemaOperation[] = [
+    const tipicoOps: GenraphOperation[] = [
         { opId: "op-tipico-0000", opSeq: 0, type: "ADD_NODE", timestamp: 1772535600, actorId: "importer:fixture", node: tipicoData.nodes["p-juan"] },
         { opId: "op-tipico-0001", opSeq: 1, type: "ADD_NODE", timestamp: 1772535601, actorId: "importer:fixture", node: tipicoData.nodes["p-maria"] },
         { opId: "op-tipico-0002", opSeq: 2, type: "ADD_NODE", timestamp: 1772535602, actorId: "importer:fixture", node: tipicoData.nodes["p-pedro"] },
@@ -253,7 +253,7 @@ function fixtures(): ExampleFixture[] {
         { opId: "op-tipico-0010", opSeq: 10, type: "ADD_CLAIM", timestamp: 1772535610, actorId: "importer:fixture", claim: tipicoData.claims["p-pedro"]["person.name.full"][0] },
     ];
 
-    const edgecasesData: GSchemaGraphData = {
+    const edgecasesData: GenraphGraphData = {
         schemaVersion: "0.4.0",
         graphId: "graph-edgecases-0001",
         createdAt: "2026-03-03T12:00:00.000Z",
@@ -338,7 +338,7 @@ function fixtures(): ExampleFixture[] {
         ],
     };
 
-    const edgecasesOps: GSchemaOperation[] = [
+    const edgecasesOps: GenraphOperation[] = [
         { opId: "op-edge-0000", opSeq: 0, type: "ADD_NODE", timestamp: 1772539200, actorId: "importer:fixture", node: edgecasesData.nodes["p-ana"] },
         { opId: "op-edge-0001", opSeq: 1, type: "ADD_CLAIM", timestamp: 1772539201, actorId: "importer:fixture", claim: edgecasesData.claims["p-ana"]["person.name.full"][0] },
         {
@@ -374,3 +374,4 @@ main().catch((error) => {
     console.error(error);
     process.exit(1);
 });
+

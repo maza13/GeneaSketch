@@ -4,9 +4,9 @@ import {
   createLayoutFixtureDoc,
   createLayoutFixtureViewConfig
 } from "@/tests/layout/fixture";
-import { buildOverlayPrecomputedData } from "@/views/dtree-v3/overlays/contextBuilders";
-import { TREE_PALETTE } from "@/views/dtree-v3/overlays/palette";
-import { resolveOverlayPipeline } from "@/views/dtree-v3/overlays/pipeline";
+import { buildOverlayPrecomputedData } from "@/views/kindra-v31/overlays/contextBuilders";
+import { TREE_PALETTE } from "@/views/kindra-v31/overlays/palette";
+import { resolveOverlayPipeline } from "@/views/kindra-v31/overlays/pipeline";
 import type { ActiveOverlay } from "@/types/domain";
 import type { ColorThemeConfig } from "@/types/editor";
 

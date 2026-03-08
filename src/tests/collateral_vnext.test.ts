@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { createNewTree } from "@/core/edit/commands";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
+import { documentToGenraph } from "@/core/genraph/GedcomBridge";
 import { useAppStore } from "@/state/store";
 
 function loadDoc(doc: any) {
     const version = doc?.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-    useAppStore.getState().loadGraph({ graph: documentToGSchema(doc, version).graph, source: "ged" });
+    useAppStore.getState().loadGraph({ graph: documentToGenraph(doc, version).graph, source: "ged" });
 }
 
 describe("Collateral Sliders vNext - Deterministic Tests", () => {
@@ -33,7 +33,7 @@ describe("Collateral Sliders vNext - Deterministic Tests", () => {
                     unclesCousins: 0
                 },
                 showSpouses: true,
-                dtree: {
+                kindra: {
                     isVertical: true,
                     layoutEngine: "vnext",
                     collapsedNodeIds: [],

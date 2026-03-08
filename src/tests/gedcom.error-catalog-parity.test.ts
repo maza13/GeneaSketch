@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { ERROR_CATALOG, ERROR_CODES, isGskModeEntry } from "../core/gschema/errorCatalog";
+import { ERROR_CATALOG, ERROR_CODES, isGskModeEntry } from "../core/genraph/errorCatalog";
 
 const GED_PARSER_CODES = [
     ERROR_CODES.PEDI_UNKNOWN_VALUE_COERCED,

@@ -1,4 +1,4 @@
-# Wiki de UX y Diseno (GeneaSketch)
+﻿# Wiki de UX y Diseno (GeneaSketch)
 
 ## Resumen
 Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementacion consistente en desktop.
@@ -20,7 +20,7 @@ Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementa
 10. [10_anti_patrones](./10_anti_patrones.md)
 11. [11_checklist_entrega](./11_checklist_entrega.md)
 12. [12_instrucciones_agentes_ia](./12_instrucciones_agentes_ia.md)
-13. [13_dtree-v3-control-plane](./13_dtree-v3-control-plane.md)
+13. [13_kindra-v31-control-plane](./13_kindra-v31-control-plane.md)
 14. [CHANGELOG](./CHANGELOG.md)
 
 ## Convencion editorial
@@ -44,7 +44,8 @@ Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementa
 | [10](./10_anti_patrones.md) | vigente | Anti-patrones |
 | [11](./11_checklist_entrega.md) | vigente | Checklist de entrega |
 | [12](./12_instrucciones_agentes_ia.md) | vigente | Contrato para agentes + gobernanza |
-| [13](./13_dtree-v3-control-plane.md) | vigente | Gobernanza, gates y cierre DTree V3 |
+| [13](./13_kindra-v31-control-plane.md) | vigente | Gobernanza, gates y cierre Kindra v3.1 |
 
 ## Navegacion
 [Siguiente: 01_filosofia_y_principios ->](./01_filosofia_y_principios.md)
+

@@ -12,6 +12,6 @@ export function withExpandedGraphForView(
 
   return {
     viewConfig,
-    expandedGraph: ensureExpanded(projectGraphDocument(state.gschemaGraph), viewConfig),
+    expandedGraph: ensureExpanded(projectGraphDocument(state.genraphGraph), viewConfig),
   };
 }

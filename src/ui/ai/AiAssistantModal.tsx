@@ -46,7 +46,7 @@ function diagnosticsToText(
   logPath: string | null
 ): string {
   const lines = [
-    "GeneaSketch AI Diagnostics Report",
+    "GeneaSketch AncestrAI Diagnostics Report",
     `GeneratedAt: ${new Date().toISOString()}`,
     `RunId: ${runId || "n/a"}`,
     `LogPath: ${logPath || "n/a"}`,
@@ -158,7 +158,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
     setRunning(true);
     setProgressStartedAt(Date.now());
     setProgressElapsedSeconds(0);
-    setProgressMessage("Iniciando pipeline IA...");
+    setProgressMessage("Iniciando pipeline AncestrAI...");
     setError(null);
     setTechnicalError(null);
     setErrorRunId(null);
@@ -180,7 +180,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
       });
       setReview(draft);
       setReviewStep(2);
-      onStatus(`Borrador IA generado: ${draft.items.length} acciones propuestas.`);
+      onStatus(`Borrador AncestrAI generado: ${draft.items.length} acciones propuestas.`);
     } catch (runError) {
       let technicalMessage = "Error desconocido";
       if (runError instanceof Error) {
@@ -211,7 +211,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
 
       setError(summarizePipelineError(technicalMessage));
       setTechnicalError(technicalMessage);
-      onStatus(`Error en pipeline IA: ${technicalMessage}`);
+      onStatus(`Error en pipeline AncestrAI: ${technicalMessage}`);
     } finally {
       setRunning(false);
       setProgressStartedAt(null);
@@ -284,7 +284,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
 
     try {
       const result = applyApprovedAiReview(document, review);
-      const summary = `Lote IA aplicado: ${result.appliedItemIds.length} acciones.`;
+      const summary = `Lote AncestrAI aplicado: ${result.appliedItemIds.length} acciones.`;
       onApplyBatch(result.nextDoc, summary + (result.warnings.length ? ` Advertencias: ${result.warnings.length}.` : ""));
       setReview(null);
       setInputText("");
@@ -294,7 +294,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
     } catch (applyError) {
       const message = applyError instanceof Error ? applyError.message : String(applyError);
       setError(`Fallo aplicacion de lote: ${message}`);
-      onStatus(`Fallo lote IA: ${message}`);
+      onStatus(`Fallo lote AncestrAI: ${message}`);
     }
   }
 
@@ -313,12 +313,12 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
       <div className="modal-panel ai-assistant-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header" style={{ padding: "16px 24px", borderBottom: "1px solid var(--border-color-dim)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--gs-accent-gold)" }}>Asistente IA</h3>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--gs-accent-gold)" }}>AncestrAI</h3>
             <span style={{ color: "var(--border-color)", fontWeight: 300 }}>|</span>
             <span style={{ fontSize: "0.95rem", color: "var(--gs-ink-secondary)", fontWeight: 500 }}>{contextLabel(context?.kind === "global" && selectedGlobalFocusId ? { kind: "local", anchorPersonId: selectedGlobalFocusId } : context, document)}</span>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            <button className="secondary-ghost icon-btn" onClick={onOpenSettings} title="Configuracion IA">
+            <button className="secondary-ghost icon-btn" onClick={onOpenSettings} title="Configuracion AncestrAI">
               Config
             </button>
             <button onClick={onClose}>Cerrar</button>
@@ -332,7 +332,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div className="spinner-small" />
               <div style={{ flex: 1 }}>
-                <strong style={{ display: "block", marginBottom: 2 }}>IA Procesando</strong>
+                <strong style={{ display: "block", marginBottom: 2 }}>AncestrAI procesando</strong>
                 <span style={{ fontSize: 13, opacity: 0.9 }}>
                   {progressMessage.includes("...") ? progressMessage : `${progressMessage}...`}
                   <span style={{ marginLeft: 8, color: "var(--gs-accent-gold)" }}>({progressElapsedSeconds}s)</span>
@@ -440,7 +440,7 @@ export function AiAssistantModal({ viewModel, onClose, onStatus, onApplyBatch, o
 
             {review.userMessage ? (
               <div className="modal-line info" style={{ backgroundColor: "var(--accent-color-dim)", borderLeft: "4px solid var(--accent-color)", padding: "10px 12px", margin: "8px 0", borderRadius: 4 }}>
-                <strong>Mensaje de la IA:</strong>
+                <strong>Mensaje de AncestrAI:</strong>
                 <p style={{ margin: "4px 0 0 0", fontSize: 13 }}>{review.userMessage}</p>
               </div>
             ) : null}

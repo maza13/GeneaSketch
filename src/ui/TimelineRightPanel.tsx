@@ -74,7 +74,7 @@ export function TimelineRightPanel({
     };
   }, [datedYears]);
 
-  const timelineOverlay = viewConfig?.dtree?.overlays.find(o => o.type === 'timeline');
+  const timelineOverlay = viewConfig?.kindra?.overlays.find(o => o.type === 'timeline');
   const activeItemId = timelineOverlay?.config.sourceItemId ?? null;
   const timelineView = viewConfig?.timeline.view ?? "list";
   const effectiveScope = viewConfig?.timeline.scope ?? "visible";
@@ -226,7 +226,7 @@ export function TimelineRightPanel({
                     setLivingEnabled(true);
                   }}
                 >
-                  Año
+                  AÃ±o
                 </button>
                 <button
                   className={livingMode === "decade" ? "gs-panel-btn-subtle gs-panel-btn-subtle--active" : "gs-panel-btn-subtle"}
@@ -237,7 +237,7 @@ export function TimelineRightPanel({
                     setLivingEnabled(true);
                   }}
                 >
-                  Década
+                  DÃ©cada
                 </button>
               </div>
 

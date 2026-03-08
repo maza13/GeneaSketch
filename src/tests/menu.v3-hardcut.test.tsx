@@ -69,7 +69,7 @@ function buildParams(): MenuConfigParams {
     setTimelinePanelOpen: () => {},
     setTimelineScope: () => {},
     setTimelineView: () => {},
-    setDTreeLayoutEngine: () => {},
+    setKindraLayoutEngine: () => {},
     setShowDiagnostics: () => {},
     setShowPersonStatsPersonId: () => {},
     setShowGlobalStatsPanel: () => {},

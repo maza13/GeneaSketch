@@ -1,4 +1,4 @@
-# AGENTS.md - GeneaSketch Agent Guide
+﻿# AGENTS.md - GeneaSketch Agent Guide
 This guide is for coding agents working in this repository.
 It summarizes build/lint/test commands (including single-test workflows) and code style conventions inferred from the codebase.
 
@@ -66,7 +66,7 @@ npm test -- -t "restore normalization"
 
 ### Run tests in one folder
 ```bash
-npm test -- src/tests/dtree-v3
+npm test -- src/tests/kindra-v31
 ```
 
 ### Project-specific scripts
@@ -148,9 +148,10 @@ If those files are added later, treat them as high-priority agent instructions a
 ## 9) High-Signal Paths
 - `src/main.tsx`, `src/App.tsx`
 - `src/state/store.ts`, `src/state/slices/*`
-- `src/core/gschema/*`, `src/core/gschema/GedcomBridge.ts`
+- `src/core/genraph/*`, `src/core/genraph/GedcomBridge.ts`
 - `src/tests/*`
 - `src/styles/tokens.css`
 - `src-tauri/src/main.rs`
 
 Keep changes scoped, verified, and aligned with existing conventions.
+

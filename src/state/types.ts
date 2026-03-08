@@ -11,7 +11,7 @@ import type {
     ViewMode,
     VisualConfig
 } from "@/types/domain";
-import type { GSchemaGraph } from "@/core/gschema";
+import type { GenraphGraph } from "@/core/genraph";
 import type { GraphDocument, GraphPayload, GraphSource, RecentPayloadV2 } from "@/core/read-model/types";
 
 export type RightStackState = {
@@ -25,10 +25,10 @@ import { PersonPatch, PersonInput } from "@/core/engine/GeneaEngine";
 
 export interface DocSlice {
     /**
-     * The GSchema graph engine — the new source of truth for 0.4.0+.
+     * The Genraph graph engine — the new source of truth for 0.4.0+.
      * When null, the app is operating in legacy-only mode (pre-0.4.0 files) - wait, now it's the ONLY mode.
      */
-    gschemaGraph: GSchemaGraph | null;
+    genraphGraph: GenraphGraph | null;
     graphRevision: number;
     xrefToUid?: Record<string, string>;
     uidToXref?: Record<string, string>;
@@ -80,9 +80,9 @@ export interface ViewSlice {
     clearNodePositions: () => void;
     setGridEnabled: (enabled: boolean) => void;
     setGridSize: (size: number) => void;
-    setDTreeOrientation: (isVertical: boolean) => void;
-    setDTreeLayoutEngine: (engine: "vnext") => void;
-    toggleDTreeNodeCollapse: (nodeId: string) => void;
+    setKindraOrientation: (isVertical: boolean) => void;
+    setKindraLayoutEngine: (engine: "vnext") => void;
+    toggleKindraNodeCollapse: (nodeId: string) => void;
     setOverlay: (overlay: ActiveOverlay) => void;
     removeOverlay: (id: string) => void;
     clearOverlayType: (type: string) => void;

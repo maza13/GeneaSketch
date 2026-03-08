@@ -1,4 +1,4 @@
-# 12 - Instrucciones para agentes IA
+﻿# 12 - Instrucciones para agentes IA
 
 ## 12. Instrucciones para agentes IA
 
@@ -30,7 +30,7 @@
 
 #### Matriz de liderazgo y delegacion
 - `geneasketch-ux-governor` lidera cambios en UI/estilos/UX docs.
-- `gsk-engine-architect` lidera cambios de `src/core/gschema/**` y `docs/wiki-gsk/**`.
+- `gsk-engine-architect` lidera cambios de `src/core/genraph/**` y `docs/wiki-gsk/**`.
 - `geneasketch-docs-manager` lidera carriles documentales de producto/wiki-software.
 - En cambios mixtos: skill lider delega y luego valida cumplimiento `UX-RULE-*`.
 
@@ -89,3 +89,4 @@ powershell -ExecutionPolicy Bypass -File tools/skills/check_skill_parity.ps1
 
 ## Navegacion
 [<- 11_checklist_entrega](./11_checklist_entrega.md) | [Volver a README ->](./README.md)
+

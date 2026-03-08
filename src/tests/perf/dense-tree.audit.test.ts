@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { expandGraph } from "@/core/graph/expand";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
+import { documentToGenraph } from "@/core/genraph/GedcomBridge";
 import { computeLayout } from "@/core/layout";
 import {
   clearGraphProjectionCache,
@@ -84,7 +84,7 @@ function buildDenseViewConfig(document: GeneaDocument): ViewConfig {
       unclesCousins: 2,
     },
     showSpouses: true,
-    dtree: {
+    kindra: {
       isVertical: true,
       layoutEngine: "vnext",
       collapsedNodeIds: [],
@@ -143,7 +143,7 @@ describe("perf/dense-tree audit", () => {
     const viewConfig = buildDenseViewConfig(document);
     const expanded = expandGraph(document, viewConfig);
     const focusQuery = firstPersonLabel(document);
-    const { graph } = documentToGSchema(document, "7.0.x");
+    const { graph } = documentToGenraph(document, "7.0.x");
 
     // Pure read-model projection from an already-built graph.
     const graphProjection = await measureColdWarmRuns(() => {
@@ -154,7 +154,7 @@ describe("perf/dense-tree audit", () => {
 
     // Proxy for "time to visible" from document-derived graph load path.
     const ttvProxy = await measureColdWarmRuns(() => {
-      const rebuilt = documentToGSchema(document, "7.0.x").graph;
+      const rebuilt = documentToGenraph(document, "7.0.x").graph;
       clearGraphProjectionCache();
       setReadModelMode("direct");
       const projected = projectGraphDocument(rebuilt);

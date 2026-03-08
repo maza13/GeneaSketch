@@ -1,11 +1,10 @@
 import { openDB } from "idb";
 import type { SessionSnapshot } from "@/types/domain";
-import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
+import { normalizeKindraConfig } from "@/core/kindra/kindraConfig";
 
 const DB_NAME = "geneasketch-db";
 const STORE_NAME = "session";
 const KEY = "autosession";
-export const SESSION_LEGACY_MIN_SCHEMA_VERSION = 7;
 export const SESSION_SNAPSHOT_SCHEMA_VERSION = 8;
 
 async function getDb() {
@@ -34,29 +33,18 @@ function toRecord(value: unknown): Record<string, any> {
 function sanitizeViewConfig(value: unknown): SessionSnapshot["viewConfig"] {
   if (!isRecord(value)) return null;
   const next: Record<string, unknown> = { ...value };
-  next.dtree = normalizeDtreeConfig((value as Record<string, unknown>).dtree as any);
+  next.kindra = normalizeKindraConfig((value as Record<string, unknown>).kindra as any);
   return next as SessionSnapshot["viewConfig"];
-}
-
-function hasLegacyDtreeFlags(value: unknown): boolean {
-  if (!isRecord(value)) return false;
-  const dtree = isRecord(value.dtree) ? value.dtree : null;
-  if (!dtree) return false;
-  return dtree.renderVersion !== undefined || dtree.layoutEngine === "v2";
 }
 
 function normalizeSnapshot(value: unknown): { snapshot: SessionSnapshot | null; shouldWriteBack: boolean } {
   if (!isRecord(value)) return { snapshot: null, shouldWriteBack: false };
   const schemaVersion = value.schemaVersion;
   if (typeof schemaVersion !== "number") return { snapshot: null, shouldWriteBack: false };
-  if (schemaVersion < SESSION_LEGACY_MIN_SCHEMA_VERSION) return { snapshot: null, shouldWriteBack: false };
-
-  const shouldWriteBack =
-    schemaVersion !== SESSION_SNAPSHOT_SCHEMA_VERSION
-    || hasLegacyDtreeFlags(value.viewConfig);
+  if (schemaVersion !== SESSION_SNAPSHOT_SCHEMA_VERSION) return { snapshot: null, shouldWriteBack: false };
 
   return {
-    shouldWriteBack,
+    shouldWriteBack: false,
     snapshot: {
     schemaVersion: SESSION_SNAPSHOT_SCHEMA_VERSION,
     graph: ("graph" in value ? (value.graph as SessionSnapshot["graph"]) : null) ?? null,

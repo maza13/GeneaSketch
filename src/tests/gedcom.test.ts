@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseGedcomAnyVersion } from "@/core/gedcom/parser";
 import { serializeGedcom } from "@/core/gedcom/serializer";
-import { documentToGSchema, gschemaToDocument } from "@/core/gschema/GedcomBridge";
+import { documentToGenraph, genraphToDocument } from "@/core/genraph/GedcomBridge";
 import { expandGraph } from "@/core/graph/expand";
 import type { ViewConfig } from "@/types/domain";
 
@@ -158,7 +158,7 @@ describe("GED parser + serializer", () => {
     expect(warnings.some((w) => w.code === "GED_PEDI_STRUCT_DROPPED")).toBe(false);
   });
 
-  it("maps PEDI/QUAY to ParentChild nature/certainty in GSchema bridge", () => {
+  it("maps PEDI/QUAY to ParentChild nature/certainty in Genraph bridge", () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1
@@ -183,7 +183,7 @@ describe("GED parser + serializer", () => {
 1 CHIL @I1@
 0 TRLR`;
     const parsed = parseGedcomAnyVersion(ged);
-    const { graph } = documentToGSchema(parsed.document!, "5.5.1");
+    const { graph } = documentToGenraph(parsed.document!, "5.5.1");
     const pc = graph.allEdges().find((edge) => edge.type === "ParentChild");
     expect(pc?.type).toBe("ParentChild");
     if (pc?.type !== "ParentChild") throw new Error("Missing ParentChild");
@@ -193,7 +193,7 @@ describe("GED parser + serializer", () => {
 
   it("defaults to UNK when PEDI is absent under conservative policy", () => {
     const parsed = parseGedcomAnyVersion(SAMPLE_GED);
-    const { graph } = documentToGSchema(parsed.document!, "7.0.x");
+    const { graph } = documentToGenraph(parsed.document!, "7.0.x");
     const pc = graph.allEdges().find((edge) => edge.type === "ParentChild");
     expect(pc?.type).toBe("ParentChild");
     if (pc?.type !== "ParentChild") throw new Error("Missing ParentChild");
@@ -202,13 +202,13 @@ describe("GED parser + serializer", () => {
 
   it("roundtrips ParentChild UNKNOWN/uncertain into PEDI/QUAY", () => {
     const parsed = parseGedcomAnyVersion(SAMPLE_GED);
-    const { graph } = documentToGSchema(parsed.document!, "7.0.x");
+    const { graph } = documentToGenraph(parsed.document!, "7.0.x");
     const pces = graph.allEdges().filter((edge) => edge.type === "ParentChild");
     for (const edge of pces) {
       edge.nature = "UNK";
       edge.certainty = "uncertain";
     }
-    const projected = gschemaToDocument(graph, "5.5.1");
+    const projected = genraphToDocument(graph, "5.5.1");
     const ged = serializeGedcom(projected, { version: "5.5.1" });
     expect(ged).toContain("2 PEDI UNKNOWN");
     expect(ged).toContain("2 QUAY 0");
@@ -216,13 +216,13 @@ describe("GED parser + serializer", () => {
 
   it("degrades STE to PEDI UNKNOWN with explicit warning", () => {
     const parsed = parseGedcomAnyVersion(SAMPLE_GED);
-    const { graph } = documentToGSchema(parsed.document!, "7.0.x");
+    const { graph } = documentToGenraph(parsed.document!, "7.0.x");
     const pces = graph.allEdges().filter((edge) => edge.type === "ParentChild");
     for (const edge of pces) {
       edge.nature = "STE";
       edge.certainty = "medium";
     }
-    const projected = gschemaToDocument(graph, "5.5.1");
+    const projected = genraphToDocument(graph, "5.5.1");
     const warnings: Array<{ code: string; message: string }> = [];
     const ged = serializeGedcom(projected, {
       version: "5.5.1",

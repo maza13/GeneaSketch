@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionService } from "@/io/sessionService";
 import { useAppStore } from "@/state/store";
 import type { GeneaDocument } from "@/types/domain";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
+import { documentToGenraph } from "@/core/genraph/GedcomBridge";
 
 function doc(name: string): GeneaDocument {
   return {
@@ -27,7 +27,7 @@ function doc(name: string): GeneaDocument {
 
 function recentPayload(name: string) {
   const source = doc(name);
-  const graph = documentToGSchema(source, "7.0.x").graph;
+  const graph = documentToGenraph(source, "7.0.x").graph;
   return {
     graph: {
       data: graph.toData(),

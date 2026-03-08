@@ -1,4 +1,4 @@
-export type PublicChangelogEntry = {
+﻿export type PublicChangelogEntry = {
   heading: string;
   technicalVersion?: string | null;
   userChanges: string[];
@@ -10,7 +10,7 @@ export const PUBLIC_CHANGELOG: PublicChangelogEntry[] = [
     "technicalVersion": "0.4.5",
     "userChanges": [
       "La shell queda mas ordenada internamente sin cambiar los flujos visibles de trabajo.",
-      "La documentacion principal ahora describe mejor el estado real de la app, `.gsk` y `DTree V3`.",
+      "La documentacion principal ahora describe mejor el estado real de la app, `.gsk` y `Kindra v3.1`.",
       "Se agregan tests para blindar la frontera entre App Shell, facade y features complejas."
     ]
   },
@@ -24,7 +24,7 @@ export const PUBLIC_CHANGELOG: PublicChangelogEntry[] = [
     ]
   },
   {
-    "heading": "4 de marzo de 2026 - Nota de arquitectura (Cierre DTree V3 065-072)",
+    "heading": "4 de marzo de 2026 - Nota de arquitectura (Cierre Kindra v3.1 065-072)",
     "technicalVersion": null,
     "userChanges": [
       "El render genealogico queda consolidado en la ruta V3.",
@@ -92,3 +92,4 @@ export const PUBLIC_CHANGELOG: PublicChangelogEntry[] = [
     ]
   }
 ] as PublicChangelogEntry[];
+

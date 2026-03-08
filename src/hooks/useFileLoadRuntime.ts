@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
-import type { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
+import { normalizeKindraConfig } from "@/core/kindra/kindraConfig";
+import type { GenraphGraph } from "@/core/genraph";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { GraphDocument, GraphSource } from "@/core/read-model/types";
 import { WorkspaceProfileService } from "@/io/workspaceProfileService";
@@ -16,7 +16,7 @@ export type LegacyGskMeta = {
 } | null | undefined;
 
 export type LoadedGraphRuntimeInput = {
-  graph: GSchemaGraph | null;
+  graph: GenraphGraph | null;
   source: GraphSource;
   gskMeta?: LegacyGskMeta;
 };
@@ -28,10 +28,10 @@ export type FileLoadRuntime = {
 
 function normalizeHydratedViewConfig(viewConfig: ViewConfig | null | undefined): ViewConfig | null {
   if (!viewConfig) return viewConfig ?? null;
-  const normalizedDtree = normalizeDtreeConfig(viewConfig.dtree);
+  const normalizedKindra = normalizeKindraConfig(viewConfig.kindra);
   return {
     ...viewConfig,
-    dtree: normalizedDtree,
+    kindra: normalizedKindra,
   };
 }
 
@@ -65,12 +65,12 @@ export function useFileLoadRuntime(clearMergeFocus: () => void): FileLoadRuntime
     async ({ graph, source, gskMeta }: LoadedGraphRuntimeInput) => {
       loadGraph({ graph, source });
 
-      const graphId = useAppStore.getState().gschemaGraph?.graphId ?? "";
+      const graphId = useAppStore.getState().genraphGraph?.graphId ?? "";
       const profile = graphId ? await WorkspaceProfileService.load(graphId) : null;
       if (profile || gskMeta?.viewConfig || gskMeta?.visualConfig) {
         const nextHydration = resolveProfileHydration(useAppStore.getState(), profile, gskMeta);
         useAppStore.setState((state) => {
-          const tempDoc = projectGraphDocument(state.gschemaGraph);
+          const tempDoc = projectGraphDocument(state.genraphGraph);
           return {
             viewConfig: nextHydration.nextViewConfig,
             visualConfig: nextHydration.nextVisualConfig,

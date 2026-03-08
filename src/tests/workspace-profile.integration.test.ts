@@ -59,17 +59,17 @@ describe("workspace profile hydration precedence", () => {
     expect(result.nextTheme).toBeUndefined();
   });
 
-  it("normalizes legacy dtree flags to hard-cut contract when profile/meta is legacy", () => {
+  it("normalizes invalid Kindra flags to the current runtime contract", () => {
     const state = baseState();
-    const currentDtree = state.viewConfig?.dtree;
-    if (!currentDtree) throw new Error("Expected default dtree config in base state.");
+    const currentKindra = state.viewConfig?.kindra;
+    if (!currentKindra) throw new Error("Expected default Kindra config in base state.");
     const legacyProfileView = {
       ...state.viewConfig!,
-      dtree: {
-        isVertical: currentDtree.isVertical,
+      kindra: {
+        isVertical: currentKindra.isVertical,
         layoutEngine: "v2",
-        collapsedNodeIds: [...currentDtree.collapsedNodeIds],
-        overlays: [...currentDtree.overlays],
+        collapsedNodeIds: [...currentKindra.collapsedNodeIds],
+        overlays: [...currentKindra.overlays],
         renderVersion: "v2"
       }
     } as any;
@@ -83,8 +83,8 @@ describe("workspace profile hydration precedence", () => {
       null
     );
 
-    expect(result.nextViewConfig?.dtree?.layoutEngine).toBe("vnext");
-    expect((result.nextViewConfig?.dtree as any)?.renderVersion).toBeUndefined();
+    expect(result.nextViewConfig?.kindra?.layoutEngine).toBe("vnext");
+    expect((result.nextViewConfig?.kindra as any)?.renderVersion).toBeUndefined();
   });
 });
 

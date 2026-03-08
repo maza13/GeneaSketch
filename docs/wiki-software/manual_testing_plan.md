@@ -1,4 +1,4 @@
-# Plan de Pruebas Manuales - GeneaSketch v0.4.5 (Beta GSchema)
+# Plan de Pruebas Manuales - GeneaSketch v0.4.5 (Beta Genraph)
 
 Este documento contiene pruebas paso a paso para verificar estabilidad de motores visuales, logicos y de interfaz antes de un corte de release.
 
@@ -26,8 +26,8 @@ Objetivo: Verificar que los atajos auditados funcionan correctamente.
 
 ---
 
-## Bloque B: Motor D3 y Overlays
-Objetivo: Validar capas de visualizacion del motor grafico.
+## Bloque B: Kindra y overlays
+Objetivo: Validar capas de visualizacion del subsystema visual.
 
 1. Ajuste a pantalla:
 - Haz zoom out hasta que el arbol sea pequeno.
@@ -46,7 +46,7 @@ Objetivo: Validar capas de visualizacion del motor grafico.
 
 ---
 
-## Bloque C: GSchema y GEDCOM (Integridad)
+## Bloque C: Genraph y GEDCOM (Integridad)
 Objetivo: Asegurar que el hardening del motor de datos es efectivo.
 
 1. Persistencia del historial (journal):
@@ -61,16 +61,16 @@ Objetivo: Asegurar que el hardening del motor de datos es efectivo.
 
 ---
 
-## Bloque D: AI Bridge (IA)
-Objetivo: Verificar flujo de asistencia IA y reversibilidad.
+## Bloque D: AncestrAI (IA)
+Objetivo: Verificar flujo de AncestrAI y reversibilidad.
 
 1. Asistente local:
-- Abre el panel de una persona y haz clic en "Asistente IA".
+- Abre el panel de una persona y haz clic en "AncestrAI".
 - Solicita "Generar una biografia basada en sus hechos".
 - Resultado esperado: respuesta coherente basada en datos del nodo.
 
 2. Batch Apply y Undo:
 - Solicita un cambio masivo (por ejemplo, estandarizar nombres).
 - Haz clic en "Aplicar Cambios".
-- Usa "Deshacer Lote IA" en menu `Edit`.
+- Usa "Deshacer lote AncestrAI" en menu `Edit`.
 - Resultado esperado: los cambios se aplican en bloque y se revierten al estado anterior.

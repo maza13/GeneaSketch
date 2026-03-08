@@ -1,9 +1,9 @@
-# 07. Catalogo Normativo de Errores y Severidad
+﻿# 07. Catalogo Normativo de Errores y Severidad
 
 ## Fuentes de verdad (codigo)
-- Catalogo central: `src/core/gschema/errorCatalog.ts`
-- Import/export de paquete: `src/core/gschema/GskPackage.ts`
-- Validacion estructural: `src/core/gschema/validation.ts`
+- Catalogo central: `src/core/genraph/errorCatalog.ts`
+- Import/export de paquete: `src/core/genraph/GskPackage.ts`
+- Validacion estructural: `src/core/genraph/validation.ts`
 - GED parser: `src/core/gedcom/parser.ts`
 - GED serializer: `src/core/gedcom/serializer.ts`
 
@@ -89,10 +89,11 @@ Nota operativa 0.5.0:
 
 ## Regla de mantenimiento
 Todo codigo nuevo debe cumplir, en la misma iteracion:
-1. Alta en `src/core/gschema/errorCatalog.ts`.
+1. Alta en `src/core/genraph/errorCatalog.ts`.
 2. Uso en runtime (sin literales sueltos de `code`).
 3. Actualizacion de este capitulo.
 4. Test de paridad en verde (`wiki.error-catalog-parity-docs`, `gedcom.error-catalog-parity`).
 
 ## Navegacion
 [<- Anterior: 06_versionado_y_migraciones](./06_versionado_y_migraciones.md) | [Siguiente: CHANGELOG ->](./CHANGELOG.md)
+

@@ -12,7 +12,7 @@ App Shell (Chrome / UI)
 │   │   ├── person/         ← detail panels (App Shell)
 │   │   └── shell/          ← layout (Chrome / UI)
 │   ├── views/
-│   │   └── dtree-v3/       ← VISUAL ENGINE (D3 Canvas, Nodos, Edges)
+│   │   └── kindra-v31/       ← Kindra (implementacion visual actual)
 │   ├── styles/
 │   │   ├── tokens.css      ← FUENTE DE VERDAD de colores/spacing
 │   │   └── styles.css      ← reglas globales de UI
@@ -21,16 +21,17 @@ App Shell (Chrome / UI)
 
 ### Regla de separación crítica
 1. **App Shell (UI):** Componentes estándar de interacción. Se encuentran principalmente en `@/ui`.
-2. **Visual Engine:** Sistema de proyección de grafo a coordenadas visuales (Canvas). Se encuentra en `@/views/dtree-v3`.
+2. **Kindra:** Nombre oficial del visual engine. Su implementacion actual vive en `@/views/kindra-v31`.
 
 ### Regla de estilos
 - **Variables CSS siempre** — nunca hardcodear colores, espaciados o radios
 - **CSS Modules** para componentes (`.module.css` junto al `.tsx`)
 - **No Tailwind** — las clases utilitarias rompen la coherencia del token system
-- **Excepción D3 (Visual Engine):** El canvas SVG usa atributos SVG directos + variables CSS leídas con `getComputedStyle`.
+- **Excepcion D3 (Kindra):** El canvas SVG usa atributos SVG directos + variables CSS leidas con `getComputedStyle`.
 
 ---
 
 ## Navegacion
 [<- 01_filosofia_y_principios](./01_filosofia_y_principios.md) | [Siguiente: 03_sistema_de_diseno_tokens ->](./03_sistema_de_diseno_tokens.md)
+
 

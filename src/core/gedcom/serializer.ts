@@ -1,6 +1,6 @@
-import type { Family, GedExportVersion, GedExportWarning, GeneaDocument, Person, SourceRef } from "@/types/domain";
+﻿import type { Family, GedExportVersion, GedExportWarning, GeneaDocument, Person, SourceRef } from "@/types/domain";
 import { normalizePersonSurnames } from "@/core/naming/surname";
-import { ERROR_CODES } from "@/core/gschema/errorCatalog";
+import { ERROR_CODES } from "@/core/genraph/errorCatalog";
 
 export type GedExportWarningCollector = {
   push: (warning: GedExportWarning) => void;
@@ -320,3 +320,4 @@ export function serializeGedcom(doc: GeneaDocument, options?: SerializeGedOption
   out.push("0 TRLR");
   return `${out.join("\n")}\n`;
 }
+

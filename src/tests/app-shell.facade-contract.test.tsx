@@ -189,9 +189,9 @@ function createActions() {
     setTimelineStatus: vi.fn(),
     clearNodePositions: vi.fn(),
     setGridEnabled: vi.fn(),
-    setDTreeOrientation: vi.fn(),
-    setDTreeLayoutEngine: vi.fn(),
-    toggleDTreeNodeCollapse: vi.fn(),
+    setKindraOrientation: vi.fn(),
+    setKindraLayoutEngine: vi.fn(),
+    toggleKindraNodeCollapse: vi.fn(),
     setOverlay: vi.fn<(overlay: ActiveOverlay) => void>(),
     clearOverlayType: vi.fn(),
     clearVisualModes: vi.fn(),
@@ -218,7 +218,7 @@ describe("useAppShellFacade contract", () => {
     const actions = createActions();
     fakeState.current = {
       __document: doc,
-      gschemaGraph: { graphId: "graph-1", journalLength: 1, persons: doc.persons, families: doc.families },
+      genraphGraph: { graphId: "graph-1", journalLength: 1, persons: doc.persons, families: doc.families },
       viewConfig: UiEngine.createDefaultViewConfig("@I1@"),
       visualConfig: UiEngine.createDefaultVisualConfig(),
       expandedGraph: { nodes: [{ id: "@I1@", canonicalId: "@I1@", type: "person" }], edges: [] },

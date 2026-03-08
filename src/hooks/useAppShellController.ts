@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mergeFocusKey, normalizeMergeFocus, type MergeFocusPayload } from "@/core/edit/mergeFocus";
-import { resolveNodeClickRouting } from "@/core/dtree/nodeClickRouting";
+import { resolveNodeClickRouting } from "@/core/kindra/nodeClickRouting";
 import { TreeGenerator, type GeneratorScenario } from "@/core/testing/generator";
 import { useNodeActions } from "@/hooks/useNodeActions";
 import type { GraphDocument, GraphSource } from "@/core/read-model/types";
@@ -46,7 +46,7 @@ type AppShellControllerParams = {
   fitToScreen: () => void;
   setStatus: (status: string) => void;
   applyProjectedDocument: (doc: GraphDocument, source: GraphSource) => void;
-  toggleDTreeNodeCollapse: (id: string) => void;
+  toggleKindraNodeCollapse: (id: string) => void;
   setFocusFamilyId: (id: string | null) => void;
   openLocalAiAssistant: (id: string) => void;
 };
@@ -158,7 +158,7 @@ export function useAppShellController(params: AppShellControllerParams) {
 
   const handleNodeClick = useCallback(
     (interaction: NodeInteraction) => {
-      const heatmapOverlayCandidate = params.viewConfig?.dtree?.overlays.find((overlay) => overlay.type === "heatmap");
+      const heatmapOverlayCandidate = params.viewConfig?.kindra?.overlays.find((overlay) => overlay.type === "heatmap");
       const heatmapOverlay = heatmapOverlayCandidate?.type === "heatmap" ? heatmapOverlayCandidate : null;
       const decision = resolveNodeClickRouting({
         interaction,
@@ -237,7 +237,7 @@ export function useAppShellController(params: AppShellControllerParams) {
     clearOverlayType: params.clearOverlayType,
     setOverlay: params.setOverlay,
     setStatus: params.setStatus,
-    toggleDTreeNodeCollapse: params.toggleDTreeNodeCollapse,
+    toggleKindraNodeCollapse: params.toggleKindraNodeCollapse,
     setBranchAnchorId,
     openLocalAiAssistant: params.openLocalAiAssistant,
     setPendingKinshipSourceId,

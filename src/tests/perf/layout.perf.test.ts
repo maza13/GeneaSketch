@@ -6,6 +6,11 @@ import { buildLayoutInputForScenario, createPerfScenarios } from "@/tests/perf/c
 import { measureColdWarmRuns, type PerfStats } from "@/tests/perf/common/perfStats";
 import { writeJsonReport, writeMarkdownReport } from "@/tests/perf/common/reportWriter";
 
+const SHOULD_RUN_PERF =
+  process.env.PERF_WRITE_REPORTS === "1"
+  || ["test:perf:layout", "test:perf:all"].includes(process.env.npm_lifecycle_event ?? "");
+const perfIt = SHOULD_RUN_PERF ? it : it.skip;
+
 type LayoutBaseline = {
   commit: string;
   generatedAt: string;
@@ -18,7 +23,7 @@ type LayoutBaseline = {
 function loadLayoutBaseline(): LayoutBaseline {
   const baselinePath = path.resolve(
     process.cwd(),
-    "reports/perf/dtree-v3-phase0/baseline-layout.json"
+    "reports/perf/kindra-v31-phase0/baseline-layout.json"
   );
   const raw = readFileSync(baselinePath, "utf8");
   return JSON.parse(raw) as LayoutBaseline;
@@ -30,7 +35,7 @@ function buildSummaryMarkdown(
   results: Record<string, PerfStats>
 ): string {
   const lines = [
-    "# DTree V3 Phase0 Layout Perf",
+    "# Kindra v3.1 Phase0 Layout Perf",
     "",
     `- measuredAt: ${measuredAt}`,
     `- baselineCommit: ${baselineCommit}`,
@@ -49,7 +54,7 @@ function buildSummaryMarkdown(
 }
 
 describe("perf/layout phase0", () => {
-  it("meets SLO and regression gates", async () => {
+  perfIt("meets SLO and regression gates", async () => {
     const baseline = loadLayoutBaseline();
     const scenarios = createPerfScenarios();
     const results: Record<string, PerfStats> = {};
@@ -86,7 +91,7 @@ describe("perf/layout phase0", () => {
 
     if (process.env.PERF_WRITE_REPORTS === "1") {
       const measuredAt = new Date().toISOString();
-      const outputDir = path.resolve(process.cwd(), "reports/perf/dtree-v3-phase0");
+      const outputDir = path.resolve(process.cwd(), "reports/perf/kindra-v31-phase0");
       writeJsonReport(path.join(outputDir, "latest-layout.json"), {
         measuredAt,
         baselineCommit: baseline.commit,

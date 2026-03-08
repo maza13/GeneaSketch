@@ -232,7 +232,7 @@ function MarkdownGFM({ content, onLinkNavigate }: { content: string; onLinkNavig
 
 const WIKI_TABS = [
   { id: "software" as const, label: "Guía de Usuario", icon: "menu_book" },
-  { id: "tech" as const, label: "Ingeniería / GSchema", icon: "settings_suggest" },
+  { id: "tech" as const, label: "Ingeniería / Genraph", icon: "settings_suggest" },
   { id: "ux" as const, label: "UX / Diseño", icon: "palette" },
 ];
 

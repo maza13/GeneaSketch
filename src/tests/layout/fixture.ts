@@ -60,7 +60,7 @@ export function createLayoutFixtureViewConfig(): ViewConfig {
       unclesCousins: 2
     },
     showSpouses: true,
-    dtree: {
+    kindra: {
       isVertical: true,
       layoutEngine: "vnext",
       collapsedNodeIds: [],

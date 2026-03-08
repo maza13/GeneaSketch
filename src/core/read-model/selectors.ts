@@ -1,4 +1,4 @@
-import type { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
+import type { GenraphGraph } from "@/core/genraph";
 import { clearReadModelCache, getCached, setCached } from "./cache";
 import { buildDirectDocument } from "./directProjection";
 import type {
@@ -25,17 +25,17 @@ export function getReadModelMode(): ReadModelMode {
   return "direct";
 }
 
-function keyFor(graph: GSchemaGraph | null): string {
+function keyFor(graph: GenraphGraph | null): string {
   if (!graph) return "";
   return `${graph.graphId}:${graph.journalLength}:direct`;
 }
 
-function keyedSelector(graph: GSchemaGraph | null, selector: string): string {
+function keyedSelector(graph: GenraphGraph | null, selector: string): string {
   const key = keyFor(graph);
   return key ? `${key}:${selector}` : "";
 }
 
-export function projectGraphDocument(graph: GSchemaGraph | null): GraphProjectionDocument | null {
+export function projectGraphDocument(graph: GenraphGraph | null): GraphProjectionDocument | null {
   if (!graph) {
     lastKey = "";
     lastDoc = null;
@@ -48,7 +48,7 @@ export function projectGraphDocument(graph: GSchemaGraph | null): GraphProjectio
   return lastDoc;
 }
 
-export function selectPersons(graph: GSchemaGraph | null): GraphPerson[] {
+export function selectPersons(graph: GenraphGraph | null): GraphPerson[] {
   const cacheKey = keyedSelector(graph, "persons");
   if (!cacheKey) return [];
   const cached = getCached<GraphPerson[]>(cacheKey);
@@ -57,7 +57,7 @@ export function selectPersons(graph: GSchemaGraph | null): GraphPerson[] {
   return setCached(cacheKey, Object.values(doc?.persons || {}));
 }
 
-export function selectFamilies(graph: GSchemaGraph | null): GraphFamily[] {
+export function selectFamilies(graph: GenraphGraph | null): GraphFamily[] {
   const cacheKey = keyedSelector(graph, "families");
   if (!cacheKey) return [];
   const cached = getCached<GraphFamily[]>(cacheKey);
@@ -66,7 +66,7 @@ export function selectFamilies(graph: GSchemaGraph | null): GraphFamily[] {
   return setCached(cacheKey, Object.values(doc?.families || {}));
 }
 
-export function selectGraphStats(graph: GSchemaGraph | null): GraphStatsSummary {
+export function selectGraphStats(graph: GenraphGraph | null): GraphStatsSummary {
   const cacheKey = keyedSelector(graph, "stats");
   if (!cacheKey) return { persons: 0, families: 0, living: 0, deceased: 0 };
   const cached = getCached<GraphStatsSummary>(cacheKey);
@@ -83,7 +83,7 @@ export function selectGraphStats(graph: GSchemaGraph | null): GraphStatsSummary 
   });
 }
 
-export function selectTimelineInput(graph: GSchemaGraph | null): GraphTimelineInput {
+export function selectTimelineInput(graph: GenraphGraph | null): GraphTimelineInput {
   const cacheKey = keyedSelector(graph, "timeline");
   if (!cacheKey) return { persons: [], families: [] };
   const cached = getCached<GraphTimelineInput>(cacheKey);
@@ -94,7 +94,7 @@ export function selectTimelineInput(graph: GSchemaGraph | null): GraphTimelineIn
   });
 }
 
-export function selectSearchEntries(graph: GSchemaGraph | null): GraphSearchEntry[] {
+export function selectSearchEntries(graph: GenraphGraph | null): GraphSearchEntry[] {
   const cacheKey = keyedSelector(graph, "search");
   if (!cacheKey) return [];
   const cached = getCached<GraphSearchEntry[]>(cacheKey);

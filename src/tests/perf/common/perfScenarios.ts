@@ -51,7 +51,7 @@ function getFirstPersonId(document: GraphDocument): string {
 
 function buildViewConfig(focusPersonId: string): ViewConfig {
   const fixture = createLayoutFixtureViewConfig();
-  const fixtureDtree = fixture.dtree ?? {
+  const fixtureKindra = fixture.kindra ?? {
     isVertical: true,
     layoutEngine: "vnext" as const,
     collapsedNodeIds: [],
@@ -61,10 +61,10 @@ function buildViewConfig(focusPersonId: string): ViewConfig {
     ...fixture,
     focusPersonId,
     homePersonId: focusPersonId,
-    dtree: {
-      isVertical: fixtureDtree.isVertical,
+    kindra: {
+      isVertical: fixtureKindra.isVertical,
       layoutEngine: "vnext",
-      collapsedNodeIds: [...fixtureDtree.collapsedNodeIds],
+      collapsedNodeIds: [...fixtureKindra.collapsedNodeIds],
       overlays: []
     }
   };

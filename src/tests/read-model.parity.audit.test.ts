@@ -3,10 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import JSZip from "jszip";
 import { parseGedcomAnyVersion } from "@/core/gedcom/parser";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
-import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
-import { exportGskPackage, importGskPackage } from "@/core/gschema/GskPackage";
-import { parseJournalFromJsonl } from "@/core/gschema/Journal";
+import { documentToGenraph } from "@/core/genraph/GedcomBridge";
+import { GenraphGraph } from "@/core/genraph/GenraphGraph";
+import { exportGskPackage, importGskPackage } from "@/core/genraph/GskPackage";
+import { parseJournalFromJsonl } from "@/core/genraph/Journal";
 import {
   clearGraphProjectionCache,
   projectGraphDocument,
@@ -23,7 +23,7 @@ import type { Event, GeneaDocument, GraphDocument, Person } from "@/types/domain
 type ParityFixture = {
   id: string;
   category: "canonical" | "synthetic" | "compat" | "real";
-  graphFactory: () => Promise<GSchemaGraph> | GSchemaGraph;
+  graphFactory: () => Promise<GenraphGraph> | GenraphGraph;
 };
 
 type FixtureSummary = {
@@ -152,7 +152,7 @@ function normalizeTimeline(timeline: GraphTimelineInput): Record<string, unknown
   };
 }
 
-function summarizeProjection(graph: GSchemaGraph): {
+function summarizeProjection(graph: GenraphGraph): {
   document: GraphDocument | null;
   persons: Array<Record<string, unknown>>;
   families: Array<Record<string, unknown>>;
@@ -244,16 +244,16 @@ function withMode<T>(mode: "direct" | "legacy", fn: () => T): T {
   return fn();
 }
 
-function loadCanonicalGraph(baseName: "basico" | "tipico" | "edgecases"): GSchemaGraph {
+function loadCanonicalGraph(baseName: "basico" | "tipico" | "edgecases"): GenraphGraph {
   const root = path.resolve(process.cwd(), "docs/wiki-gsk/ejemplos/canon");
   const data = JSON.parse(fs.readFileSync(path.join(root, `${baseName}.graph.json`), "utf8"));
   const journalRaw = fs.readFileSync(path.join(root, `${baseName}.journal.jsonl`), "utf8");
   const journal = parseJournalFromJsonl(journalRaw);
-  return GSchemaGraph.fromData(data, journal);
+  return GenraphGraph.fromData(data, journal);
 }
 
-async function buildCompatRepairGraph(): Promise<GSchemaGraph> {
-  const graph = GSchemaGraph.create();
+async function buildCompatRepairGraph(): Promise<GenraphGraph> {
+  const graph = GenraphGraph.create();
   graph.addPersonNode({ uid: "p-father", type: "Person", sex: "M", isLiving: false });
   graph.addPersonNode({ uid: "p-child", type: "Person", sex: "F", isLiving: true });
 
@@ -284,7 +284,7 @@ async function buildCompatRepairGraph(): Promise<GSchemaGraph> {
   return result.graph;
 }
 
-function buildAdoptionGraph(): GSchemaGraph {
+function buildAdoptionGraph(): GenraphGraph {
   const rawGedcom = [
     "0 HEAD",
     "1 GEDC",
@@ -312,22 +312,22 @@ function buildAdoptionGraph(): GSchemaGraph {
 
   const parsed = parseGedcomAnyVersion(rawGedcom);
   if (!parsed.document) throw new Error("Expected adoption GED fixture to parse.");
-  return documentToGSchema(parsed.document, "5.5.1").graph;
+  return documentToGenraph(parsed.document, "5.5.1").graph;
 }
 
-function buildRealSampleGraph(): GSchemaGraph {
+function buildRealSampleGraph(): GenraphGraph {
   const raw = fs.readFileSync(path.resolve(process.cwd(), "samples/NuñezyMendoza.ged"), "utf8");
   const parsed = parseGedcomAnyVersion(raw);
   if (!parsed.document) throw new Error("Expected real GED sample to parse.");
   const version = parsed.sourceVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-  return documentToGSchema(parsed.document, version).graph;
+  return documentToGenraph(parsed.document, version).graph;
 }
 
 const fixtures: ParityFixture[] = [
   { id: "canonical_basico", category: "canonical", graphFactory: () => loadCanonicalGraph("basico") },
   { id: "canonical_tipico", category: "canonical", graphFactory: () => loadCanonicalGraph("tipico") },
   { id: "canonical_edgecases", category: "canonical", graphFactory: () => loadCanonicalGraph("edgecases") },
-  { id: "synthetic_multi_union", category: "synthetic", graphFactory: () => documentToGSchema(makeMultiUnionDoc(), "7.0.x").graph },
+  { id: "synthetic_multi_union", category: "synthetic", graphFactory: () => documentToGenraph(makeMultiUnionDoc(), "7.0.x").graph },
   { id: "synthetic_adoption", category: "synthetic", graphFactory: buildAdoptionGraph },
   { id: "compat_missing_union_repair", category: "compat", graphFactory: buildCompatRepairGraph },
   { id: "real_sample_nunez_mendoza", category: "real", graphFactory: buildRealSampleGraph },

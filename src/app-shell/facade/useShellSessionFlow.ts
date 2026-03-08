@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+﻿import { useEffect, useMemo, useRef } from "react";
+import type { GenraphGraph } from "@/core/genraph";
 import type { GraphDocument } from "@/core/read-model/types";
 import { hasMeaningfulTree } from "@/hooks/useGskFile";
 import { hasMeaningfulDocument } from "./facadeBuilders";
@@ -9,7 +10,7 @@ type Params = {
   bootStatus: BootStatus;
   restoreNoticeVisible: boolean;
   document: GraphDocument | null;
-  gschemaGraph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null;
+  genraphGraph: GenraphGraph | null;
   bootstrapSession: () => Promise<void>;
   dismissRestoreNotice: () => void;
   clearSession: () => Promise<void>;
@@ -23,8 +24,8 @@ type Params = {
 export function useShellSessionFlow(params: Params) {
   const initializedRef = useRef(false);
   const hasActiveTree = useMemo(
-    () => hasMeaningfulTree(params.gschemaGraph) || hasMeaningfulDocument(params.document),
-    [params.document, params.gschemaGraph],
+    () => hasMeaningfulTree(params.genraphGraph) || hasMeaningfulDocument(params.document),
+    [params.document, params.genraphGraph],
   );
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export function useShellSessionFlow(params: Params) {
 
   useEffect(() => {
     if (params.bootStatus !== "ready" || initializedRef.current) return;
-    if (params.document || params.gschemaGraph) {
+    if (params.document || params.genraphGraph) {
       initializedRef.current = true;
       return;
     }
@@ -51,7 +52,7 @@ export function useShellSessionFlow(params: Params) {
     params.createNewTreeDoc,
     params.document,
     params.fitToScreen,
-    params.gschemaGraph,
+    params.genraphGraph,
     params.openPersonEditor,
     params.setSelectedPerson,
     params.setStatus,
@@ -92,3 +93,4 @@ export function useShellSessionFlow(params: Params) {
     },
   };
 }
+

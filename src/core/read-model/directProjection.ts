@@ -7,10 +7,10 @@ import type {
   SourceRef,
 } from "@/types/domain";
 import { inferCanonicalSurnameFields, normalizePersonSurnames } from "@/core/naming/surname";
-import { ensureParentChildUnionLinks } from "@/core/gschema/FamilyNormalization";
-import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
-import { PersonPredicates, UnionPredicates } from "@/core/gschema/predicates";
-import { createXrefResolver, type XrefPrefix } from "@/core/gschema/xref";
+import { ensureParentChildUnionLinks } from "@/core/genraph/FamilyNormalization";
+import { GenraphGraph } from "@/core/genraph/GenraphGraph";
+import { PersonPredicates, UnionPredicates } from "@/core/genraph/predicates";
+import { createXrefResolver, type XrefPrefix } from "@/core/genraph/xref";
 import type {
   GClaim,
   GeoRef,
@@ -22,7 +22,7 @@ import type {
   PersonNode,
   SourceNode,
   UnionNode,
-} from "@/core/gschema/types";
+} from "@/core/genraph/types";
 import type {
   GraphFamily,
   GraphPerson,
@@ -90,7 +90,7 @@ function certaintyToQuay(certainty: ParentChildEdge["certainty"]): "0" | "1" | "
 }
 
 function sourceRefsFromClaim(
-  graph: GSchemaGraph,
+  graph: GenraphGraph,
   claim: GClaim | null | undefined,
   xrefOf: (nodeUid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
 ): SourceRef[] {
@@ -116,7 +116,7 @@ function sourceRefsFromClaim(
 
 function buildPersonEventsFromClaims(
   nodeUid: string,
-  graph: GSchemaGraph,
+  graph: GenraphGraph,
   xrefOf: (nodeUid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
 ): GeneaEvent[] {
   const events: GeneaEvent[] = [];
@@ -157,7 +157,7 @@ function buildPersonEventsFromClaims(
 
 function buildUnionEventsFromClaims(
   nodeUid: string,
-  graph: GSchemaGraph,
+  graph: GenraphGraph,
   xrefOf: (nodeUid: string, prefix: "I" | "F" | "S" | "N" | "M") => string
 ): GeneaEvent[] {
   const events: GeneaEvent[] = [];
@@ -298,7 +298,7 @@ function collectFamcLinksForUnion(
 }
 
 export function buildDirectDocument(
-  graphInput: GSchemaGraph,
+  graphInput: GenraphGraph,
   targetVersion: "5.5.1" | "7.0.x" = "7.0.x"
 ): GraphProjectionDocument {
   const inputEdges = graphInput.allEdges();
@@ -308,7 +308,7 @@ export function buildDirectDocument(
     const exportData = graphInput.toData();
     const repair = ensureParentChildUnionLinks(exportData);
     if (repair.repairedEdges > 0) {
-      graph = GSchemaGraph.fromData(exportData, graphInput.getJournal());
+      graph = GenraphGraph.fromData(exportData, graphInput.getJournal());
     }
   }
 
@@ -474,7 +474,7 @@ export function buildDirectDocument(
       sourceRefs: [],
       noteRefs: noteRefsProjection || [],
       rawTags: inlineNotesProjection && inlineNotesProjection.length > 0 ? { NOTE: inlineNotesProjection } : undefined,
-      gschemaMeta: { uid: personNode.uid, source: "direct" },
+      genraphMeta: { uid: personNode.uid, source: "direct" },
     };
 
     if (targetVersion === "5.5.1") {
@@ -535,7 +535,7 @@ export function buildDirectDocument(
       events,
       noteRefs: projectedNoteRefs || [],
       rawTags: projectedInlineNotes && projectedInlineNotes.length > 0 ? { NOTE: projectedInlineNotes } : undefined,
-      gschemaMeta: { uid: unionNode.uid, source: "direct" },
+      genraphMeta: { uid: unionNode.uid, source: "direct" },
     };
 
     if (husbandXref && persons[husbandXref] && !persons[husbandXref].fams.includes(xref)) {
@@ -624,15 +624,15 @@ export function buildDirectDocument(
   } as GraphProjectionDocument;
 }
 
-export function buildDirectPersons(graph: GSchemaGraph): GraphPerson[] {
+export function buildDirectPersons(graph: GenraphGraph): GraphPerson[] {
   return Object.values(buildDirectDocument(graph).persons as Record<string, GraphPerson>);
 }
 
-export function buildDirectFamilies(graph: GSchemaGraph): GraphFamily[] {
+export function buildDirectFamilies(graph: GenraphGraph): GraphFamily[] {
   return Object.values(buildDirectDocument(graph).families as Record<string, GraphFamily>);
 }
 
-export function buildDirectTimeline(graph: GSchemaGraph): GraphTimelineInput {
+export function buildDirectTimeline(graph: GenraphGraph): GraphTimelineInput {
   return {
     persons: buildDirectPersons(graph),
     families: buildDirectFamilies(graph),

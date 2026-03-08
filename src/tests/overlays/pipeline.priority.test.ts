@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildOverlayPrecomputedData } from "@/views/dtree-v3/overlays/contextBuilders";
-import { TREE_PALETTE } from "@/views/dtree-v3/overlays/palette";
-import { resolveOverlayPipeline } from "@/views/dtree-v3/overlays/pipeline";
-import type { OverlayResolverRegistry } from "@/views/dtree-v3/overlays/types";
+import { buildOverlayPrecomputedData } from "@/views/kindra-v31/overlays/contextBuilders";
+import { TREE_PALETTE } from "@/views/kindra-v31/overlays/palette";
+import { resolveOverlayPipeline } from "@/views/kindra-v31/overlays/pipeline";
+import type { OverlayResolverRegistry } from "@/views/kindra-v31/overlays/types";
 import type { ColorThemeConfig } from "@/types/editor";
 import type { ExpandedGraph, GraphDocument } from "@/types/domain";
 

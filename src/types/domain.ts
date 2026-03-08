@@ -1,4 +1,4 @@
-import type { GSchemaGraph as GSchemaGraphData, GSchemaOperation } from "@/core/gschema/types";
+import type { GenraphGraph as GenraphGraphData, GenraphOperation } from "@/core/genraph/types";
 
 export type SourceFormat = "GED" | "GSK";
 export type ViewMode = "fan" | "tree" | "network";
@@ -341,6 +341,14 @@ export type TimelineHighlightState = {
   secondaryPersonIds: string[];
 };
 
+export type KindraViewConfig = {
+  isVertical: boolean;
+  layoutEngine?: "vnext";
+  collapsedNodeIds: string[];
+  // Highlight & Overlay Systems
+  overlays: ActiveOverlay[];
+};
+
 export type ViewConfig = {
   mode: ViewMode;
   preset: Preset;
@@ -372,13 +380,7 @@ export type ViewConfig = {
     unclesCousins: number;
   };
   showSpouses: boolean;
-  dtree?: {
-    isVertical: boolean;
-    layoutEngine?: "vnext";
-    collapsedNodeIds: string[];
-    // Highlight & Overlay Systems
-    overlays: ActiveOverlay[];
-  };
+  kindra?: KindraViewConfig;
 };
 
 export type OverlayType =
@@ -437,8 +439,8 @@ export type ExpandedGraph = {
 export type SessionSnapshot = {
   schemaVersion: 8;
   graph?: {
-    data: GSchemaGraphData;
-    journal: GSchemaOperation[];
+  data: GenraphGraphData;
+  journal: GenraphOperation[];
   } | null;
   viewConfig: ViewConfig | null;
   visualConfig?: VisualConfig;
@@ -486,8 +488,8 @@ export type RecentFileEntry = {
 
 export type RecentPayloadV2 = {
   graph: {
-    data: GSchemaGraphData;
-    journal: GSchemaOperation[];
+  data: GenraphGraphData;
+  journal: GenraphOperation[];
   };
   sourceVersion: SourceGedVersion;
   fileName: string;

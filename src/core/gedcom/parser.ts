@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   Event,
   Family,
   GedParseError,
@@ -10,7 +10,7 @@ import type {
   SourceRecord,
   SourceGedVersion
 } from "@/types/domain";
-import { ERROR_CODES } from "@/core/gschema/errorCatalog";
+import { ERROR_CODES } from "@/core/genraph/errorCatalog";
 import { inferCanonicalSurnameFields } from "@/core/naming/surname";
 
 type ParsedLine = {
@@ -624,4 +624,5 @@ export function parseGedcomAnyVersion(raw: string): ImportGedResult {
   }
   return { document, errors: [], warnings, sourceVersion: versionData.version };
 }
+
 

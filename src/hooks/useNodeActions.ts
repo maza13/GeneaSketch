@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import type {
     Family,
     PendingRelationType,
@@ -30,7 +30,7 @@ export type NodeActionsParams = {
     clearOverlayType: (type: OverlayType) => void;
     setOverlay: (overlay: ActiveOverlay) => void;
     setStatus: (msg: string) => void;
-    toggleDTreeNodeCollapse: (id: string) => void;
+    toggleKindraNodeCollapse: (id: string) => void;
     setBranchAnchorId: (id: string | null) => void;
     openLocalAiAssistant: (id: string) => void;
     setPendingKinshipSourceId: (id: string | null) => void;
@@ -57,6 +57,8 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
             const person = document.persons[p.nodeMenu.nodeId];
             if (!person) return null;
 
+            const kindraConfig = p.viewConfig?.kindra;
+
             const items: NodeActionMenuItem[] = [
                 { id: "view-details", label: "👁️ Ver ficha detallada", group: "accion", onSelect: () => p.setWorkspacePersonId(person.id) },
                 { id: "select-person", label: "🔍 Seleccionar persona", group: "accion", onSelect: () => p.focusPersonInCanvas(person.id) },
@@ -64,8 +66,8 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
                 { id: "add-relation", label: "➕ Agregar familiar...", group: "accion", onSelect: () => p.openAddRelationEditor(person.id, "child") }
             ];
 
-            if (p.viewConfig?.dtree) {
-                const lineageOverlay = p.viewConfig.dtree.overlays.find((overlay) => overlay.type === "lineage" && overlay.config.personId === person.id);
+            if (kindraConfig) {
+                const lineageOverlay = kindraConfig.overlays.find((overlay) => overlay.type === "lineage" && overlay.config.personId === person.id);
                 const hasLineage = Boolean(lineageOverlay);
                 const lineageMode = lineageOverlay?.config.mode || "all";
                 if (person.sex === "M" || person.sex === "U") {
@@ -96,7 +98,7 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
                         }
                     });
                 }
-                const heatmapOverlay = p.viewConfig.dtree.overlays.find((overlay) => overlay.type === "heatmap");
+                const heatmapOverlay = kindraConfig.overlays.find((overlay) => overlay.type === "heatmap");
                 const heatmapActive = heatmapOverlay?.config.personId === person.id;
                 items.push({
                     id: "genetic-heatmap",
@@ -114,13 +116,13 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
                 });
                 items.push({
                     id: "toggle-collapse",
-                    label: p.viewConfig.dtree.collapsedNodeIds.includes(person.id) ? "📂 Expandir descendencia" : "📁 Colapsar descendencia",
+                    label: kindraConfig.collapsedNodeIds.includes(person.id) ? "📂 Expandir descendencia" : "📁 Colapsar descendencia",
                     group: "vista",
-                    onSelect: () => p.toggleDTreeNodeCollapse(person.id)
+                    onSelect: () => p.toggleKindraNodeCollapse(person.id)
                 });
                 items.push({ id: "extract-branch", label: "🌳 Extraer rama...", group: "herramientas", onSelect: () => p.setBranchAnchorId(person.id) });
             }
-            items.push({ id: "ai-local", label: "🤖 Asistente IA local...", group: "herramientas", onSelect: () => p.openLocalAiAssistant(person.id) });
+            items.push({ id: "ai-local", label: "🤖 AncestrAI local...", group: "herramientas", onSelect: () => p.openLocalAiAssistant(person.id) });
             items.push({
                 id: "kinship-click",
                 label: "🧬 Calcular parentesco (clic en gráfico)",
@@ -166,6 +168,7 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
             items.push({ id: "family-add-child", label: "👶➕ Agregar hijo", group: "accion", onSelect: () => p.openAddRelationEditor(target.anchorId, target.relationType) });
         }
         const familyFocused = p.viewConfig?.focusFamilyId === family.id;
+        const familyKindraConfig = p.viewConfig?.kindra;
         items.push({
             id: "focus-family",
             label: familyFocused ? "🎯 Familia centrada" : "🎯 Enfocar familia (centro)",
@@ -173,16 +176,16 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
             disabled: familyFocused,
             onSelect: () => p.setFocusFamilyId(family.id)
         });
-        if (p.viewConfig?.dtree) {
+        if (familyKindraConfig) {
             items.push({
                 id: "toggle-collapse-family",
-                label: p.viewConfig.dtree.collapsedNodeIds.includes(family.id) ? "📂 Expandir descendencia" : "📁 Colapsar descendencia",
+                label: familyKindraConfig.collapsedNodeIds.includes(family.id) ? "📂 Expandir descendencia" : "📁 Colapsar descendencia",
                 group: "vista",
-                onSelect: () => p.toggleDTreeNodeCollapse(family.id)
+                onSelect: () => p.toggleKindraNodeCollapse(family.id)
             });
             if (family.husbandId && family.wifeId) {
                 const hasCoupleLineage = Boolean(
-                    p.viewConfig.dtree.overlays.find((overlay) => overlay.type === "lineage_couple" && overlay.config.familyId === family.id)
+                    familyKindraConfig.overlays.find((overlay) => overlay.type === "lineage_couple" && overlay.config.familyId === family.id)
                 );
                 items.push({
                     id: "couple-lineage",
@@ -208,4 +211,5 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
 
     return nodeMenuState;
 }
+
 

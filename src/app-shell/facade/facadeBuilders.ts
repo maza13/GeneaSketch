@@ -1,4 +1,4 @@
-import { calculateDetailedStatistics } from "@/core/graph/statistics";
+﻿import { calculateDetailedStatistics } from "@/core/graph/statistics";
 import { extractSubTree } from "@/core/edit/generators";
 import { buildTimeline } from "@/core/timeline/buildTimeline";
 import type { GraphDocument } from "@/core/read-model/types";
@@ -93,7 +93,7 @@ export function buildLeftPanelViewModel(
     },
     treeConfig: viewConfig
       ? {
-          isVertical: viewConfig.dtree?.isVertical ?? false,
+          isVertical: viewConfig.kindra?.isVertical ?? false,
           preset: viewConfig.preset,
           depth: viewConfig.depth,
           showSpouses: viewConfig.showSpouses,
@@ -130,7 +130,7 @@ export function buildTimelinePanelViewModel(
   const bounds = years.length === 0
     ? { min: currentYear - 120, max: currentYear + 20 }
     : { min: Math.min(...years) - 5, max: Math.max(...years) + 5 };
-  const timelineOverlay = viewConfig?.dtree?.overlays.find((overlay) => overlay.type === "timeline");
+  const timelineOverlay = viewConfig?.kindra?.overlays.find((overlay) => overlay.type === "timeline");
   const scope = viewConfig?.timeline.scope ?? "visible";
 
   return {
@@ -240,3 +240,4 @@ export function hasMeaningfulDocument(document: GraphDocument | null): boolean {
   const root = document.persons[personIds[0]];
   return Boolean(root && (root.name !== "(Sin nombre)" || root.isPlaceholder === false));
 }
+

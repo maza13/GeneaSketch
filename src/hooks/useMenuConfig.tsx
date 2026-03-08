@@ -52,7 +52,7 @@ export type MenuConfigParams = {
     setTimelinePanelOpen: (show: boolean) => void;
     setTimelineScope: (scope: TimelineScope) => void;
     setTimelineView: (view: TimelineViewMode) => void;
-    setDTreeLayoutEngine: (engine: "vnext") => void;
+    setKindraLayoutEngine: (engine: "vnext") => void;
     setShowDiagnostics: (show: boolean) => void;
     setShowPersonStatsPersonId: (id: string | null) => void;
     setShowGlobalStatsPanel: (show: boolean) => void;
@@ -117,10 +117,10 @@ export function useMenuConfig(p: MenuConfigParams) {
         const itemFamilySearch: MenuItem = { id: "familysearch", label: "FamilySearch Connect", icon: ic("travel_explore"), onClick: () => p.setShowFamilySearchPanel(true) };
 
         // ── IA & Análisis ────────────────────────────────────────────────────
-        const itemAiLocal: MenuItem = { id: "ai-local", label: "Asistente IA (persona)", icon: ic("auto_awesome"), disabled: !p.selectedPersonId, onClick: () => p.selectedPersonId && p.openLocalAiAssistant(p.selectedPersonId) };
-        const itemAiGlobal: MenuItem = { id: "ai-global", label: "Asistente IA (árbol)", icon: ic("psychology"), disabled: !p.document, onClick: () => p.openGlobalAiAssistant() };
-        const itemAiSettings: MenuItem = { id: "ai-settings", label: "Configuración IA...", icon: ic("tune"), shortcut: "Ctrl+Mayús+I", onClick: () => p.setShowAiSettingsModal(true) };
-        const itemAiUndo: MenuItem = { id: "ai-undo", label: "Deshacer lote IA", icon: ic("undo"), disabled: !p.aiUndoSnapshot, onClick: () => p.undoAiBatch() };
+        const itemAiLocal: MenuItem = { id: "ai-local", label: "AncestrAI (persona)", icon: ic("auto_awesome"), disabled: !p.selectedPersonId, onClick: () => p.selectedPersonId && p.openLocalAiAssistant(p.selectedPersonId) };
+        const itemAiGlobal: MenuItem = { id: "ai-global", label: "AncestrAI (árbol)", icon: ic("psychology"), disabled: !p.document, onClick: () => p.openGlobalAiAssistant() };
+        const itemAiSettings: MenuItem = { id: "ai-settings", label: "Configuracion AncestrAI...", icon: ic("tune"), shortcut: "Ctrl+Mayús+I", onClick: () => p.setShowAiSettingsModal(true) };
+        const itemAiUndo: MenuItem = { id: "ai-undo", label: "Deshacer lote AncestrAI", icon: ic("undo"), disabled: !p.aiUndoSnapshot, onClick: () => p.undoAiBatch() };
         const itemDiagnostics: MenuItem = { id: "diagnostics", label: "Diagnóstico", icon: ic("health_and_safety"), onClick: () => p.setShowDiagnostics(true) };
         const itemStatsPerson: MenuItem = { id: "stats-person", label: "Estadísticas persona", icon: ic("person_search"), disabled: !p.selectedPersonId, onClick: () => p.selectedPersonId && p.setShowPersonStatsPersonId(p.selectedPersonId) };
         const itemStatsGlobal: MenuItem = { id: "stats-global", label: "Estadísticas árbol", icon: ic("bar_chart"), disabled: !p.document, onClick: () => p.setShowGlobalStatsPanel(true) };
@@ -150,8 +150,8 @@ export function useMenuConfig(p: MenuConfigParams) {
                     ]
                 },
                 {
-                    id: "advanced-layout", label: "Motor DTree", children: [
-                        { id: "layout-vnext", label: "vnext", checked: true, disabled: !p.viewConfig, onClick: () => p.setDTreeLayoutEngine("vnext") }
+                    id: "advanced-layout", label: "Motor Kindra v3.1", children: [
+                        { id: "layout-vnext", label: "vnext", checked: true, disabled: !p.viewConfig, onClick: () => p.setKindraLayoutEngine("vnext") }
                     ]
                 }
             ]
@@ -323,7 +323,7 @@ export function useMenuConfig(p: MenuConfigParams) {
         p.setShowGlobalStatsPanel, p.fitToScreen, p.themeMode, p.setThemeMode,
         p.setShowColorThemeMenu, p.leftCollapsed, p.rightCollapsed, p.toggleShellPanel,
         p.timelineOpen, p.setTimelinePanelOpen, p.clearNodePositions, p.viewConfig,
-        p.setTimelineScope, p.setTimelineView, p.setDTreeLayoutEngine, p.generateScenario,
+        p.setTimelineScope, p.setTimelineView, p.setKindraLayoutEngine, p.generateScenario,
         p.setShowMockTools, p.setShowWikiPanel, p.setShowAboutModalV3,
         p.menuLayout, p.setMenuLayout
     ]);
@@ -339,16 +339,16 @@ export function useMenuConfig(p: MenuConfigParams) {
             // Layout B: search + IA as quick access
             return [
                 { id: "qa-diagnostics", label: "Diagnóstico rápido", icon: ic("search"), onClick: () => p.setShowDiagnostics(true) },
-                { id: "qa-ai", label: "Asistente IA (árbol)", icon: ic("auto_awesome"), onClick: () => p.openGlobalAiAssistant() },
+                { id: "qa-ai", label: "AncestrAI (árbol)", icon: ic("auto_awesome"), onClick: () => p.openGlobalAiAssistant() },
             ];
         }
 
         // Layout C (hybrid): 4 quick actions — IA, Export, View Toggle, Settings
         return [
-            { id: "qa-ai", label: "Asistente IA (árbol)", icon: ic("auto_awesome"), onClick: () => p.openGlobalAiAssistant() },
+            { id: "qa-ai", label: "AncestrAI (árbol)", icon: ic("auto_awesome"), onClick: () => p.openGlobalAiAssistant() },
             { id: "qa-search", label: "Diagnóstico", icon: ic("search"), onClick: () => p.setShowDiagnostics(true) },
             { id: "qa-export", label: "Exportar PDF", icon: ic("picture_as_pdf"), disabled: !p.document, onClick: () => p.setShowPdfExport(true) },
-            { id: "qa-settings", label: "Configuración IA", icon: ic("tune"), onClick: () => p.setShowAiSettingsModal(true) },
+            { id: "qa-settings", label: "Configuracion AncestrAI", icon: ic("tune"), onClick: () => p.setShowAiSettingsModal(true) },
         ];
     }, [p.menuLayout, p.document, p.setShowDiagnostics, p.openGlobalAiAssistant, p.setShowPdfExport, p.setShowAiSettingsModal]);
 

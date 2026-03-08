@@ -1,8 +1,8 @@
 import { StateCreator } from "zustand";
 import { AppState, DocSlice } from "../types";
 import { GeneaEngine } from "@/core/engine/GeneaEngine";
-import { documentToGSchema } from "@/core/gschema/GedcomBridge";
-import { GraphMutations } from "@/core/gschema/GraphMutations";
+import { documentToGenraph } from "@/core/genraph/GedcomBridge";
+import { GraphMutations } from "@/core/genraph/GraphMutations";
 import { buildLoadedGraphState, runGraphMutation } from "../helpers/graphStateTransitions";
 
 function mapRelType(type: string): "parent" | "child" | "spouse" {
@@ -12,14 +12,14 @@ function mapRelType(type: string): "parent" | "child" | "spouse" {
 }
 
 export const createDocSlice: StateCreator<AppState, [], [], DocSlice> = (set, get) => ({
-    gschemaGraph: null,
+    genraphGraph: null,
     graphRevision: 0,
     expandedGraph: { nodes: [], edges: [] },
 
     loadGraph: (payload) => set((state) => buildLoadedGraphState(state, payload.graph)),
     applyProjectedDocument: (document, source) => {
         const gedVersion = document.metadata?.gedVersion?.startsWith("7") ? "7.0.x" : "5.5.1";
-        const graph = documentToGSchema(document, gedVersion).graph;
+        const graph = documentToGenraph(document, gedVersion).graph;
         get().loadGraph({ graph, source });
     },
 

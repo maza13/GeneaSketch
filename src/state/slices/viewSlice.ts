@@ -3,11 +3,15 @@ import { AppState, ViewSlice } from "../types";
 import { withFocusHistory } from "../helpers/sessionHelpers";
 import { withExpandedGraphForView } from "../helpers/viewStateTransitions";
 import { UiEngine } from "@/core/engine/UiEngine";
-import { createDefaultDtreeConfig } from "@/core/dtree/dtreeConfig";
+import { createDefaultKindraConfig } from "@/core/kindra/kindraConfig";
 import type { ActiveOverlay } from "@/types/domain";
 
-const defaultDtree = () => createDefaultDtreeConfig();
+const defaultKindra = () => createDefaultKindraConfig();
 const defaultRightStack = () => ({ detailsMode: "expanded" as const, timelineMode: "compact" as const, detailsAutoCompactedByTimeline: false });
+const withNormalizedKindra = (kindra: Partial<ReturnType<typeof createDefaultKindraConfig>>) => {
+    const normalized = { ...defaultKindra(), ...kindra };
+    return { kindra: normalized };
+};
 
 export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) => ({
     viewConfig: null,
@@ -116,7 +120,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         if (!state.viewConfig) return {};
         const current = state.viewConfig;
         const currentStack = { ...defaultRightStack(), ...(current.rightStack || {}) };
-        const overlays = current.dtree?.overlays || [];
+        const overlays = current.kindra?.overlays || [];
         const nextOverlays = open ? overlays : overlays.filter((overlay) => overlay.type !== "timeline");
         const stack = open
             ? {
@@ -147,7 +151,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
                 ...current,
                 timelinePanelOpen: open,
                 rightStack: stack,
-                dtree: { ...(current.dtree || defaultDtree()), overlays: nextOverlays }
+                ...withNormalizedKindra({ ...(current.kindra || defaultKindra()), overlays: nextOverlays })
             }
         };
     }),
@@ -200,7 +204,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
     setTimelineStatus: (livingIds, deceasedIds, year, eventPersonIds) => set((state) => {
         if (!state.viewConfig) return {};
         const current = state.viewConfig;
-        const overlays = current.dtree?.overlays || [];
+        const overlays = current.kindra?.overlays || [];
         const timelineOverlay: ActiveOverlay = {
             id: "timeline-simulation",
             type: "timeline",
@@ -222,7 +226,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         return {
             viewConfig: {
                 ...current,
-                dtree: { ...(current.dtree || defaultDtree()), overlays: nextOverlays }
+                ...withNormalizedKindra({ ...(current.kindra || defaultKindra()), overlays: nextOverlays })
             }
         };
     }),
@@ -246,39 +250,39 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         visualConfig: { ...state.visualConfig, gridSize: size }
     })),
 
-    setDTreeOrientation: (isVertical) => set((state) => {
+    setKindraOrientation: (isVertical) => set((state) => {
         if (!state.viewConfig) return {};
         const viewConfig = {
             ...state.viewConfig,
-            dtree: { ...(state.viewConfig.dtree || defaultDtree()), isVertical }
+            ...withNormalizedKindra({ ...(state.viewConfig.kindra || defaultKindra()), isVertical })
         };
         return withExpandedGraphForView(state, viewConfig);
     }),
 
-    setDTreeLayoutEngine: (engine) => set((state) => {
+    setKindraLayoutEngine: (engine) => set((state) => {
         if (!state.viewConfig) return {};
         const viewConfig = {
             ...state.viewConfig,
-            dtree: { ...(state.viewConfig.dtree || defaultDtree()), layoutEngine: engine }
+            ...withNormalizedKindra({ ...(state.viewConfig.kindra || defaultKindra()), layoutEngine: engine })
         };
         return withExpandedGraphForView(state, viewConfig);
     }),
 
-    toggleDTreeNodeCollapse: (nodeId) => set((state) => {
+    toggleKindraNodeCollapse: (nodeId) => set((state) => {
         if (!state.viewConfig) return {};
-        const collapsed = new Set(state.viewConfig.dtree?.collapsedNodeIds || []);
+        const collapsed = new Set(state.viewConfig.kindra?.collapsedNodeIds || []);
         if (collapsed.has(nodeId)) collapsed.delete(nodeId);
         else collapsed.add(nodeId);
         const viewConfig = {
             ...state.viewConfig,
-            dtree: { ...(state.viewConfig.dtree || defaultDtree()), collapsedNodeIds: Array.from(collapsed) }
+            ...withNormalizedKindra({ ...(state.viewConfig.kindra || defaultKindra()), collapsedNodeIds: Array.from(collapsed) })
         };
         return withExpandedGraphForView(state, viewConfig);
     }),
 
     setOverlay: (overlay) => set((state) => {
         if (!state.viewConfig) return {};
-        const current = state.viewConfig.dtree?.overlays || [];
+        const current = state.viewConfig.kindra?.overlays || [];
         const next = [...current];
         const idx = next.findIndex(o => o.id === overlay.id);
         if (idx >= 0) {
@@ -289,44 +293,44 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: next }
+                ...withNormalizedKindra({ ...(state.viewConfig.kindra || defaultKindra()), overlays: next })
             }
         };
     }),
 
     removeOverlay: (id) => set((state) => {
         if (!state.viewConfig) return {};
-        const current = state.viewConfig.dtree?.overlays || [];
+        const current = state.viewConfig.kindra?.overlays || [];
         const next = current.filter(o => o.id !== id);
         if (next.length === current.length) return {};
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: next }
+                ...withNormalizedKindra({ ...(state.viewConfig.kindra || defaultKindra()), overlays: next })
             }
         };
     }),
 
     clearOverlayType: (type) => set((state) => {
         if (!state.viewConfig) return {};
-        const current = state.viewConfig.dtree?.overlays || [];
+        const current = state.viewConfig.kindra?.overlays || [];
         const next = current.filter(o => o.type !== type);
         if (next.length === current.length) return {};
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: next }
+                ...withNormalizedKindra({ ...(state.viewConfig.kindra || defaultKindra()), overlays: next })
             }
         };
     }),
 
     clearAllOverlays: () => set((state) => {
         if (!state.viewConfig) return {};
-        if ((state.viewConfig.dtree?.overlays || []).length === 0) return {};
+        if ((state.viewConfig.kindra?.overlays || []).length === 0) return {};
         return {
             viewConfig: {
                 ...state.viewConfig,
-                dtree: { ...(state.viewConfig.dtree || defaultDtree()), overlays: [] }
+                ...withNormalizedKindra({ ...(state.viewConfig.kindra || defaultKindra()), overlays: [] })
             }
         };
     }),
@@ -341,7 +345,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
             detailsMode: currentStack.detailsAutoCompactedByTimeline ? "expanded" as const : currentStack.detailsMode,
             detailsAutoCompactedByTimeline: false
         };
-        const needsOverlayClear = (current.dtree?.overlays || []).length > 0;
+        const needsOverlayClear = (current.kindra?.overlays || []).length > 0;
         const needsTimelineClose = !!current.timelinePanelOpen;
         const needsFamilyReset = current.focusFamilyId !== null;
         const needsStackChange =
@@ -355,7 +359,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
                 timelinePanelOpen: false,
                 focusFamilyId: null,
                 rightStack: nextStack,
-                dtree: { ...(current.dtree || defaultDtree()), overlays: [] }
+                ...withNormalizedKindra({ ...(current.kindra || defaultKindra()), overlays: [] })
             }
         };
     }),

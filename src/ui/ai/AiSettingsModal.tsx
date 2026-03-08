@@ -449,7 +449,7 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
         geminiApiKey: geminiKey || undefined
       });
       setCredentialStatus(status);
-      onStatus("Credenciales IA guardadas.");
+      onStatus("Credenciales AncestrAI guardadas.");
       setOpenaiKey("");
       setGeminiKey("");
       await refreshModelCatalogs(status);
@@ -475,7 +475,7 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
           message: "Gemini: listado en vivo requiere API key."
         }
       });
-      onStatus("Credenciales IA limpiadas.");
+      onStatus("Credenciales AncestrAI limpiadas.");
     } catch (error) {
       onStatus(`No se pudieron limpiar credenciales: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -517,7 +517,7 @@ export function AiSettingsModal({ open, settings, onSave, onClose, onStatus }: P
   return (
     <StandardModal
       open={open}
-      title="Configuración IA"
+      title="Configuracion AncestrAI"
       onClose={onClose}
       tabs={tabs}
       activeTab={activeTab}

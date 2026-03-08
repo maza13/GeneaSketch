@@ -1,4 +1,4 @@
-﻿# Wiki del Software (Guia de Usuario GeneaSketch)
+# Wiki del Software (Guia de Usuario GeneaSketch)
 
 ## Resumen
 Esta wiki describe el uso del producto para investigacion genealogica local-first.
@@ -35,7 +35,7 @@ Esta wiki describe el uso del producto para investigacion genealogica local-firs
 | [04](./04_edicion_y_crecimiento.md) | vigente | Edicion y crecimiento del arbol |
 | [05](./05_motores_visuales.md) | vigente | Visualizaciones y analitica |
 | [06](./06_analisis_temporal.md) | vigente | Timeline y validaciones temporales |
-| [07](./07_inteligencia_artificial.md) | vigente | Asistente IA y revision |
+| [07](./07_inteligencia_artificial.md) | vigente | AncestrAI y revision |
 | [08](./08_atajos_y_productividad.md) | vigente | Atajos y eficiencia |
 | [10](./10_interconexiones.md) | vigente | Puentes con wiki tecnica |
 

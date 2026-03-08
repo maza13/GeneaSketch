@@ -1,8 +1,8 @@
-﻿# 01. El Paradigma GSchema: `graph.json` como Autoridad Canonica
+# 01. El Paradigma Genraph: `graph.json` como Autoridad Canonica
 
 ## Fuentes de verdad (codigo)
-- Modelo de tipos: `src/core/gschema/types.ts`
-- Carga/export de paquetes: `src/core/gschema/GskPackage.ts`
+- Modelo de tipos: `src/core/genraph/types.ts`
+- Carga/export de paquetes: `src/core/genraph/GskPackage.ts`
 
 ## Estado de confianza
 - **Estado:** Base contractual 0.5.0 (activacion operativa completa en `041`)
@@ -61,3 +61,4 @@ Este bloque es historico y no describe el estado operativo vigente.
 ---
 **Navegacion:**
 [<- Anterior: README](./README.md) | [Siguiente: 02_formato ->](./02_formato.md)
+

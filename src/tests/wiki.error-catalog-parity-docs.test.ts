@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { ERROR_CATALOG } from "../core/gschema/errorCatalog";
+import { ERROR_CATALOG } from "../core/genraph/errorCatalog";
 
 function extractCatalogCodesFromWiki(source: string): Set<string> {
     const values = [...source.matchAll(/`([A-Z][A-Z0-9_]+)`/g)].map((m) => m[1]);

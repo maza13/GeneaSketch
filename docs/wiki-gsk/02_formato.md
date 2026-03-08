@@ -1,9 +1,9 @@
 ﻿# 02. Anatomia del Formato `.gsk` (Paquete ZIP)
 
 ## Fuentes de verdad (codigo)
-- Serializador/cargador: `src/core/gschema/GskPackage.ts`
-- Journal JSONL: `src/core/gschema/Journal.ts`
-- Tipos de paquete: `src/core/gschema/types.ts`
+- Serializador/cargador: `src/core/genraph/GskPackage.ts`
+- Journal JSONL: `src/core/genraph/Journal.ts`
+- Tipos de paquete: `src/core/genraph/types.ts`
 
 ## Estado de confianza
 - **Estado:** Operativo en 0.5.0 core-only
@@ -191,3 +191,4 @@ Ejemplo minimo realista:
 
 ## Navegacion
 [<- Anterior: 01_paradigma](./01_paradigma.md) | [Siguiente: 03_modelo ->](./03_modelo.md)
+

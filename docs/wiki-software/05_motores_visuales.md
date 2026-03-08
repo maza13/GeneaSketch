@@ -1,4 +1,8 @@
-﻿# 05 - Motores Visuales (Heatmaps, D3)
+﻿# 05 - Kindra y visualizacion genealogica
+
+## Nota de nomenclatura
+- Kindra es el nombre oficial del subsystema visual.
+- Kindra v3.1 sigue siendo la implementacion visual actual.
 
 ## Objetivo
 Describir el uso de vistas visuales para exploracion genealogica.
@@ -17,3 +21,4 @@ Describir el uso de vistas visuales para exploracion genealogica.
 
 ## Navegacion
 [<- 04_edicion_y_crecimiento](./04_edicion_y_crecimiento.md) | [Siguiente: 06_analisis_temporal ->](./06_analisis_temporal.md)
+

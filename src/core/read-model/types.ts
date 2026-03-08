@@ -13,10 +13,10 @@ export type GraphProjectionDocument = GraphDocument & {
   uidToXref?: Record<string, string>;
 };
 export type GraphPerson = Person & {
-  gschemaMeta?: { uid: string; source: "direct" };
+  genraphMeta?: { uid: string; source: "direct" };
 };
 export type GraphFamily = Family & {
-  gschemaMeta?: { uid: string; source: "direct" };
+  genraphMeta?: { uid: string; source: "direct" };
 };
 
 export type GraphStatsSummary = {
@@ -43,7 +43,7 @@ export type GraphTimelineInput = {
 export type GraphSource = "ai" | "ged" | "gsk" | "session" | "merge" | "mock";
 
 export type GraphPayload = {
-  graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph | null;
+  graph: import("@/core/genraph").GenraphGraph | null;
   source: GraphSource;
 };
 

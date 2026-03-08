@@ -3,10 +3,10 @@ import { AppState, SessionSlice } from "../types";
 import { SESSION_SNAPSHOT_SCHEMA_VERSION, SessionService } from "@/io/sessionService";
 import { ensureExpanded } from "../helpers/graphHelpers";
 import { UiEngine } from "@/core/engine/UiEngine";
-import { GSchemaGraph } from "@/core/gschema/GSchemaGraph";
+import { GenraphGraph } from "@/core/genraph";
 import { createDefaultAiSettings } from "@/core/ai/defaults";
 import { sanitizeMergeDraftSnapshot } from "@/core/edit/mergeDraftValidation";
-import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
+import { normalizeKindraConfig } from "@/core/kindra/kindraConfig";
 import type { ActiveOverlay, SessionSnapshot, ViewConfig } from "@/types/domain";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { GraphDocument } from "@/core/read-model/types";
@@ -26,7 +26,7 @@ export const createSessionSlice: StateCreator<AppState, [], [], SessionSlice> = 
     isRestoring: true,
 
     inspectPerson: (personId) => set((state) => {
-        if (!state.gschemaGraph || (personId && !state.gschemaGraph.node(personId))) return {};
+        if (!state.genraphGraph || (personId && !state.genraphGraph.node(personId))) return {};
         if (!state.viewConfig) return { selectedPersonId: personId };
         return { selectedPersonId: personId, viewConfig: { ...state.viewConfig, focusPersonId: personId } };
     }),
@@ -35,7 +35,7 @@ export const createSessionSlice: StateCreator<AppState, [], [], SessionSlice> = 
         if (state.focusIndex <= 0 || state.focusHistory.length === 0) return {};
         const focusIndex = state.focusIndex - 1;
         const nextPersonId = state.focusHistory[focusIndex];
-        if (!nextPersonId || (state.gschemaGraph && !state.gschemaGraph.node(nextPersonId))) return { focusIndex };
+        if (!nextPersonId || (state.genraphGraph && !state.genraphGraph.node(nextPersonId))) return { focusIndex };
         const viewConfig = state.viewConfig ? { ...state.viewConfig, focusPersonId: nextPersonId } : state.viewConfig;
         return {
             focusIndex,
@@ -48,7 +48,7 @@ export const createSessionSlice: StateCreator<AppState, [], [], SessionSlice> = 
         if (state.focusIndex >= state.focusHistory.length - 1) return {};
         const focusIndex = state.focusIndex + 1;
         const nextPersonId = state.focusHistory[focusIndex];
-        if (!nextPersonId || (state.gschemaGraph && !state.gschemaGraph.node(nextPersonId))) return { focusIndex };
+        if (!nextPersonId || (state.genraphGraph && !state.genraphGraph.node(nextPersonId))) return { focusIndex };
         const viewConfig = state.viewConfig ? { ...state.viewConfig, focusPersonId: nextPersonId } : state.viewConfig;
         return {
             focusIndex,
@@ -158,7 +158,7 @@ function applyRestoredSnapshot(
     showNotice: boolean,
 ): void {
     const restoredGraph = restored.graph
-        ? GSchemaGraph.fromData(restored.graph.data, restored.graph.journal)
+        ? GenraphGraph.fromData(restored.graph.data, restored.graph.journal)
         : null;
     if ((restored.schemaVersion ?? 0) < SESSION_SNAPSHOT_SCHEMA_VERSION && !restoredGraph) {
         set({ restoreAvailable: false, restoreNoticeVisible: false, isRestoring: false, bootStatus: "ready" });
@@ -191,27 +191,30 @@ function applyRestoredSnapshot(
 }
 
 function hasActiveSessionState(state: AppState): boolean {
-    return !!state.gschemaGraph || !!state.viewConfig;
+    return !!state.genraphGraph || !!state.viewConfig;
 }
 
 function buildAutosessionSnapshot(state: AppState): SessionSnapshot {
     const snapshotViewConfig = state.viewConfig
-        ? {
+        ? (() => {
+            const nextViewConfig: ViewConfig = {
             ...state.viewConfig,
-            dtree: state.viewConfig.dtree
+            kindra: state.viewConfig.kindra
                 ? {
-                    ...normalizeDtreeConfig(state.viewConfig.dtree),
-                    overlays: (state.viewConfig.dtree.overlays || []).filter((overlay) => overlay.type !== "merge_focus")
+                    ...normalizeKindraConfig(state.viewConfig.kindra),
+                    overlays: (state.viewConfig.kindra.overlays || []).filter((overlay) => overlay.type !== "merge_focus")
                 }
-                : state.viewConfig.dtree
-        }
+                : state.viewConfig.kindra
+            };
+            return nextViewConfig;
+        })()
         : null;
     return {
         schemaVersion: SESSION_SNAPSHOT_SCHEMA_VERSION,
-        graph: state.gschemaGraph
+        graph: state.genraphGraph
             ? {
-                data: state.gschemaGraph.toData(),
-                journal: [...state.gschemaGraph.getJournal()]
+                data: state.genraphGraph.toData(),
+                journal: [...state.genraphGraph.getJournal()]
             }
             : null,
         viewConfig: snapshotViewConfig,
@@ -251,8 +254,8 @@ function normalizeRestoredViewConfig(
     const firstPersonId = Object.keys(document?.persons || {})[0] || "";
     const defaults = UiEngine.createDefaultViewConfig(firstPersonId);
     const legacyIncludeSpouses = viewConfig.include?.spouses;
-    const overlays = Array.isArray(viewConfig?.dtree?.overlays)
-        ? viewConfig.dtree.overlays.map((overlay: ActiveOverlay) => normalizeTimelineOverlay(overlay))
+    const overlays = Array.isArray(viewConfig?.kindra?.overlays)
+        ? viewConfig.kindra.overlays.map((overlay: ActiveOverlay) => normalizeTimelineOverlay(overlay))
         : [];
     const rightStack = viewConfig.rightStack || {};
     const detailsMode = rightStack.detailsMode
@@ -286,8 +289,8 @@ function normalizeRestoredViewConfig(
             timelineMode,
             detailsAutoCompactedByTimeline: !!rightStack.detailsAutoCompactedByTimeline
         },
-        dtree: {
-            ...normalizeDtreeConfig(viewConfig.dtree),
+        kindra: {
+            ...normalizeKindraConfig(viewConfig.kindra),
             overlays
         }
     };

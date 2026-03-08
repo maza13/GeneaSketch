@@ -48,16 +48,16 @@ ts_errors.txt
 tmp.txt
 .tmp_deep_analysis.md
 
-# Keep DTree V3 phase0 perf baselines versioned
+# Keep Kindra v3.1 phase0 perf baselines versioned
 !reports/
 reports/*
 !reports/perf/
 reports/perf/*
-!reports/perf/dtree-v3-phase0/
-reports/perf/dtree-v3-phase0/*
-!reports/perf/dtree-v3-phase0/baseline-layout.json
-!reports/perf/dtree-v3-phase0/baseline-overlays.json
-!reports/perf/dtree-v3-phase0/summary.md
+!reports/perf/kindra-v31-phase0/
+reports/perf/kindra-v31-phase0/*
+!reports/perf/kindra-v31-phase0/baseline-layout.json
+!reports/perf/kindra-v31-phase0/baseline-overlays.json
+!reports/perf/kindra-v31-phase0/summary.md
 
 # OS Files
 Thumbs.db

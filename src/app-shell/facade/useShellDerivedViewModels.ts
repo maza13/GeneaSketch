@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { analyzeGeneaDocument } from "@/core/diagnostics/analyzer";
 import { calculateGlobalStatistics } from "@/core/graph/globalStatistics";
-import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
+import { normalizeKindraConfig } from "@/core/kindra/kindraConfig";
 import { buildAiAssistantViewModel } from "@/app-shell/workbenches/aiAssistantWorkbench";
 import { buildImportReviewViewModel } from "@/app-shell/workbenches/importReviewWorkbench";
 import { buildPersonEditorViewModel } from "@/app-shell/workbenches/personEditorWorkbench";
@@ -63,7 +63,7 @@ type Params = {
 
 type Result = {
   visiblePersonIds: string[];
-  normalizedDtreeConfig: NonNullable<ViewConfig["dtree"]> | undefined;
+  normalizedDtreeConfig: NonNullable<ViewConfig["kindra"]> | undefined;
   leftPanelViewModel: LeftPanelViewModel;
   selectedPersonPanelViewModel: SelectedPersonPanelViewModel;
   timelineViewModel: TimelinePanelViewModel;
@@ -90,7 +90,7 @@ export function useShellDerivedViewModels(params: Params): Result {
     [params.document, params.expandedGraph],
   );
   const normalizedDtreeConfig = useMemo(
-    () => (params.viewConfig ? normalizeDtreeConfig(params.viewConfig.dtree) : undefined),
+    () => (params.viewConfig ? normalizeKindraConfig(params.viewConfig.kindra) : undefined),
     [params.viewConfig],
   );
   const leftPanelViewModel = useMemo(
@@ -184,3 +184,4 @@ export function useShellDerivedViewModels(params: Params): Result {
     branchExportViewModel,
   };
 }
+

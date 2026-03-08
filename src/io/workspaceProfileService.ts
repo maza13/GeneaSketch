@@ -1,7 +1,7 @@
 import { deleteDB, openDB } from "idb";
 import type { WorkspaceProfileV2 } from "@/types/workspaceProfile";
 import { WORKSPACE_PROFILE_SCHEMA_VERSION } from "@/types/workspaceProfile";
-import { normalizeDtreeConfig } from "@/core/dtree/dtreeConfig";
+import { normalizeKindraConfig } from "@/core/kindra/kindraConfig";
 
 const DB_NAME = "geneasketch-workspace-db";
 const STORE_NAME = "workspace_profiles";
@@ -36,49 +36,22 @@ function isValidProfileV2(value: unknown): value is WorkspaceProfileV2 {
   return hasBaseProfileShape(value);
 }
 
-function isLegacyProfileV1(value: unknown): value is Record<string, unknown> {
-  if (!isRecord(value)) return false;
-  if (value.profileSchemaVersion !== 1) return false;
-  return hasBaseProfileShape(value);
-}
-
-function hasLegacyDtreeFlags(value: unknown): boolean {
-  if (!isRecord(value)) return false;
-  const dtree = isRecord(value.dtree) ? value.dtree : null;
-  if (!dtree) return false;
-  return dtree.renderVersion !== undefined || dtree.layoutEngine === "v2";
-}
-
 function sanitizeViewConfig(viewConfig: Record<string, unknown>): Record<string, unknown> {
   return {
     ...viewConfig,
-    dtree: normalizeDtreeConfig(viewConfig.dtree as any)
+    kindra: normalizeKindraConfig(viewConfig.kindra as any)
   };
 }
 
 function normalizeProfilePayload(value: unknown): { profile: WorkspaceProfileV2 | null; shouldWriteBack: boolean } {
   if (isValidProfileV2(value)) {
     const sanitizedViewConfig = sanitizeViewConfig(value.viewConfig as Record<string, unknown>);
-    const shouldWriteBack = hasLegacyDtreeFlags(value.viewConfig);
     return {
       profile: {
         ...value,
         viewConfig: sanitizedViewConfig as WorkspaceProfileV2["viewConfig"]
       },
-      shouldWriteBack
-    };
-  }
-
-  if (isLegacyProfileV1(value)) {
-    const sanitizedViewConfig = sanitizeViewConfig(value.viewConfig as Record<string, unknown>);
-    const migrated: WorkspaceProfileV2 = {
-      ...(value as Omit<WorkspaceProfileV2, "profileSchemaVersion" | "viewConfig">),
-      profileSchemaVersion: WORKSPACE_PROFILE_SCHEMA_VERSION,
-      viewConfig: sanitizedViewConfig as WorkspaceProfileV2["viewConfig"]
-    };
-    return {
-      profile: migrated,
-      shouldWriteBack: true
+      shouldWriteBack: false
     };
   }
 

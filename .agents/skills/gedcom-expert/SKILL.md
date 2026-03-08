@@ -1,4 +1,4 @@
-﻿---
+---
 name: gedcom-expert
 description: Specialist guidance for GEDCOM parsing, conversion, and lossless interoperability.
 ---
@@ -18,7 +18,7 @@ Use for GEDCOM import/export and interoperability decisions.
    - Primary: `claim.citations[]`
    - Secondary: `EvidenceRef`
 4. No silent data loss in import/export downgrade paths.
-5. Keep operation and timestamp semantics aligned with GSchema docs.
+5. Keep operation and timestamp semantics aligned with Genraph docs.
 
 ## Verification checklist
 - Round-trip preserves source references and conflict payloads.

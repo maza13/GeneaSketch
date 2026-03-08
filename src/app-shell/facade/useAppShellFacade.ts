@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+﻿import { useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { applyDiagnosticFixes } from "@/core/diagnostics/fixExecutor";
@@ -21,7 +21,7 @@ import { useShellDerivedViewModels } from "./useShellDerivedViewModels";
 import { useShellSessionFlow } from "./useShellSessionFlow";
 
 export function useAppShellFacade(): AppShellFacade {
-  const gschemaGraph = useAppStore((state) => state.gschemaGraph);
+  const genraphGraph = useAppStore((state) => state.genraphGraph);
   const viewConfig = useAppStore((state) => state.viewConfig);
   const visualConfig = useAppStore((state) => state.visualConfig);
   const expandedGraph = useAppStore((state) => state.expandedGraph);
@@ -66,9 +66,9 @@ export function useAppShellFacade(): AppShellFacade {
       setTimelineStatus: state.setTimelineStatus,
       clearNodePositions: state.clearNodePositions,
       setGridEnabled: state.setGridEnabled,
-      setDTreeOrientation: state.setDTreeOrientation,
-      setDTreeLayoutEngine: state.setDTreeLayoutEngine,
-      toggleDTreeNodeCollapse: state.toggleDTreeNodeCollapse,
+      setKindraOrientation: state.setKindraOrientation,
+      setKindraLayoutEngine: state.setKindraLayoutEngine,
+      toggleKindraNodeCollapse: state.toggleKindraNodeCollapse,
       setOverlay: state.setOverlay,
       clearOverlayType: state.clearOverlayType,
       clearVisualModes: state.clearVisualModes,
@@ -89,8 +89,8 @@ export function useAppShellFacade(): AppShellFacade {
   );
 
   const document = useMemo(
-    () => projectGraphDocument(gschemaGraph),
-    [gschemaGraph?.graphId, gschemaGraph?.journalLength],
+    () => projectGraphDocument(genraphGraph),
+    [genraphGraph?.graphId, genraphGraph?.journalLength],
   );
   const openFileInputRef = useRef<HTMLInputElement>(null);
   const importFileInputRef = useRef<HTMLInputElement>(null);
@@ -111,7 +111,7 @@ export function useAppShellFacade(): AppShellFacade {
     fitToScreen: actions.fitToScreen,
     setStatus: (status) => setStatusRef.current(status),
     applyProjectedDocument: actions.applyProjectedDocument,
-    toggleDTreeNodeCollapse: actions.toggleDTreeNodeCollapse,
+    toggleKindraNodeCollapse: actions.toggleKindraNodeCollapse,
     setFocusFamilyId: actions.setFocusFamilyId,
     openLocalAiAssistant: (personId) => openLocalAiAssistantRef.current(personId),
   });
@@ -205,7 +205,7 @@ export function useAppShellFacade(): AppShellFacade {
     leftCollapsed,
     rightCollapsed,
     saveAutosessionNow: actions.saveAutosessionNow,
-    graphId: gschemaGraph?.graphId,
+    graphId: genraphGraph?.graphId,
     colorTheme: shellController.colorTheme,
   });
 
@@ -213,7 +213,7 @@ export function useAppShellFacade(): AppShellFacade {
     bootStatus,
     restoreNoticeVisible,
     document,
-    gschemaGraph,
+    genraphGraph,
     bootstrapSession: actions.bootstrapSession,
     dismissRestoreNotice: actions.dismissRestoreNotice,
     clearSession: actions.clearSession,
@@ -257,7 +257,7 @@ export function useAppShellFacade(): AppShellFacade {
     setTimelinePanelOpen: actions.setTimelinePanelOpen,
     setTimelineScope: actions.setTimelineScope,
     setTimelineView: actions.setTimelineView,
-    setDTreeLayoutEngine: actions.setDTreeLayoutEngine,
+    setKindraLayoutEngine: actions.setKindraLayoutEngine,
     setShowDiagnostics: shellController.setShowDiagnostics,
     setShowPersonStatsPersonId: shellController.setShowPersonStatsPersonId,
     setShowGlobalStatsPanel: shellController.setShowGlobalStatsPanel,
@@ -339,7 +339,7 @@ export function useAppShellFacade(): AppShellFacade {
         personCount: document ? Object.keys(document.persons).length : null,
         familyCount: document ? Object.keys(document.families).length : null,
         sourceCount: document ? Object.keys(document.sources ?? {}).length : null,
-        engineMode: viewConfig ? "DTree V3" : null,
+        engineMode: viewConfig ? "Kindra" : null,
         isSaved: false,
         appVersion: "0.4.5",
       },
@@ -348,7 +348,7 @@ export function useAppShellFacade(): AppShellFacade {
         commands: {
           onToggleSection: actions.toggleLeftSection,
           onSetSections: actions.setLeftSectionState,
-          onDTreeOrientation: actions.setDTreeOrientation,
+          onDTreeOrientation: actions.setKindraOrientation,
           onPreset: actions.setPreset,
           onDepth: actions.setDepth,
           onInclude: actions.setInclude,
@@ -540,7 +540,7 @@ export function useAppShellFacade(): AppShellFacade {
           settings: aiSettings,
           onSave: (next) => {
             actions.setAiSettings(next);
-            setStatus("Ajustes IA guardados.");
+            setStatus("Ajustes AncestrAI guardados.");
           },
           onClose: () => setShowAiSettingsModal(false),
           onStatus: setStatus,
@@ -669,8 +669,8 @@ export function useAppShellFacade(): AppShellFacade {
         focusPersonId: viewConfig?.focusPersonId ?? null,
         focusFamilyId: viewConfig?.focusFamilyId ?? null,
         colorTheme: shellController.colorTheme,
-        dtreeConfig: normalizedDtreeConfig,
-        modeBadge: viewConfig ? "DTree V3" : null,
+        kindraConfig: normalizedDtreeConfig,
+        modeBadge: viewConfig ? "Kindra" : null,
         showMockTools: shellController.showMockTools,
         commands: {
           onNodeClick: shellController.handleNodeClick,
@@ -685,3 +685,4 @@ export function useAppShellFacade(): AppShellFacade {
     },
   };
 }
+

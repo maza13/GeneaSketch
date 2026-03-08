@@ -19,6 +19,11 @@ import { measureColdWarmRuns, type PerfStats } from "@/tests/perf/common/perfSta
 import { writeJsonReport, writeMarkdownReport } from "@/tests/perf/common/reportWriter";
 import type { GraphDocument } from "@/types/domain";
 
+const SHOULD_RUN_PERF =
+  process.env.PERF_WRITE_REPORTS === "1"
+  || ["test:perf:overlays", "test:perf:all"].includes(process.env.npm_lifecycle_event ?? "");
+const perfIt = SHOULD_RUN_PERF ? it : it.skip;
+
 type OverlayFamilyKey =
   | "kinship"
   | "heatmap_first_run"
@@ -41,7 +46,7 @@ type OverlayBaseline = {
 function loadOverlayBaseline(): OverlayBaseline {
   const baselinePath = path.resolve(
     process.cwd(),
-    "reports/perf/dtree-v3-phase0/baseline-overlays.json"
+    "reports/perf/kindra-v31-phase0/baseline-overlays.json"
   );
   const raw = readFileSync(baselinePath, "utf8");
   return JSON.parse(raw) as OverlayBaseline;
@@ -59,7 +64,7 @@ function buildSummaryMarkdown(
   aggregateResults: Record<OverlayFamilyKey, { aggregateP95Ms: number; scenarioP95Ms: Record<string, number> }>
 ): string {
   const lines = [
-    "# DTree V3 Phase0 Overlay Perf",
+    "# Kindra v3.1 Phase0 Overlay Perf",
     "",
     `- measuredAt: ${measuredAt}`,
     `- baselineCommit: ${baselineCommit}`,
@@ -125,7 +130,7 @@ async function measureOverlayFamiliesForScenario(
 }
 
 describe("perf/overlays phase0", () => {
-  it("meets SLO and regression gates", async () => {
+  perfIt("meets SLO and regression gates", async () => {
     const baseline = loadOverlayBaseline();
     const scenarios = createPerfScenarios();
     const scenarioResults: Record<string, Record<OverlayFamilyKey, PerfStats>> = {};
@@ -204,7 +209,7 @@ describe("perf/overlays phase0", () => {
 
     if (process.env.PERF_WRITE_REPORTS === "1") {
       const measuredAt = new Date().toISOString();
-      const outputDir = path.resolve(process.cwd(), "reports/perf/dtree-v3-phase0");
+      const outputDir = path.resolve(process.cwd(), "reports/perf/kindra-v31-phase0");
       writeJsonReport(path.join(outputDir, "latest-overlays.json"), {
         measuredAt,
         baselineCommit: baseline.commit,

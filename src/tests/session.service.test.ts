@@ -29,7 +29,7 @@ vi.mock("idb", () => {
 });
 
 import { deleteDB } from "idb";
-import { SESSION_LEGACY_MIN_SCHEMA_VERSION, SESSION_SNAPSHOT_SCHEMA_VERSION, SessionService } from "@/io/sessionService";
+import { SESSION_SNAPSHOT_SCHEMA_VERSION, SessionService } from "@/io/sessionService";
 
 describe("SessionService", () => {
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe("SessionService", () => {
   });
 
   it("discards legacy snapshots below hard-cut schema and clears key", async () => {
-    dbData.set(autosessionKey, { schemaVersion: SESSION_LEGACY_MIN_SCHEMA_VERSION - 1, focusHistory: [], focusIndex: 0 });
+    dbData.set(autosessionKey, { schemaVersion: SESSION_SNAPSHOT_SCHEMA_VERSION - 1, focusHistory: [], focusIndex: 0 });
 
     const restored = await SessionService.restoreAutosession();
 
@@ -49,7 +49,7 @@ describe("SessionService", () => {
 
   it("normalizes supported snapshots to schema v8 and writes them back", async () => {
     dbData.set(autosessionKey, {
-      schemaVersion: SESSION_LEGACY_MIN_SCHEMA_VERSION,
+      schemaVersion: SESSION_SNAPSHOT_SCHEMA_VERSION,
       graph: null,
       viewConfig: null,
       focusHistory: ["p1"],
@@ -63,7 +63,7 @@ describe("SessionService", () => {
     expect(persisted?.schemaVersion).toBe(SESSION_SNAPSHOT_SCHEMA_VERSION);
   });
 
-  it("migrates legacy dtree flags during restore and writes back schema v8", async () => {
+  it("rejects legacy visual payloads under the hard cut", async () => {
     dbData.set(autosessionKey, {
       schemaVersion: 7,
       graph: null,
@@ -77,9 +77,9 @@ describe("SessionService", () => {
         timeline: { scope: "visible", view: "list", scaleZoom: 1, scaleOffset: 0 },
         depth: { ancestors: 1, descendants: 1, unclesGreatUncles: 0, siblingsNephews: 0, unclesCousins: 0 },
         showSpouses: true,
-        dtree: {
+        kindra: {
           isVertical: true,
-          layoutEngine: "v2",
+          layoutEngine: "vnext",
           renderVersion: "v2",
           collapsedNodeIds: [],
           overlays: []
@@ -90,13 +90,9 @@ describe("SessionService", () => {
     });
 
     const restored = await SessionService.restoreAutosession();
-    const persisted = dbData.get(autosessionKey) as { schemaVersion?: number; viewConfig?: any } | undefined;
 
-    expect(restored?.schemaVersion).toBe(SESSION_SNAPSHOT_SCHEMA_VERSION);
-    expect(restored?.viewConfig?.dtree?.layoutEngine).toBe("vnext");
-    expect((restored?.viewConfig?.dtree as any)?.renderVersion).toBeUndefined();
-    expect(persisted?.schemaVersion).toBe(SESSION_SNAPSHOT_SCHEMA_VERSION);
-    expect(persisted?.viewConfig?.dtree?.layoutEngine).toBe("vnext");
+    expect(restored).toBeNull();
+    expect(dbData.has(autosessionKey)).toBe(false);
   });
 
   it("returns null for corrupted payload and removes invalid snapshot", async () => {

@@ -5,7 +5,8 @@ GeneaSketch es una app genealogica `local-first` para escritorio, centrada en tr
 Estado actual:
 - release visible: `0.4.5`
 - canal: `beta`
-- runtime visual: `DTree V3`
+- visual engine oficial: `Kindra`
+- implementacion visual actual: `Kindra v3.1`
 - formato nativo: `.gsk`
 - interoperabilidad: importacion GEDCOM `5.5`, `5.5.1` y `7.0.x`
 
@@ -17,8 +18,8 @@ Estado actual:
 - Mantener journal, autosave local y restauracion de sesion
 - Editar personas, relaciones y familias desde paneles de trabajo
 - Revisar merges/importaciones antes de aplicar cambios
-- Usar asistente IA con revision por lote y undo del ultimo batch
-- Visualizar el arbol en una ruta unica `DTree V3`
+- Usar `AncestrAI` con revision por lote y undo del ultimo batch
+- Visualizar el arbol a traves de `Kindra` (implementacion actual `Kindra v3.1`)
 - Exportar PDF y raster desde el arbol visible
 
 ## Ejecutar
@@ -68,20 +69,24 @@ npx vite build
 La separacion principal actual del sistema es:
 
 ```text
-.gsk / GED -> IO -> GSchema Engine -> Read Model -> Visual Engine / App Shell
+.gsk / GED -> IO -> Genraph Engine -> Read Model -> Kindra / App Shell
 Workspace Profile -> State Manager / App Shell
-AI / Import Review -> mutation contracts auditables
+AncestrAI / Import Review -> mutation contracts auditables
 ```
 
 Puntos estructurales importantes:
-- `GSchema Engine` es el nucleo canonico
+- `Genraph Engine` es el nucleo canonico
 - el `Read Model` alimenta la shell y la visualizacion
+- `Kindra` es el nombre oficial del subsystema visual
+- `Kindra v3.1` es la implementacion visual actual dentro de `Kindra`
+- `AncestrAI` es el nombre oficial del subsystema de asistencia y automatizacion
 - `App Shell` consume subfacades y view models derivados
 - estado local/privado del workspace permanece separado del arbol compartible
 
 ## Estructura del repositorio
 
-- `src/core/gschema`: formato nativo, journal, validacion y migraciones
+- `src/core/genraph`: API publica actual del motor canonico
+- `src/core/genraph`: implementacion interna actual del motor, journal, validacion y migraciones
 - `src/core/read-model`: proyeccion del grafo a documento consumible
 - `src/core/edit`: comandos, merges, revision e importacion
 - `src/app-shell`: facade y componentes de composicion del shell

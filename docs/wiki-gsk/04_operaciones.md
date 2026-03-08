@@ -1,9 +1,9 @@
 ﻿# 04. Operaciones y Journal (Auditoria)
 
 ## Fuentes de verdad (codigo)
-- Grafo y mutaciones: `src/core/gschema/GSchemaGraph.ts`
-- Journal/replay/recovery: `src/core/gschema/Journal.ts`
-- Tipos canonicos de opcode: `src/core/gschema/types.ts`
+- Grafo y mutaciones: `src/core/genraph/GenraphGraph.ts`
+- Journal/replay/recovery: `src/core/genraph/Journal.ts`
+- Tipos canonicos de opcode: `src/core/genraph/types.ts`
 
 ## Estado de confianza
 - **Estado:** Base contractual 0.5.0 (sin nuevos opcodes)
@@ -33,7 +33,7 @@ Definir como muta el grafo y como el journal garantiza trazabilidad, recuperacio
 
 Regla de fuente unica:
 - Esta seccion es la referencia normativa unica para opcodes del journal.
-- Cualquier cambio en `GSchemaOperationType` debe reflejarse aqui y validarse por test de paridad.
+- Cualquier cambio en `GenraphOperationType` debe reflejarse aqui y validarse por test de paridad.
 
 Nota 0.5.0:
 - El contrato `gsk-core 0.5.0` no introduce opcodes nuevos.
@@ -93,3 +93,4 @@ Nota 0.5.0:
 
 ## Navegacion
 [<- Anterior: 03_modelo](./03_modelo.md) | [Siguiente: 05_interoperabilidad_gedcom ->](./05_interoperabilidad_gedcom.md)
+

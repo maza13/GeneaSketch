@@ -1,7 +1,7 @@
-# Read-Model Direct Contract (N0009 / TODO-086)
+﻿# Read-Model Direct Contract (N0009 / TODO-086)
 
 ## Purpose
-Define the minimum direct projection contract from `GSchemaGraph` for `Person`, `Family`, and `Timeline` without relying on `gschemaToDocument` in critical selectors.
+Define the minimum direct projection contract from `GenraphGraph` for `Person`, `Family`, and `Timeline` without relying on `genraphToDocument` in critical selectors.
 
 ## Scope
 - In: `projectGraphDocument`, `selectPersons`, `selectFamilies`, `selectTimelineInput`, `selectSearchEntries`, `selectGraphStats`.
@@ -53,3 +53,4 @@ Required fields:
 ## Acceptance Mapping
 - 086: Contract defined in this document.
 - 087: Direct projection wired as default in selectors with central rollback switch.
+

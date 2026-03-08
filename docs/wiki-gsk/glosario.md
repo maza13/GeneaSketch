@@ -1,11 +1,11 @@
-﻿# Glosario de Terminos (Formato `.gsk` y GSchema)
+# Glosario de Terminos (Formato `.gsk` y Genraph)
 
 ## Proposito
 Definir terminos operativos y contractuales usados en la wiki tecnica de GeneaSketch.
 
 ## Terminos
 - **Append-Only:** Politica donde el journal solo agrega entradas nuevas.
-- **Claim:** Unidad atomica de conocimiento en GSchema.
+- **Claim:** Unidad atomica de conocimiento en Genraph.
 - **Citations (claim.citations[]):** Evidencia primaria inline por claim.
 - **EvidenceRef:** Evidencia secundaria navegable como arista del grafo.
 - **Fast-forward:** Recuperacion incremental que aplica solo operaciones faltantes del journal (`opSeq > graphDerivedFromOpSeq`).

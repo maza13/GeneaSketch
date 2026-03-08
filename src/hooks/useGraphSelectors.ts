@@ -9,7 +9,7 @@ import {
 import { useAppStore } from "@/state/store";
 
 export function useGraphSelectors() {
-  const graph = useAppStore((state) => state.gschemaGraph);
+  const graph = useAppStore((state) => state.genraphGraph);
   const graphRevision = useAppStore((state) => state.graphRevision);
 
   return useMemo(() => {

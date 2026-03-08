@@ -10,7 +10,7 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes("node_modules/jspdf")) return "vendor-export";
           if (id.includes("node_modules/jszip")) return "vendor-gsk";
-          if (id.includes("/src/core/gschema/")) return "gsk-core";
+          if (id.includes("/src/core/genraph/")) return "genraph-core";
         },
       },
     },

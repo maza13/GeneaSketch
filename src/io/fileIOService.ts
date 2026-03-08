@@ -1,9 +1,10 @@
-﻿import { parseGedcomAnyVersion } from "@/core/gedcom/parser";
+import { parseGedcomAnyVersion } from "@/core/gedcom/parser";
 import { serializeGedcom } from "@/core/gedcom/serializer";
+import type { GenraphGraph } from "@/core/genraph";
 import type { GedExportVersion, GedExportWarning, GedParseError, GeneaDocument, ImportWarning, SourceGedVersion } from "@/types/domain";
-import type { GskImportResult, GskExportOptions } from "@/core/gschema/GskPackage";
+import type { GskImportResult, GskExportOptions } from "@/core/genraph/GskPackage";
 
-export type { GskImportResult } from "@/core/gschema/GskPackage";
+export type { GskImportResult } from "@/core/genraph/GskPackage";
 
 export type ImportResult = {
   document: GeneaDocument | null;
@@ -27,7 +28,7 @@ export class FileIOService {
    * Import a .gsk package.
    */
   static async importGsk(file: File | Blob | ArrayBuffer | Uint8Array): Promise<GskImportResult> {
-    const { importGskPackage } = await import("@/core/gschema/GskPackage");
+    const { importGskPackage } = await import("@/core/genraph/GskPackage");
     return importGskPackage(file, { strict: true });
   }
 
@@ -45,14 +46,14 @@ export class FileIOService {
   }
 
   /**
-   * Export a GSchemaGraph as a .gsk package.
+   * Export a Genraph graph as a .gsk package.
    * For schema >= 0.5.0, app metadata in options.meta is ignored (core-only export).
    */
   static async exportGsk(
-    graph: import("@/core/gschema/GSchemaGraph").GSchemaGraph,
+    graph: GenraphGraph,
     options?: GskExportOptions
   ): Promise<Blob> {
-    const { exportGskPackage } = await import("@/core/gschema/GskPackage");
+    const { exportGskPackage } = await import("@/core/genraph/GskPackage");
     return exportGskPackage(graph, options);
   }
 }

@@ -1,5 +1,5 @@
 import { UiEngine } from "@/core/engine/UiEngine";
-import type { GSchemaGraph } from "@/core/gschema";
+import type { GenraphGraph } from "@/core/genraph";
 import { projectGraphDocument } from "@/core/read-model/selectors";
 import type { AppState } from "../types";
 import { ensureExpanded } from "./graphHelpers";
@@ -9,12 +9,12 @@ type GraphMutationResult = {
   selectedPersonUid?: string | null;
 };
 
-export function buildLoadedGraphState(state: AppState, graph: GSchemaGraph | null): Partial<AppState> {
+export function buildLoadedGraphState(state: AppState, graph: GenraphGraph | null): Partial<AppState> {
   const projected = projectGraphDocument(graph);
 
   if (!graph || !projected) {
     return {
-      gschemaGraph: null,
+      genraphGraph: null,
       graphRevision: state.graphRevision + 1,
       expandedGraph: { nodes: [], edges: [] },
     };
@@ -33,7 +33,7 @@ export function buildLoadedGraphState(state: AppState, graph: GSchemaGraph | nul
     : firstPersonId || null;
 
   return {
-    gschemaGraph: graph,
+    genraphGraph: graph,
     graphRevision: state.graphRevision + 1,
     xrefToUid: projected.xrefToUid,
     uidToXref: projected.uidToXref,
@@ -45,14 +45,14 @@ export function buildLoadedGraphState(state: AppState, graph: GSchemaGraph | nul
 
 export function runGraphMutation(
   state: AppState,
-  mutate: (graph: GSchemaGraph) => GraphMutationResult | null,
+  mutate: (graph: GenraphGraph) => GraphMutationResult | null,
 ): Partial<AppState> {
-  if (!state.gschemaGraph) return {};
+  if (!state.genraphGraph) return {};
 
-  const result = mutate(state.gschemaGraph);
+  const result = mutate(state.genraphGraph);
   if (result === null) return {};
 
-  const projected = projectGraphDocument(state.gschemaGraph);
+  const projected = projectGraphDocument(state.genraphGraph);
   if (!projected) return {};
 
   const nextSelectedPersonId = result.selectedPersonUid
