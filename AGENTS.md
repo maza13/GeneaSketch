@@ -14,6 +14,7 @@ It summarizes build/lint/test commands (including single-test workflows) and cod
 - TypeScript is strict (`strict`, `noUnusedLocals`, `noUnusedParameters` in `tsconfig.json`).
 - Path alias `@/* -> src/*` is configured in `tsconfig.json` and `vite.config.ts`.
 - Shared-core direction lives in `docs/wiki-software/11_shared_core_direction.md`; reading it is mandatory before architectural work that can affect core/app boundaries.
+- `notes/*` and `todos/*` workflows no longer auto-commit. Their CLI commands persist changes and print `SUGGESTED COMMIT: ...` for manual git commits.
 
 ## 2) Install
 ```bash

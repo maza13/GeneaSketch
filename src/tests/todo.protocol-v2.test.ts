@@ -53,17 +53,6 @@ function runNode(script: string, cwd: string, args: string[]) {
   });
 }
 
-function runNodeWithEnv(script: string, cwd: string, args: string[], env: NodeJS.ProcessEnv) {
-  return spawnSync(process.execPath, [script, ...args], {
-    cwd,
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      ...env
-    }
-  });
-}
-
 function runGit(cwd: string, args: string[]) {
   return spawnSync("git", args, {
     cwd,
@@ -487,7 +476,7 @@ Test.
     expect(result.stdout).toContain("Next child in order: 205");
   });
 
-  it("prepare opens umbrella and activates only eligible children", () => {
+  it("prepare opens umbrella and activates only eligible children without creating a commit", () => {
     const repo = makeRepo();
     initGitRepo(repo);
     writeTodo(
@@ -747,10 +736,11 @@ Test.
     expect(fs.existsSync(path.join(repo, "todos", "211-pending-p2-blocked.md"))).toBe(true);
     expect(result.stdout).toContain("activated: 210");
     expect(result.stdout).toContain("blocked: 211");
-    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("3");
+    expect(result.stdout).toContain("SUGGESTED COMMIT: chore(todos): prepare umbrella 209");
+    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("2");
   });
 
-  it("notes:promote generates v2 umbrella todos from promotion blocks", () => {
+  it("notes:promote generates v2 umbrella todos from promotion blocks without creating a commit", () => {
     const repo = makeRepo();
     initGitRepo(repo);
     ensureNotesPromoteRuntime(repo);
@@ -818,10 +808,11 @@ Test insight.
     expect(umbrella).toContain('task_type: "umbrella"');
     expect(umbrella).toContain('child_tasks: ["002", "003"]');
     expect(child).toContain('task_type: "leaf"');
-    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("2");
+    expect(result.stdout).toContain("SUGGESTED COMMIT: chore(notes): promote note N9000");
+    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("1");
   });
 
-  it("notes:new creates note, registry, and commit automatically", () => {
+  it("notes:new creates note, registry, and suggests a manual commit", () => {
     const repo = makeRepo();
     initGitRepo(repo);
 
@@ -830,10 +821,11 @@ Test insight.
     expect(result.stdout).toContain("CREATED N0001");
     expect(fs.existsSync(path.join(repo, "notes", "entries", "N0001-note-nueva-nota-de-prueba.md"))).toBe(true);
     expect(fs.existsSync(path.join(repo, "notes", "index", "registry.json"))).toBe(true);
-    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("2");
+    expect(result.stdout).toContain("SUGGESTED COMMIT: chore(notes): create note N0001");
+    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("1");
   });
 
-  it("notes:update renames note slug and commits automatically", () => {
+  it("notes:update renames note slug and suggests a manual commit", () => {
     const repo = makeRepo();
     initGitRepo(repo);
     const create = runNode(NOTES_CLI, repo, ["new", "--kind", "note", "--title", "Nota base"]);
@@ -843,160 +835,8 @@ Test insight.
     expect(update.status).toBe(0);
     expect(fs.existsSync(path.join(repo, "notes", "entries", "N0001-note-nota-base-renombrada.md"))).toBe(true);
     expect(fs.existsSync(path.join(repo, "notes", "entries", "N0001-note-nota-base.md"))).toBe(false);
-    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("3");
-  });
-
-  it("notes:update rolls back on simulated commit failure", () => {
-    const repo = makeRepo();
-    initGitRepo(repo);
-    const create = runNode(NOTES_CLI, repo, ["new", "--kind", "note", "--title", "Nota rollback"]);
-    expect(create.status).toBe(0);
-
-    const update = runNodeWithEnv(
-      NOTES_CLI,
-      repo,
-      ["update", "--note", "N0001", "--title", "Nota rollback fallida"],
-      { NOTES_GIT_TX_SIMULATE_COMMIT_FAILURE: "1" }
-    );
-    expect(update.status).not.toBe(0);
-    expect(update.stderr).toContain("commit_failed");
-    expect(fs.existsSync(path.join(repo, "notes", "entries", "N0001-note-nota-rollback.md"))).toBe(true);
-    expect(fs.existsSync(path.join(repo, "notes", "entries", "N0001-note-nota-rollback-fallida.md"))).toBe(false);
-    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("2");
-  });
-
-  it("todo:prepare rolls back on simulated commit failure", () => {
-    const repo = makeRepo();
-    initGitRepo(repo);
-    writeTodo(
-      repo,
-      "220-pending-p2-v2-umbrella.md",
-      `
----
-protocol_version: 2
-task_type: "umbrella"
-status: "pending"
-priority: "p2"
-issue_id: "220"
-title: "umbrella"
-tags: []
-dependencies: []
-child_tasks: ["221"]
-related_tasks: []
-owner: "codex"
-created_at: "2026-03-06"
-updated_at: "2026-03-06"
-target_date: null
-risk_level: "medium"
-estimated_effort: "m"
-complexity: "complex"
-auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
----
-
-# Umbrella
-
-## Problem Statement
-
-Test.
-
-## Findings
-
-None.
-
-## Proposed Solutions
-
-None.
-
-## Recommended Action
-
-Do it.
-
-## Orchestration Guide
-
-### Hard Dependencies
-
-- none
-
-### Child Execution Order
-
-1. 221 - only child
-
-### Related Context
-
-- none
-
-### Exit Rule
-
-- close last
-
-## Acceptance Criteria
-
-- [ ] Pending
-
-## Work Log
-
-### 2026-03-06 - Test
-`
-    );
-    writeTodo(
-      repo,
-      "221-pending-p2-child.md",
-      `
----
-protocol_version: 2
-task_type: "leaf"
-status: "pending"
-priority: "p2"
-issue_id: "221"
-title: "child"
-tags: []
-dependencies: []
-child_tasks: []
-related_tasks: []
-owner: "codex"
-created_at: "2026-03-06"
-updated_at: "2026-03-06"
-target_date: null
-risk_level: "medium"
-estimated_effort: "s"
-complexity: "standard"
-auto_closure: true
-commit_confirmed: false
-commit_message: null
-closed_at: null
----
-
-# Child
-
-## Problem Statement
-
-Test.
-
-## Recommended Action
-
-Do it.
-
-## Acceptance Criteria
-
-- [ ] Pending
-
-## Work Log
-
-### 2026-03-06 - Test
-`
-    );
-    expect(runGit(repo, ["add", "."]).status).toBe(0);
-    expect(runGit(repo, ["commit", "-m", "seed prepare rollback"]).status).toBe(0);
-
-    const result = runNodeWithEnv(PREPARE, repo, ["--todo", "220"], { TODOS_GIT_TX_SIMULATE_COMMIT_FAILURE: "1" });
-    expect(result.status).not.toBe(0);
-    expect(result.stderr).toContain("commit_failed");
-    expect(fs.existsSync(path.join(repo, "todos", "220-pending-p2-v2-umbrella.md"))).toBe(true);
-    expect(fs.existsSync(path.join(repo, "todos", "220-ready-p2-v2-umbrella.md"))).toBe(false);
-    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("2");
+    expect(update.stdout).toContain("SUGGESTED COMMIT: chore(notes): update note N0001");
+    expect(runGit(repo, ["rev-list", "--count", "HEAD"]).stdout.trim()).toBe("1");
   });
 
   it("closes successfully with a modified tracked file", () => {
@@ -1012,6 +852,7 @@ Do it.
     expect(result.status).toBe(0);
     expect(fs.existsSync(path.join(repo, "todos", "300-complete-p2-close-target.md"))).toBe(true);
     expect(result.stdout).toContain("OK: closed todo 300");
+    expect(result.stdout).toContain("SUGGESTED COMMIT: chore(todos): close issue 300 close-target");
   });
 
   it("expands directories to changed tracked files during dry run", () => {
@@ -1030,6 +871,7 @@ Do it.
     expect(result.stdout).toContain("preflight: ok");
     expect(result.stdout).toContain("reports/a.md");
     expect(result.stdout).toContain("reports/b.md");
+    expect(result.stdout).toContain("suggested commit: chore(todos): close issue 300 close-target");
     expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
   });
 
@@ -1089,52 +931,6 @@ Do it.
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("preflight: blocked_empty");
     expect(result.stderr).toContain("unchanged targets: docs/stable.md");
-  });
-
-  it("rolls back the todo file when stage fails after mutation", () => {
-    const repo = makeRepo();
-    initGitRepo(repo);
-    writeClosableTodo(repo);
-    writeFile(repo, "docs/change.md", "draft\n");
-    expect(runGit(repo, ["add", "."]).status).toBe(0);
-    expect(runGit(repo, ["commit", "-m", "seed change"]).status).toBe(0);
-    writeFile(repo, "docs/change.md", "draft\nupdated\n");
-
-    const result = runNodeWithEnv(
-      CLOSE,
-      repo,
-      ["--todo", "300", "--files", "docs/change.md"],
-      { TODO_CLOSE_SIMULATE_STAGE_FAILURE: "1" }
-    );
-
-    expect(result.status).not.toBe(0);
-    expect(result.stderr).toContain("stage_failed");
-    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
-    expect(fs.existsSync(path.join(repo, "todos", "300-complete-p2-close-target.md"))).toBe(false);
-    const todo = fs.readFileSync(path.join(repo, "todos", "300-ready-p2-close-target.md"), "utf8");
-    expect(todo).toContain('status: "ready"');
-  });
-
-  it("rolls back the todo file when commit fails after staging", () => {
-    const repo = makeRepo();
-    initGitRepo(repo);
-    writeClosableTodo(repo);
-    writeFile(repo, "docs/commit.md", "draft\n");
-    expect(runGit(repo, ["add", "."]).status).toBe(0);
-    expect(runGit(repo, ["commit", "-m", "seed commit"]).status).toBe(0);
-    writeFile(repo, "docs/commit.md", "draft\nupdated\n");
-
-    const result = runNodeWithEnv(
-      CLOSE,
-      repo,
-      ["--todo", "300", "--files", "docs/commit.md"],
-      { TODO_CLOSE_SIMULATE_COMMIT_FAILURE: "1" }
-    );
-
-    expect(result.status).not.toBe(0);
-    expect(result.stderr).toContain("commit_failed");
-    expect(fs.existsSync(path.join(repo, "todos", "300-ready-p2-close-target.md"))).toBe(true);
-    expect(fs.existsSync(path.join(repo, "todos", "300-complete-p2-close-target.md"))).toBe(false);
   });
 
   it("keeps the original todo when a requested directory mixes valid and ignored artifacts", () => {

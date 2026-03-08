@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { persistWithGit } from "../shared/gitPersistence.mjs";
+import { persistMutation } from "../shared/gitPersistence.mjs";
 
 const ROOT = process.cwd();
 const NOTES_DIR = path.resolve(ROOT, "notes");
@@ -626,13 +626,14 @@ function noteCommitMessage(action, detail) {
 }
 
 function persistNotesMutation({ commitMessage, targetPaths, mutate }) {
-  return persistWithGit({
+  const result = persistMutation({
     root: ROOT,
     targetPaths,
-    commitMessage,
-    mutate,
-    simulationPrefix: "NOTES_GIT_TX"
+    suggestedCommitMessage: commitMessage,
+    mutate
   });
+  console.log(`SUGGESTED COMMIT: ${result.suggestedCommitMessage}`);
+  return result;
 }
 
 function nextNoteId() {

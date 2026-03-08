@@ -1,6 +1,6 @@
 ---
 name: file-todos
-description: Manage file-based todo tracking in the `todos/` directory with end-to-end execution by default, automatic validation, and automatic close+commit flow. Use when creating, triaging, executing, reporting, or closing todo files, including `plan todo` requests.
+description: Manage file-based todo tracking in the `todos/` directory with end-to-end execution by default, automatic validation, and manual-commit-ready close flow with suggested commit messages. Use when creating, triaging, executing, reporting, or closing todo files, including `plan todo` requests.
 disable-model-invocation: true
 ---
 
@@ -21,7 +21,7 @@ Default behavior:
 
 1. End-to-end execution first.
 2. User action only when unavoidable and explicitly documented.
-3. Prefer automation over manual closure steps.
+3. Prefer automation over manual closure steps, but keep git commits manual.
 4. Keep TODO content clear and pragmatic.
 5. Add next-step recommendations at task closure, not at task creation.
 
@@ -52,7 +52,7 @@ Recommended frontmatter fields:
 - `title`, `tags`, `dependencies`, `owner`, `created_at`, `updated_at`
 - `risk_level`, `estimated_effort`, `target_date`
 - `complexity` (`simple` | `standard` | `complex`)
-- `auto_closure`, `commit_confirmed`, `commit_message`, `closed_at`
+- `auto_closure`, `closed_at`
 
 Protocol v2 fields:
 - `protocol_version` (`2`)
@@ -92,7 +92,7 @@ When a TODO is being executed:
 1. Run implementation from start to finish in one flow whenever feasible.
 2. Keep status progression aligned with real execution state.
 3. Update Work Log during execution, not afterward.
-4. Close task automatically with commit using `todo:close`.
+4. Close task with `todo:close` and use the suggested commit message for manual git commit.
 
 ## Umbrella Protocol (V2)
 
@@ -101,7 +101,7 @@ When a task uses `protocol_version: 2` and `task_type: umbrella`:
 1. Run `npm run todo:brief -- --todo <id>` before mutating state.
 2. Summarize hard dependencies, child order, related tasks, blockers, and the recommended next child.
 3. If the user asked to start/open the umbrella, run `npm run todo:prepare -- --todo <id>`.
-4. `todo:prepare` may move eligible child tasks from `pending` to `ready` and must persist that mutation with an automatic commit.
+4. `todo:prepare` may move eligible child tasks from `pending` to `ready` and must persist that mutation while printing a suggested manual commit message.
 5. Do not execute child tasks automatically.
 6. Do not close the umbrella until all child tasks are complete and acceptance criteria are checked.
 
@@ -154,7 +154,7 @@ For `protocol_version: 2`, validation also rejects:
 - umbrella tasks without `child_tasks`
 - umbrella tasks without `## Orchestration Guide`
 
-## Automatic Close and Commit
+## Manual Commit Suggestion Flow
 
 Close tasks with automation:
 
@@ -163,22 +163,19 @@ Close tasks with automation:
 Behavior of `todo:close`:
 - updates TODO status to `complete`
 - renames file to `*-complete-*`
-- updates timestamps and commit confirmation fields
+- updates timestamps
 - appends closing Work Log entry
 - generates next-step recommendation using current dependency/project state
 - validates requested `--files`/`--file` targets before mutating the TODO
 - accepts files and directories in `--files`; directories are expanded to changed files only
 - refuses closure if any requested target is missing, ignored, outside the repo, or would produce a partial commit
-- stages validated files + TODO file
-- creates commit automatically
-- prints commit hash and message
+- prints a `SUGGESTED COMMIT: ...` line for manual git commit
 
 Safety contract:
 - `todo:close` must fail before editing the TODO when requested artifacts cannot be committed safely.
-- If `git add` or `git commit` fails after the TODO rename/write step, the TODO file is rolled back to its original on-disk state.
 - Ignored paths are hard blockers, not warnings.
 - `--dry-run` must show the preflight result, expanded paths, and blocked categories.
-- `todo:prepare` must follow the same transactional persistence rule when it rewrites umbrella/child files.
+- `todo:prepare` must print a suggested manual commit message when it rewrites umbrella/child files.
 
 For `protocol_version: 2`, `todo:close` must refuse closure when:
 - any acceptance checkbox is unchecked
@@ -207,7 +204,7 @@ For `protocol_version: 2`, `todo:close` must refuse closure when:
 1. Implement changes.
 2. Update Work Log with evidence.
 3. Run `todo:validate` (scoped) on modified TODO files.
-4. Run `todo:close` to complete + commit + final recommendation.
+4. Run `todo:close` to complete + suggested manual commit + final recommendation.
 
 ### Start an Umbrella
 
@@ -238,7 +235,7 @@ When asked for status/recommendations, provide:
 - Validate full backlog: `npm run todo:validate:all`
 - Brief umbrella: `npm run todo:brief -- --todo 099`
 - Prepare umbrella: `npm run todo:prepare -- --todo 099`
-- Close + commit: `npm run todo:close -- --todo 073 --files package.json,tools/todos/validate.mjs,todos/073-complete-...`
+- Close + suggested commit: `npm run todo:close -- --todo 073 --files package.json,tools/todos/validate.mjs,todos/073-complete-...`
 
 ## Key Distinctions
 

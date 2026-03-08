@@ -121,8 +121,6 @@ export function serialize(meta, body) {
     "estimated_effort",
     "complexity",
     "auto_closure",
-    "commit_confirmed",
-    "commit_message",
     "closed_at"
   ];
 

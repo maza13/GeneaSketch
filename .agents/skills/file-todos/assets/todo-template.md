@@ -17,8 +17,6 @@ risk_level: medium
 estimated_effort: m
 complexity: standard
 auto_closure: true
-commit_confirmed: false
-commit_message: null
 closed_at: null
 ---
 

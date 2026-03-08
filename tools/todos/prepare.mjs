@@ -2,7 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { persistWithGit } from "../shared/gitPersistence.mjs";
+import { persistMutation } from "../shared/gitPersistence.mjs";
 import {
   FILE_RE,
   appendWorkLog,
@@ -164,11 +164,10 @@ function main() {
     return;
   }
 
-  persistWithGit({
+  const result = persistMutation({
     root: ROOT,
     targetPaths,
-    commitMessage: prepareCommitMessage(umbrella.id),
-    simulationPrefix: "TODOS_GIT_TX",
+    suggestedCommitMessage: prepareCommitMessage(umbrella.id),
     mutate: () => {
       if (renderStatus(umbrella) === "pending") {
         umbrella.meta.status = "ready";
@@ -188,6 +187,7 @@ function main() {
   console.log(`OK: prepared umbrella ${umbrella.id}`);
   console.log(`- activated: ${activated.join(", ") || "none"}`);
   console.log(`- blocked: ${blocked.join(", ") || "none"}`);
+  console.log(`SUGGESTED COMMIT: ${result.suggestedCommitMessage}`);
 }
 
 main();

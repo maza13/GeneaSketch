@@ -339,15 +339,6 @@ function validateFile(fullPath) {
     }
   }
 
-  if (String(meta.status) === "complete" && meta.auto_closure === true) {
-    if (meta.commit_confirmed !== true) {
-      errors.push("complete task with auto_closure=true requires commit_confirmed=true");
-    }
-    if (!(typeof meta.commit_message === "string" && meta.commit_message.trim().length > 0)) {
-      errors.push("complete task with auto_closure=true requires non-empty commit_message");
-    }
-  }
-
   return { name, id, errors, warnings, meta, deps: dependenciesOf(meta), childTasks };
 }
 

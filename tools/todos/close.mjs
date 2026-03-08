@@ -43,7 +43,7 @@ function parseArgs(argv) {
   const opts = {
     todo: null,
     files: [],
-    summary: "Task completed with automated closure.",
+    summary: "Task completed and ready for manual commit.",
     message: null,
     by: "Codex",
     dryRun: false
@@ -361,7 +361,7 @@ function preflightActionFor(status) {
   if (status === "blocked_missing") return "Create the missing paths first or remove them from --files/--file.";
   if (status === "blocked_ignored") return "Move the artifacts to a tracked path or update .gitignore before retrying.";
   if (status === "blocked_empty") return "Modify the requested files or omit unchanged paths from the close command.";
-  if (status === "blocked_partial") return "Resolve blocked paths first; the command refuses partial closure commits.";
+  if (status === "blocked_partial") return "Resolve blocked paths first; the command refuses partial closure with incomplete requested artifacts.";
   return "Proceed with todo:close.";
 }
 
@@ -399,31 +399,6 @@ function formatPreflightReport(preflight) {
 
   lines.push(`recommended action: ${preflightActionFor(preflight.status)}`);
   return lines.join("\n");
-}
-
-function maybeSimulateFailure(kind) {
-  if (kind === "stage" && process.env.TODO_CLOSE_SIMULATE_STAGE_FAILURE === "1") {
-    return { status: 1, stderr: "simulated stage failure", stdout: "" };
-  }
-  if (kind === "commit" && process.env.TODO_CLOSE_SIMULATE_COMMIT_FAILURE === "1") {
-    return { status: 1, stderr: "simulated commit failure", stdout: "" };
-  }
-  return null;
-}
-
-function rollbackTodoMutation(originalPath, originalRaw, closedPath) {
-  if (fs.existsSync(closedPath)) {
-    fs.unlinkSync(closedPath);
-  }
-  fs.writeFileSync(originalPath, originalRaw, "utf8");
-}
-
-function unstageTodoPaths(todoPaths) {
-  if (todoPaths.length === 0) return;
-  const reset = run("git", ["reset", "--quiet", "HEAD", "--", ...todoPaths]);
-  if (reset.status !== 0) {
-    console.warn(`WARN: could not unstage TODO paths after rollback:\n${reset.stderr || reset.stdout}`);
-  }
 }
 
 function main() {
@@ -467,8 +442,6 @@ function main() {
   meta.created_at = meta.created_at ?? date;
   meta.closed_at = date;
   meta.auto_closure = true;
-  meta.commit_confirmed = true;
-  meta.commit_message = commitMessage;
   meta.tags = Array.isArray(meta.tags) ? meta.tags : [];
   meta.dependencies = Array.isArray(meta.dependencies) ? meta.dependencies : [];
   meta.child_tasks = Array.isArray(meta.child_tasks) ? meta.child_tasks : [];
@@ -479,7 +452,7 @@ function main() {
       : "standard";
 
   const entry = [
-    `### ${date} - Auto close via todo:close`,
+    `### ${date} - Close via todo:close`,
     "",
     `**By:** ${opts.by}`,
     "",
@@ -489,11 +462,11 @@ function main() {
     "",
     "**Actions:**",
     `- ${opts.summary}`,
-    "- Closed task with automated status update + rename + commit.",
+    "- Closed task with status update + rename.",
     "",
     "**Evidence:**",
     "- Command: npm run todo:close -- ...",
-    "- Result: automatic close and commit executed.",
+    "- Result: task marked complete and ready for manual commit.",
     `- Artifacts/paths: todos/${id}-complete-${priority}-${slug}.md`,
     "",
     "**Next Recommendation (generated at closure):**",
@@ -524,7 +497,7 @@ function main() {
   if (opts.dryRun) {
     console.log("DRY RUN");
     console.log(`- todo: ${todoNewRel}`);
-    console.log(`- commit message: ${commitMessage}`);
+    console.log(`- suggested commit: ${commitMessage}`);
     console.log(`- preflight: ${preflight.status}`);
     console.log(`- staged files: ${stageFiles.join(", ")}`);
     console.log(preflightReport);
@@ -534,27 +507,8 @@ function main() {
   fs.writeFileSync(newPath, newContent, "utf8");
   if (newPath !== todoPath) fs.unlinkSync(todoPath);
 
-  const stageFailure = maybeSimulateFailure("stage");
-  const add = stageFailure ?? run("git", ["add", "-A", "--", ...stageFiles]);
-  if (add.status !== 0) {
-    rollbackTodoMutation(todoPath, raw, newPath);
-    unstageTodoPaths(uniqueSorted([todoOldRel, todoNewRel]));
-    die(`stage_failed\n${preflightReport}\nraw git error:\n${add.stderr || add.stdout}`);
-  }
-
-  const commitFailure = maybeSimulateFailure("commit");
-  const commit = commitFailure ?? run("git", ["commit", "-m", commitMessage]);
-  if (commit.status !== 0) {
-    rollbackTodoMutation(todoPath, raw, newPath);
-    unstageTodoPaths(uniqueSorted([todoOldRel, todoNewRel]));
-    die(`commit_failed\n${preflightReport}\nraw git error:\n${commit.stderr || commit.stdout}`);
-  }
-
-  const hash = run("git", ["rev-parse", "--short", "HEAD"]);
-  if (hash.status !== 0) die(`commit created but could not read hash:\n${hash.stderr || hash.stdout}`);
-
-  console.log(`OK: closed todo ${id} with commit ${hash.stdout.trim()}`);
-  console.log(`Message: ${commitMessage}`);
+  console.log(`OK: closed todo ${id}`);
+  console.log(`SUGGESTED COMMIT: ${commitMessage}`);
   console.log(`File: ${todoNewRel}`);
 }
 
