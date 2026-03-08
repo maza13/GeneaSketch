@@ -15,6 +15,8 @@ It summarizes build/lint/test commands (including single-test workflows) and cod
 - Path alias `@/* -> src/*` is configured in `tsconfig.json` and `vite.config.ts`.
 - Shared-core direction lives in `docs/wiki-software/11_shared_core_direction.md`; reading it is mandatory before architectural work that can affect core/app boundaries.
 - `notes/*` and `todos/*` workflows no longer auto-commit. Their CLI commands persist changes and print `SUGGESTED COMMIT: ...` for manual git commits.
+- `docs/wiki-uxdesign/14_rediseno_conceptual_interfaz_genealogica.md` is mandatory reading before redesigning panels, modes, or primary UI surfaces.
+- `docs/wiki-uxdesign/15_auditoria_superficies_actuales_y_plan_rediseno.md` is mandatory reading before consolidating, retiring, or redefining current UI panels and overlays.
 
 ## 2) Install
 ```bash
@@ -163,6 +165,8 @@ If those files are added later, treat them as high-priority agent instructions a
 - `src/state/store.ts`, `src/state/slices/*`
 - `src/core/genraph/*`, `src/core/genraph/GedcomBridge.ts`
 - `src/core/kindra/*`, `src/views/kindra-v31/*`
+- `docs/wiki-uxdesign/14_rediseno_conceptual_interfaz_genealogica.md`
+- `docs/wiki-uxdesign/15_auditoria_superficies_actuales_y_plan_rediseno.md`
 - `docs/wiki-software/11_shared_core_direction.md`
 - `src/tests/*`
 - `src/styles/tokens.css`

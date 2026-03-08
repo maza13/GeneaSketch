@@ -13,6 +13,8 @@
 **Fuente de verdad UX:**
 - Esta wiki (`docs/wiki-uxdesign/*`).
 - Tokens runtime canonicos en `src/styles/tokens.css`.
+- `14_rediseno_conceptual_interfaz_genealogica.md` es lectura obligatoria antes de cambios que redefinan paneles, modos o superficies principales.
+- `15_auditoria_superficies_actuales_y_plan_rediseno.md` es lectura obligatoria antes de consolidar, fusionar o retirar paneles existentes.
 
 #### Reglas canonicas (`UX-RULE-*`)
 | Rule ID | Regla |
@@ -41,6 +43,8 @@
 3. **Antes de implementar interaccion:** buscar en seccion 8 si existe patron.
 4. **Tokens:** usar `src/styles/tokens.css` como fuente canonica.
 5. **Si hay inconsistencia:** reportar y proponer actualizacion de wiki.
+6. **Antes de rediseñar paneles o modos:** leer el capitulo 14 y respetar su taxonomia UX.
+7. **Antes de decidir destinos de paneles actuales:** leer el capitulo 15 y usar su inventario y matriz de triggers como base.
 
 ### Prompt de contexto minimo para una sesion
 ```text

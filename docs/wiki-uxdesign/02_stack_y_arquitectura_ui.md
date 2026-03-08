@@ -22,6 +22,7 @@ App Shell (Chrome / UI)
 ### Regla de separación crítica
 1. **App Shell (UI):** Componentes estándar de interacción. Se encuentran principalmente en `@/ui`.
 2. **Kindra:** Nombre oficial del visual engine. Su implementacion actual vive en `@/views/kindra-v31`.
+3. **Rediseño conceptual obligatorio:** antes de rediseñar paneles, modos o superficies principales, leer `14_rediseno_conceptual_interfaz_genealogica.md`.
 
 ### Regla de estilos
 - **Variables CSS siempre** — nunca hardcodear colores, espaciados o radios

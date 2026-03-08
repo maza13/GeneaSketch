@@ -21,7 +21,9 @@ Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementa
 11. [11_checklist_entrega](./11_checklist_entrega.md)
 12. [12_instrucciones_agentes_ia](./12_instrucciones_agentes_ia.md)
 13. [13_kindra-v31-control-plane](./13_kindra-v31-control-plane.md)
-14. [CHANGELOG](./CHANGELOG.md)
+14. [14_rediseno_conceptual_interfaz_genealogica](./14_rediseno_conceptual_interfaz_genealogica.md)
+15. [15_auditoria_superficies_actuales_y_plan_rediseno](./15_auditoria_superficies_actuales_y_plan_rediseno.md)
+16. [CHANGELOG](./CHANGELOG.md)
 
 ## Convencion editorial
 - Esta wiki define el estandar UX/UI y su aplicacion en componentes e interacciones.
@@ -45,6 +47,8 @@ Esta wiki documenta el estandar integral de UX/UI de GeneaSketch para implementa
 | [11](./11_checklist_entrega.md) | vigente | Checklist de entrega |
 | [12](./12_instrucciones_agentes_ia.md) | vigente | Contrato para agentes + gobernanza |
 | [13](./13_kindra-v31-control-plane.md) | vigente | Gobernanza, gates y cierre Kindra v3.1 |
+| [14](./14_rediseno_conceptual_interfaz_genealogica.md) | vigente | Arquitectura UX objetivo para el futuro rediseño de paneles, modos y superficies |
+| [15](./15_auditoria_superficies_actuales_y_plan_rediseno.md) | vigente | Inventario real, conflictos, triggers y decisiones de consolidación para el rediseño |
 
 ## Navegacion
 [Siguiente: 01_filosofia_y_principios ->](./01_filosofia_y_principios.md)

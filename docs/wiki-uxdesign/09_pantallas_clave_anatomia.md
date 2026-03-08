@@ -2,6 +2,8 @@
 
 ## 9. Pantallas clave — anatomía
 
+> Nota: este capítulo describe anatomías actuales y patrones base. Cualquier rediseño mayor de paneles o modos debe alinearse primero con [14_rediseno_conceptual_interfaz_genealogica](./14_rediseno_conceptual_interfaz_genealogica.md).
+
 ### 9.1 Pantalla principal (main canvas)
 
 ```
