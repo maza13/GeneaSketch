@@ -1,6 +1,6 @@
 [package]
 name = "geneasketch"
-version = "0.4.5"
+version = "0.4.6"
 description = "GeneaSketch desktop shell"
 authors = ["GeneaSketch"]
 edition = "2021"
@@ -21,6 +21,5 @@ dirs = "5"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-
 
 

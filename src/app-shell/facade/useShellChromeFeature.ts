@@ -20,7 +20,7 @@ type Params = {
   leftPanelViewModel: LeftPanelViewModel;
   toggleLeftSection: AppShellFacade["chrome"]["leftPanel"]["commands"]["onToggleSection"];
   setLeftSectionState: AppShellFacade["chrome"]["leftPanel"]["commands"]["onSetSections"];
-  setKindraOrientation: AppShellFacade["chrome"]["leftPanel"]["commands"]["onDTreeOrientation"];
+  setKindraOrientation: AppShellFacade["chrome"]["leftPanel"]["commands"]["onKindraOrientation"];
   setPreset: AppShellFacade["chrome"]["leftPanel"]["commands"]["onPreset"];
   setDepth: AppShellFacade["chrome"]["leftPanel"]["commands"]["onDepth"];
   setInclude: AppShellFacade["chrome"]["leftPanel"]["commands"]["onInclude"];
@@ -78,7 +78,7 @@ export function useShellChromeFeature(params: Params): AppShellFacade["chrome"] 
       commands: {
         onToggleSection: params.toggleLeftSection,
         onSetSections: params.setLeftSectionState,
-        onDTreeOrientation: params.setKindraOrientation,
+        onKindraOrientation: params.setKindraOrientation,
         onPreset: params.setPreset,
         onDepth: params.setDepth,
         onInclude: params.setInclude,

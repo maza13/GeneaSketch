@@ -9,9 +9,9 @@ export type ReleaseInfo = {
 };
 
 export const RELEASE_INFO: ReleaseInfo = {
-  technicalVersion: "0.4.5",
+  technicalVersion: "0.4.6",
   channel: "beta",
-  codename: "genraph",
-  displayLabel: "Beta Genraph",
-  releaseTag: "v0.4.5-beta-genraph"
+  codename: "rebrand",
+  displayLabel: "Beta Rebrand",
+  releaseTag: "v0.4.6-beta-rebrand"
 };

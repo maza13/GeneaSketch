@@ -2,6 +2,27 @@
 
 Todos los cambios notables de GeneaSketch se documentan aqui.
 
+## 7 de marzo de 2026 - 0.4.6 (Beta Rebrand, Hard Cut Close)
+
+### Para usuarios (resumen rapido)
+- La app cierra oficialmente la etapa de hard cut con una taxonomia mas clara: `Genraph`, `Kindra`, `Kindra v3.1` y `AncestrAI`.
+- La shell queda mas ordenada y estable para seguir construyendo nuevas capacidades sin arrastrar naming legacy.
+- La version visible y la metadata de desktop/release quedan sincronizadas en `0.4.6`.
+
+### Detalle tecnico
+- Se cierra el rebranding interno y visible de los subsistemas clave, retirando naming legacy activo en shell, runtime visual y metadata de release.
+- `useAppShellFacade`, controller y session quedan mas delgados y repartidos por responsabilidad, con contratos estables y menos acoplamiento interno.
+- Se sincronizan manifests web/desktop, release metadata, changelog publico y referencias visibles de version para consolidar `0.4.6`.
+
+### Known Issues
+- El nombre principal de la app `GeneaSketch` sigue intacto y podra reevaluarse en una fase posterior, separada del hard cut tecnico.
+- El trabajo siguiente deberia volver a capacidades/producto; no se recomienda abrir otra ronda grande de refactor estructural inmediata.
+
+### Compatibilidad
+- Desktop (Tauri) Windows.
+- Canal visible: beta.
+- Codename: rebrand.
+
 ## 7 de marzo de 2026 - 0.4.5 (Beta GSchema, Shell Composition and Docs Sync)
 
 ### Para usuarios (resumen rapido)

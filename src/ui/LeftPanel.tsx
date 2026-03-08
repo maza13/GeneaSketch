@@ -7,7 +7,7 @@ type Props = {
   commands: {
     onToggleSection: (section: "layers" | "treeConfig" | "canvasTools") => void;
     onSetSections: (patch: Partial<NonNullable<ViewConfig["leftSections"]>>) => void;
-    onDTreeOrientation: (isVertical: boolean) => void;
+    onKindraOrientation: (isVertical: boolean) => void;
     onPreset: (preset: ViewConfig["preset"]) => void;
     onDepth: (kind: keyof ViewConfig["depth"], depth: number) => void;
     onInclude: (key: "spouses", value: boolean) => void;
@@ -21,7 +21,7 @@ export function LeftPanel({ viewModel, commands }: Props) {
   const {
     onToggleSection,
     onSetSections,
-    onDTreeOrientation,
+    onKindraOrientation,
     onPreset,
     onDepth,
     onInclude,
@@ -82,7 +82,7 @@ export function LeftPanel({ viewModel, commands }: Props) {
                   <input
                     type="checkbox"
                     checked={treeConfig.isVertical}
-                    onChange={(event) => onDTreeOrientation(event.target.checked)}
+                    onChange={(event) => onKindraOrientation(event.target.checked)}
                   />
                   Distribucion vertical
                 </label>

@@ -265,7 +265,7 @@ export type ShellChromeFacade = {
     commands: {
       onToggleSection: (section: "layers" | "treeConfig" | "canvasTools") => void;
       onSetSections: (patch: Partial<NonNullable<ViewConfig["leftSections"]>>) => void;
-      onDTreeOrientation: (isVertical: boolean) => void;
+      onKindraOrientation: (isVertical: boolean) => void;
       onPreset: (preset: ViewConfig["preset"]) => void;
       onDepth: (kind: keyof ViewConfig["depth"], depth: number) => void;
       onInclude: (key: "spouses", value: boolean) => void;

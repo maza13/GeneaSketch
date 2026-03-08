@@ -3,7 +3,7 @@
 GeneaSketch es una app genealogica `local-first` para escritorio, centrada en trabajo sobre `.gsk` como formato nativo, interoperabilidad con `.ged` y edicion visual directa del arbol.
 
 Estado actual:
-- release visible: `0.4.5`
+- release visible: `0.4.6`
 - canal: `beta`
 - visual engine oficial: `Kindra`
 - implementacion visual actual: `Kindra v3.1`

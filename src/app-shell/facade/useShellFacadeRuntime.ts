@@ -1,140 +1,74 @@
-import { useRef, useState } from "react";
-import type { SearchFilterState, SearchSortDirection, SearchSortField } from "@/ui/search/searchEngine";
-import { useAiAssistant } from "@/hooks/useAiAssistant";
-import { useAppShellController } from "@/hooks/useAppShellController";
-import { useFileLoadRuntime } from "@/hooks/useFileLoadRuntime";
-import { useGskFile } from "@/hooks/useGskFile";
 import { useMenuConfig } from "@/hooks/useMenuConfig";
-import type { GraphDocument } from "@/core/read-model/types";
+import { useShellSearchRuntime } from "./useShellSearchRuntime";
+import { useShellRuntimeRefsAndServices } from "./useShellRuntimeRefsAndServices";
+import type { ShellFacadeRuntimeParams } from "./runtimeTypes";
 
-type Params = {
-  document: GraphDocument | null;
-  viewConfig: any;
-  selectedPersonId: string | null;
-  recentFiles: any[];
-  aiSettings: any;
-  mergeDraft: any;
-  leftCollapsed: boolean;
-  rightCollapsed: boolean;
-  actions: any;
-};
-
-export function useShellFacadeRuntime(params: Params) {
-  const openFileInputRef = useRef<HTMLInputElement>(null);
-  const importFileInputRef = useRef<HTMLInputElement>(null);
-  const graphSvgRef = useRef<SVGSVGElement | null>(null);
-  const clearMergeFocusOverlayRef = useRef<() => void>(() => {});
-  const openLocalAiAssistantRef = useRef<(id: string) => void>(() => {});
-  const setStatusRef = useRef<(status: string) => void>(() => {});
-  const fileLoadRuntime = useFileLoadRuntime(() => clearMergeFocusOverlayRef.current());
-
-  const shellController = useAppShellController({
+export function useShellFacadeRuntime(params: ShellFacadeRuntimeParams) {
+  const services = useShellRuntimeRefsAndServices({
     document: params.document,
     viewConfig: params.viewConfig,
     selectedPersonId: params.selectedPersonId,
-    clearOverlayType: params.actions.clearOverlayType,
-    setOverlay: params.actions.setOverlay,
-    inspectPerson: params.actions.inspectPerson,
-    setSelectedPerson: params.actions.setSelectedPerson,
-    fitToScreen: params.actions.fitToScreen,
-    setStatus: (status) => setStatusRef.current(status),
-    applyProjectedDocument: params.actions.applyProjectedDocument,
-    toggleKindraNodeCollapse: params.actions.toggleKindraNodeCollapse,
-    setFocusFamilyId: params.actions.setFocusFamilyId,
-    openLocalAiAssistant: (personId) => openLocalAiAssistantRef.current(personId),
+    aiSettings: params.aiSettings,
+    mergeDraft: params.mergeDraft,
+    actions: params.actions,
   });
-
-  const gsk = useGskFile(graphSvgRef, shellController.colorTheme, fileLoadRuntime);
-  setStatusRef.current = gsk.setStatus;
-
-  const ai = useAiAssistant({
-    document: params.document,
-    applyDocumentChange: (nextDoc, source) => params.actions.applyProjectedDocument(nextDoc, source),
-    setStatus: gsk.setStatus,
-  });
-
-  openLocalAiAssistantRef.current = ai.openLocalAiAssistant;
-  clearMergeFocusOverlayRef.current = shellController.clearMergeFocusOverlay;
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchSortField, setSearchSortField] = useState<SearchSortField>("id");
-  const [searchSortDirection, setSearchSortDirection] = useState<SearchSortDirection>("asc");
-  const [searchFilters, setSearchFilters] = useState<SearchFilterState>({
-    sex: "any",
-    lifeStatus: "any",
-    surname: "any",
-  });
+  const search = useShellSearchRuntime();
 
   const menu = useMenuConfig({
     document: params.document,
     viewConfig: params.viewConfig,
     recentFiles: params.recentFiles,
     selectedPersonId: params.selectedPersonId,
-    colorTheme: shellController.colorTheme,
-    themeMode: shellController.themeMode,
-    aiUndoSnapshot: ai.aiUndoSnapshot,
+    colorTheme: services.shellController.colorTheme,
+    themeMode: services.shellController.themeMode,
+    aiUndoSnapshot: services.ai.aiUndoSnapshot,
     leftCollapsed: params.leftCollapsed,
     rightCollapsed: params.rightCollapsed,
     timelineOpen: params.viewConfig?.timelinePanelOpen ?? false,
     createNewTreeDoc: params.actions.createNewTreeDoc,
-    openFileInput: () => openFileInputRef.current?.click(),
-    importFileInput: () => importFileInputRef.current?.click(),
-    openAndReplace: gsk.openAndReplace,
-    openRecentItem: gsk.openRecentItem,
-    saveGsk: gsk.saveGsk,
-    exportGed: gsk.exportGed,
-    setShowPdfExport: shellController.setShowPdfExport,
-    exportRaster: gsk.exportRaster,
-    openPersonEditor: shellController.openPersonEditor,
-    openAddRelationEditor: shellController.openAddRelationEditor,
-    openLocalAiAssistant: ai.openLocalAiAssistant,
-    openGlobalAiAssistant: ai.openGlobalAiAssistant,
-    setShowAiSettingsModal: ai.setShowAiSettingsModal,
-    undoAiBatch: ai.undoAiBatch,
+    openFileInput: () => services.refs.openFileInputRef.current?.click(),
+    importFileInput: () => services.refs.importFileInputRef.current?.click(),
+    openAndReplace: services.gsk.openAndReplace,
+    openRecentItem: services.gsk.openRecentItem,
+    saveGsk: services.gsk.saveGsk,
+    exportGed: services.gsk.exportGed,
+    setShowPdfExport: services.shellController.setShowPdfExport,
+    exportRaster: services.gsk.exportRaster,
+    openPersonEditor: services.shellController.openPersonEditor,
+    openAddRelationEditor: services.shellController.openAddRelationEditor,
+    openLocalAiAssistant: services.ai.openLocalAiAssistant,
+    openGlobalAiAssistant: services.ai.openGlobalAiAssistant,
+    setShowAiSettingsModal: services.ai.setShowAiSettingsModal,
+    undoAiBatch: services.ai.undoAiBatch,
     fitToScreen: params.actions.fitToScreen,
-    setThemeMode: shellController.setThemeMode,
-    setShowColorThemeMenu: shellController.setShowColorThemeMenu,
+    setThemeMode: services.shellController.setThemeMode,
+    setShowColorThemeMenu: services.shellController.setShowColorThemeMenu,
     toggleShellPanel: params.actions.toggleShellPanel,
     setTimelinePanelOpen: params.actions.setTimelinePanelOpen,
     setTimelineScope: params.actions.setTimelineScope,
     setTimelineView: params.actions.setTimelineView,
     setKindraLayoutEngine: params.actions.setKindraLayoutEngine,
-    setShowDiagnostics: shellController.setShowDiagnostics,
-    setShowPersonStatsPersonId: shellController.setShowPersonStatsPersonId,
-    setShowGlobalStatsPanel: shellController.setShowGlobalStatsPanel,
+    setShowDiagnostics: services.shellController.setShowDiagnostics,
+    setShowPersonStatsPersonId: services.shellController.setShowPersonStatsPersonId,
+    setShowGlobalStatsPanel: services.shellController.setShowGlobalStatsPanel,
     clearNodePositions: params.actions.clearNodePositions,
-    generateScenario: shellController.generateScenario,
-    setShowMockTools: shellController.setShowMockTools,
-    setShowFamilySearchPanel: shellController.setShowFamilySearchPanel,
-    setShowWikiPanel: shellController.setShowWikiPanel,
-    setShowAboutModalV3: shellController.setShowAboutModalV3,
-    openPersonWorkspaceV3: (id) => shellController.setWorkspacePersonIdV3(id),
-    setColorTheme: shellController.setColorTheme,
+    generateScenario: services.shellController.generateScenario,
+    setShowMockTools: services.shellController.setShowMockTools,
+    setShowFamilySearchPanel: services.shellController.setShowFamilySearchPanel,
+    setShowWikiPanel: services.shellController.setShowWikiPanel,
+    setShowAboutModalV3: services.shellController.setShowAboutModalV3,
+    openPersonWorkspaceV3: services.shellController.setWorkspacePersonIdV3,
+    setColorTheme: services.shellController.setColorTheme,
     clearRecentFiles: params.actions.clearRecentFiles,
-    menuLayout: shellController.menuLayout,
-    setMenuLayout: shellController.setMenuLayout,
+    menuLayout: services.shellController.menuLayout,
+    setMenuLayout: services.shellController.setMenuLayout,
   });
 
   return {
-    refs: {
-      openFileInputRef,
-      importFileInputRef,
-      graphSvgRef,
-    },
-    shellController,
-    fileLoadRuntime,
-    gsk,
-    ai,
+    ...services,
     menu,
     search: {
-      query: searchQuery,
-      setQuery: setSearchQuery,
-      sortField: searchSortField,
-      setSortField: setSearchSortField,
-      sortDirection: searchSortDirection,
-      setSortDirection: setSearchSortDirection,
-      filters: searchFilters,
-      setFilters: setSearchFilters,
+      ...search,
     },
   };
 }

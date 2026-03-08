@@ -6,6 +6,15 @@
 
 export const PUBLIC_CHANGELOG: PublicChangelogEntry[] = [
   {
+    "heading": "7 de marzo de 2026 - 0.4.6 (Beta Rebrand, Hard Cut Close)",
+    "technicalVersion": "0.4.6",
+    "userChanges": [
+      "La taxonomia oficial del sistema queda alineada en Genraph, Kindra, Kindra v3.1 y AncestrAI.",
+      "La shell y sus capas de composicion quedan mas limpias para seguir construyendo producto sin arrastrar naming legacy.",
+      "La metadata de release, desktop y referencias visibles de version quedan sincronizadas oficialmente en 0.4.6."
+    ]
+  },
+  {
     "heading": "7 de marzo de 2026 - 0.4.5 (Beta GSchema, Shell Composition and Docs Sync)",
     "technicalVersion": "0.4.5",
     "userChanges": [
