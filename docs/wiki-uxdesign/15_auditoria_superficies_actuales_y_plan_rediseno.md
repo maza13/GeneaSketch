@@ -287,3 +287,11 @@ Implicacion UX:
 - `window dossier`: header sobrio, tabs, contenido principal y sin sidecar analitico persistente
 - `fullscreen workbench`: mismo expediente, pero con sidecar/contexto, quick actions de analisis y carriles visibles para capacidades futuras
 - la taxonomia de tabs no cambia entre modos; cambia la densidad, el contexto suplementario y la prioridad visual del trabajo analitico
+
+### 15.12.2 Anatomia espacial recomendada
+
+- `canvas Kindra` permanece como superficie principal
+- `RightPanel` actua como inspector compacto de lectura y navegacion
+- `PersonWorkspacePanelV3` en `window` usa tabs superiores y cuerpo unico, cercano al expediente clasico
+- `PersonWorkspacePanelV3` en `fullscreen` puede reemplazar las tabs superiores por un rail lateral de navegacion y un sidecar derecho de herramientas/contexto
+- esta adaptacion toma como referencia anatomica patrones tipo `canvas + inspector + expediente + workbench`, pero no implica copiar estilos demo ni branding ajeno

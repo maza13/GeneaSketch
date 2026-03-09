@@ -88,9 +88,9 @@ export function RightPanel(props: Props) {
           <div className="right-panel-summary__meta">
             <span className="material-symbols-outlined">fingerprint</span>
             <code>{person.id}</code>
-            <span aria-hidden="true">•</span>
+            <span aria-hidden="true">|</span>
             <span>{person.sex === "M" ? "Hombre" : person.sex === "F" ? "Mujer" : "No definido"}</span>
-            <span aria-hidden="true">•</span>
+            <span aria-hidden="true">|</span>
             <span>{formatLifeLine(viewModel)}</span>
           </div>
           <div className="right-panel-summary__stats">

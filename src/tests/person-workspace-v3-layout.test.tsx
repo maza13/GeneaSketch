@@ -70,8 +70,10 @@ describe("PersonWorkspacePanelV3 layout split", () => {
 
     expect(html).toContain("data-layout-mode=\"window\"");
     expect(html).toContain("person-workspace-window-header");
+    expect(html).toContain("role=\"tablist\"");
     expect(html).not.toContain("person-workspace-sidecar");
     expect(html).not.toContain("Modo workbench");
+    expect(html).not.toContain("person-workspace-workbench-nav");
   });
 
   it("renders workbench chrome only in fullscreen mode", () => {
@@ -87,7 +89,9 @@ describe("PersonWorkspacePanelV3 layout split", () => {
 
     expect(html).toContain("data-layout-mode=\"fullscreen\"");
     expect(html).toContain("person-workspace-sidecar");
-    expect(html).toContain("Modo workbench");
+    expect(html).toContain("person-workspace-workbench-nav");
+    expect(html).not.toContain("role=\"tablist\"");
+    expect(html).toContain("Workbench");
     expect(html).toContain("Carriles futuros");
   });
 });

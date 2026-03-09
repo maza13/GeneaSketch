@@ -6326,6 +6326,10 @@ select:focus {
   background: var(--surface-elevated);
 }
 
+.person-workspace-v3-modal--fullscreen .gs-content-area {
+  padding-top: 16px;
+}
+
 .person-workspace-v3-actions,
 .person-workspace-v3-footer {
   display: flex;
@@ -6350,9 +6354,8 @@ select:focus {
 .person-workspace-v3-window-header {
   padding: 14px 18px;
   border: 1px solid var(--surface-border-subtle);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--surface-elevated) 98%, transparent);
-  box-shadow: var(--shadow-sm);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-elevated) 99%, transparent);
 }
 
 .person-workspace-v3-window-header__identity,
@@ -6382,6 +6385,15 @@ select:focus {
   min-width: 0;
 }
 
+.person-workspace-v3-window-header__eyebrow,
+.person-workspace-v3-workbench__eyebrow {
+  color: var(--accent-primary);
+  font-size: 0.72rem;
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .person-workspace-v3-window-header__name,
 .person-workspace-v3-workbench__name {
   margin: 0;
@@ -6404,11 +6416,11 @@ select:focus {
 .person-workspace-v3-workbench {
   flex-direction: column;
   align-items: stretch;
-  padding: 18px;
+  padding: 16px 18px;
   border: 1px solid color-mix(in srgb, var(--accent-primary) 24%, var(--surface-border-subtle));
-  border-radius: 18px;
+  border-radius: 16px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent-primary-muted) 62%, transparent) 0%, color-mix(in srgb, var(--surface-elevated) 96%, transparent) 100%);
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-primary-muted) 54%, transparent) 0%, color-mix(in srgb, var(--surface-elevated) 97%, transparent) 100%);
   box-shadow: var(--shadow-sm);
 }
 
@@ -6417,14 +6429,6 @@ select:focus {
   grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
   gap: var(--space-4);
   align-items: stretch;
-}
-
-.person-workspace-v3-workbench__eyebrow {
-  color: var(--accent-primary);
-  font-size: 0.72rem;
-  font-weight: var(--weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .person-workspace-v3-workbench__stats {
@@ -6464,6 +6468,7 @@ select:focus {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+  padding-top: 4px;
 }
 
 .person-workspace-v3-workbench__actions {
@@ -6506,25 +6511,81 @@ select:focus {
 
 .person-workspace-v3--fullscreen .person-workspace-v3-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: 176px minmax(0, 1fr) 308px;
   gap: var(--space-4);
 }
 
+.person-workspace-v3-rail,
 .person-workspace-v3-main,
 .person-workspace-v3-sidecar {
   min-width: 0;
 }
 
+.person-workspace-v3-rail,
 .person-workspace-v3-section-frame,
 .person-workspace-v3-context-card {
   border: 1px solid var(--surface-border-subtle);
-  border-radius: 18px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
   box-shadow: var(--shadow-sm);
 }
 
+.person-workspace-v3-rail {
+  padding: 12px 0;
+  align-self: start;
+}
+
 .person-workspace-v3-section-frame--placeholder {
   border-style: dashed;
+}
+
+.person-workspace-v3-rail__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.person-workspace-v3-rail__group + .person-workspace-v3-rail__group {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--surface-border-subtle);
+}
+
+.person-workspace-v3-rail__label {
+  padding: 0 14px;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.person-workspace-v3-rail__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.person-workspace-v3-rail__item:hover {
+  background: var(--surface-overlay);
+}
+
+.person-workspace-v3-rail__item.is-active {
+  border-left-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary-muted) 66%, transparent);
+  color: var(--text-primary);
+}
+
+.person-workspace-v3-rail__item--future {
+  color: var(--text-tertiary);
 }
 
 .person-workspace-v3-section-frame__header {
@@ -6606,7 +6667,7 @@ select:focus {
 .person-workspace-v3-section-frame__summary {
   margin: var(--space-2) 0 0 0;
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   line-height: var(--leading-normal);
 }
 
@@ -6777,8 +6838,8 @@ select:focus {
 .right-panel-summary {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px 16px;
+  gap: 12px;
+  padding: 16px 16px 14px;
   border-bottom: 1px solid var(--line-soft);
   background: var(--bg-panel-alt);
 }
@@ -6786,7 +6847,7 @@ select:focus {
 .right-panel-summary__header {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .right-panel-summary__header h2 {
@@ -6808,15 +6869,15 @@ select:focus {
 .right-panel-summary__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .right-panel-summary__stat {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   align-items: flex-start;
-  padding: 10px;
+  padding: 8px 9px;
   border-radius: 12px;
   background: color-mix(in srgb, var(--bg-card) 82%, transparent);
   border: 1px solid var(--line-soft);
@@ -6875,6 +6936,18 @@ select:focus {
   .right-panel-summary__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .person-workspace-v3-rail {
+    order: 1;
+  }
+
+  .person-workspace-v3-main {
+    order: 2;
+  }
+
+  .person-workspace-v3-sidecar {
+    order: 3;
+  }
 }
 
 @media (max-width: 640px) {
@@ -6904,6 +6977,10 @@ select:focus {
   .person-workspace-v3-window-header__meta,
   .person-workspace-v3-workbench__meta {
     gap: 6px;
+  }
+
+  .person-workspace-v3--fullscreen .person-workspace-v3-layout {
+    grid-template-columns: 1fr;
   }
 
   .person-workspace-v3-workbench__stats,

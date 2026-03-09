@@ -159,11 +159,24 @@ export function PersonWorkspacePanelV3({
     [activeTab, v3Sections],
   );
 
-  const workbenchSections = useMemo(
-    () => [...v3Sections]
-      .filter((section) => (section.contextRole === "analysis" || section.contextRole === "future") && typeof section.workbenchPriority === "number")
-      .sort((left, right) => (left.workbenchPriority ?? 999) - (right.workbenchPriority ?? 999)),
+  const orderedSections = useMemo(
+    () => [...v3Sections].sort((left, right) => (left.workbenchPriority ?? 999) - (right.workbenchPriority ?? 999)),
     [v3Sections],
+  );
+
+  const primaryRailSections = useMemo(
+    () => orderedSections.filter((section) => !section.futureAnalysis),
+    [orderedSections],
+  );
+
+  const futureRailSections = useMemo(
+    () => orderedSections.filter((section) => section.futureAnalysis),
+    [orderedSections],
+  );
+
+  const analysisQuickActions = useMemo(
+    () => orderedSections.filter((section) => ["analysis", "sources", "notes", "timeline", "audit"].includes(section.id)),
+    [orderedSections],
   );
 
   if (!person || !heroData || !activeSection) return null;
@@ -177,6 +190,7 @@ export function PersonWorkspacePanelV3({
     : person.sex === "F"
       ? "var(--node-female)"
       : "var(--surface-subtle)";
+  const showStatusBadge = layoutMode === "fullscreen" || activeSection.status !== "operativo";
 
   const renderSectionBody = (section: PersonWorkspaceV3SectionDescriptor) => {
     if (section.entryMode === "placeholder") {
@@ -235,35 +249,25 @@ export function PersonWorkspacePanelV3({
       title={`Expediente: ${getPersonLabel(person)}`}
       onClose={onClose}
       size="xl"
-      tabs={modalTabs}
-      activeTab={activeSection.id}
-      onTabChange={(tabId) => setActiveTab(tabId as PersonWorkspaceV3SectionId)}
+      tabs={layoutMode === "window" ? modalTabs : undefined}
+      activeTab={layoutMode === "window" ? activeSection.id : undefined}
+      onTabChange={layoutMode === "window" ? (tabId) => setActiveTab(tabId as PersonWorkspaceV3SectionId) : undefined}
       fullscreen={isFullscreen}
       onToggleFullscreen={() => setIsFullscreen((current) => !current)}
       className={`person-v3-panel person-workspace-v3-modal person-workspace-v3-modal--${layoutMode}`}
-      headerActions={
-        layoutMode === "fullscreen" ? (
-          <div className="person-workspace-v3-actions">
+      footer={
+        layoutMode === "window" ? (
+          <div className="person-workspace-v3-footer">
             <button className="secondary-ghost" onClick={() => onOpenAiAssistant(personId)}>
               <span className="material-symbols-outlined">auto_awesome</span>
               AncestrAI
+            </button>
+            <button className="panel-header-btn" onClick={() => onSetAsFocus(personId)}>
+              <span className="material-symbols-outlined">center_focus_strong</span>
+              Seleccionar persona
             </button>
           </div>
-        ) : null
-      }
-      footer={
-        <div className="person-workspace-v3-footer">
-          {layoutMode === "window" ? (
-            <button className="secondary-ghost" onClick={() => onOpenAiAssistant(personId)}>
-              <span className="material-symbols-outlined">auto_awesome</span>
-              AncestrAI
-            </button>
-          ) : null}
-          <button className="panel-header-btn" onClick={() => onSetAsFocus(personId)}>
-            <span className="material-symbols-outlined">center_focus_strong</span>
-            Seleccionar persona
-          </button>
-        </div>
+        ) : undefined
       }
     >
       <div className={`person-workspace-v3 person-workspace-v3--${layoutMode}`} data-layout-mode={layoutMode}>
@@ -274,9 +278,11 @@ export function PersonWorkspacePanelV3({
                 <span className="material-symbols-outlined v2-avatar-icon">{sexIcon}</span>
               </div>
               <div className="person-workspace-v3-window-header__copy">
-                <span className="v2-gedcom-id">{person.id}</span>
+                <span className="person-workspace-v3-window-header__eyebrow">Expediente</span>
                 <h2 className="person-workspace-v3-window-header__name">{getPersonLabel(person)}</h2>
                 <div className="person-workspace-v3-window-header__meta">
+                  <span>{person.id}</span>
+                  <span aria-hidden="true">|</span>
                   <span>{heroData.lifeDates}</span>
                   <span aria-hidden="true">|</span>
                   <span>{sexLabel}</span>
@@ -294,9 +300,11 @@ export function PersonWorkspacePanelV3({
                   <span className="material-symbols-outlined v2-avatar-icon">{sexIcon}</span>
                 </div>
                 <div className="person-workspace-v3-workbench__copy">
-                  <span className="person-workspace-v3-workbench__eyebrow">Modo workbench</span>
+                  <span className="person-workspace-v3-workbench__eyebrow">Workbench</span>
                   <h2 className="person-workspace-v3-workbench__name">{getPersonLabel(person)}</h2>
                   <div className="person-workspace-v3-workbench__meta">
+                    <span>{person.id}</span>
+                    <span aria-hidden="true">|</span>
                     <span>{heroData.lifeDates}</span>
                     <span aria-hidden="true">|</span>
                     <span>{sexLabel}</span>
@@ -328,7 +336,7 @@ export function PersonWorkspacePanelV3({
 
             <div className="person-workspace-v3-workbench__strip">
               <div className="person-workspace-v3-workbench__actions">
-                {workbenchSections.map((section) => (
+                {analysisQuickActions.map((section) => (
                   <button
                     key={section.id}
                     type="button"
@@ -342,13 +350,49 @@ export function PersonWorkspacePanelV3({
               </div>
               <div className="person-workspace-v3-workbench__future">
                 <span className="material-symbols-outlined">experiment</span>
-                Carriles futuros: claims, journal, validacion de evidencia
+                Carriles futuros: claims, journal, evidencia, hipotesis
               </div>
             </div>
           </section>
         )}
 
         <div className="person-workspace-v3-layout">
+          {layoutMode === "fullscreen" ? (
+            <nav className="person-workspace-v3-rail" data-testid="person-workspace-workbench-nav">
+              <div className="person-workspace-v3-rail__group">
+                <div className="person-workspace-v3-rail__label">Secciones</div>
+                {primaryRailSections.map((section) => (
+                  <button
+                    key={section.id}
+                    type="button"
+                    className={`person-workspace-v3-rail__item ${activeSection.id === section.id ? "is-active" : ""}`}
+                    onClick={() => setActiveTab(section.id)}
+                  >
+                    <span className="material-symbols-outlined">{section.icon}</span>
+                    <span>{section.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {futureRailSections.length > 0 ? (
+                <div className="person-workspace-v3-rail__group">
+                  <div className="person-workspace-v3-rail__label">Proximamente</div>
+                  {futureRailSections.map((section) => (
+                    <button
+                      key={section.id}
+                      type="button"
+                      className={`person-workspace-v3-rail__item person-workspace-v3-rail__item--future ${activeSection.id === section.id ? "is-active" : ""}`}
+                      onClick={() => setActiveTab(section.id)}
+                    >
+                      <span className="material-symbols-outlined">{section.icon}</span>
+                      <span>{section.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </nav>
+          ) : null}
+
           <section className="person-workspace-v3-main">
             <div
               className={`person-workspace-v3-section-frame person-workspace-v3-section-frame--${activeSection.status} person-workspace-v3-section-frame--${layoutMode}`}
@@ -359,9 +403,11 @@ export function PersonWorkspacePanelV3({
                   <div className="person-workspace-v3-section-frame__copy">
                     <div className="person-workspace-v3-section-frame__title-row">
                       <h3 className="person-workspace-v3-section-frame__title">{activeSection.label}</h3>
-                      <span className={`person-workspace-v3-section-frame__status person-workspace-v3-section-frame__status--${activeSection.status}`}>
-                        {buildStatusLabel(activeSection.status)}
-                      </span>
+                      {showStatusBadge ? (
+                        <span className={`person-workspace-v3-section-frame__status person-workspace-v3-section-frame__status--${activeSection.status}`}>
+                          {buildStatusLabel(activeSection.status)}
+                        </span>
+                      ) : null}
                       {typeof activeSection.badgeCount === "number" ? (
                         <span className="person-workspace-v3-section-frame__count">{activeSection.badgeCount}</span>
                       ) : null}
@@ -388,7 +434,7 @@ export function PersonWorkspacePanelV3({
               <section className="person-workspace-v3-context-card">
                 <div className="person-workspace-v3-context-card__header">
                   <h4>Contexto analitico</h4>
-                  <span>Resumen operativo del expediente</span>
+                  <span>Lectura rapida para investigacion activa</span>
                 </div>
                 <div className="person-workspace-v3-context-list">
                   <div className="person-workspace-v3-context-list__item">
@@ -417,11 +463,36 @@ export function PersonWorkspacePanelV3({
 
               <section className="person-workspace-v3-context-card">
                 <div className="person-workspace-v3-context-card__header">
-                  <h4>Analisis futuro</h4>
+                  <h4>Herramientas</h4>
+                  <span>Trabajo profundo sin salir del expediente</span>
+                </div>
+                <div className="person-workspace-v3-sidecar__actions">
+                  <button type="button" className="panel-header-btn" onClick={() => onOpenAiAssistant(personId)}>
+                    <span className="material-symbols-outlined">auto_awesome</span>
+                    Abrir AncestrAI
+                  </button>
+                  <button type="button" className="secondary-ghost" onClick={() => setActiveTab("sources")}>
+                    <span className="material-symbols-outlined">menu_book</span>
+                    Revisar fuentes
+                  </button>
+                  <button type="button" className="secondary-ghost" onClick={() => setActiveTab("notes")}>
+                    <span className="material-symbols-outlined">description</span>
+                    Abrir notas
+                  </button>
+                  <button type="button" className="secondary-ghost" onClick={() => onSetAsFocus(personId)}>
+                    <span className="material-symbols-outlined">center_focus_strong</span>
+                    Centrar persona
+                  </button>
+                </div>
+              </section>
+
+              <section className="person-workspace-v3-context-card">
+                <div className="person-workspace-v3-context-card__header">
+                  <h4>Investigacion futura</h4>
                   <span>Reservas visibles del workbench</span>
                 </div>
                 <div className="person-workspace-v3-future-list">
-                  {v3Sections.filter((section) => section.futureAnalysis).map((section) => (
+                  {futureRailSections.map((section) => (
                     <button
                       key={section.id}
                       type="button"
@@ -435,23 +506,6 @@ export function PersonWorkspacePanelV3({
                       </div>
                     </button>
                   ))}
-                </div>
-              </section>
-
-              <section className="person-workspace-v3-context-card">
-                <div className="person-workspace-v3-context-card__header">
-                  <h4>Acciones rapidas</h4>
-                  <span>Sin salir del expediente</span>
-                </div>
-                <div className="person-workspace-v3-sidecar__actions">
-                  <button type="button" className="panel-header-btn" onClick={() => onSetAsFocus(personId)}>
-                    <span className="material-symbols-outlined">center_focus_strong</span>
-                    Centrar persona
-                  </button>
-                  <button type="button" className="secondary-ghost" onClick={() => onOpenAiAssistant(personId)}>
-                    <span className="material-symbols-outlined">auto_awesome</span>
-                    AncestrAI contextual
-                  </button>
                 </div>
               </section>
             </aside>
