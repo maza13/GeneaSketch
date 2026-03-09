@@ -98,6 +98,7 @@ Este documento es un resumen operativo. La base mas completa de taxonomia e inte
 La direccion para evolucionar hacia un shared core reusable sin abrir una extraccion prematura vive en:
 - [11_shared_core_direction](./11_shared_core_direction.md)
 - Su lectura es obligatoria antes de cambios que puedan afectar fronteras entre core, read model, visual engine y app shell.
+- Ese documento tambien fija la postura `desktop-first`, las fronteras para futuros hosts `web-safe` y `mobile-safe`, y el orden recomendado de endurecimiento entre core, read model y shell.
 
 ---
 
