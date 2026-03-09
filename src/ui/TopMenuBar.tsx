@@ -22,7 +22,6 @@ export type MenuGroup = {
 
 type Props = {
     menus: MenuGroup[];
-    actions?: MenuItem[];
     menuLayout: MenuLayout;
     onChangeLayout: (layout: MenuLayout) => void;
 };
@@ -34,7 +33,7 @@ const LAYOUT_LABELS: Record<MenuLayout, { short: string; long: string }> = {
 };
 const LAYOUTS: MenuLayout[] = ["frequency", "role", "hybrid"];
 
-export function TopMenuBar({ menus, actions = [], menuLayout, onChangeLayout }: Props) {
+export function TopMenuBar({ menus, menuLayout, onChangeLayout }: Props) {
     const [openId, setOpenId] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -142,21 +141,6 @@ export function TopMenuBar({ menus, actions = [], menuLayout, onChangeLayout }: 
             </div>
 
             {/* ── Quick actions (right) ─────────────────────────── */}
-            {actions.length > 0 && (
-                <div className="topbar-actions">
-                    {actions.map((action) => (
-                        <button
-                            key={action.id}
-                            className="topbar-action-btn"
-                            title={action.label}
-                            disabled={action.disabled}
-                            onClick={() => action.onClick?.()}
-                        >
-                            {action.icon || <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>bolt</span>}
-                        </button>
-                    ))}
-                </div>
-            )}
         </nav>
     );
 }

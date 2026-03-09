@@ -27,36 +27,37 @@ function ShellSideToggle({ side, collapsed, onClick }: ShellSideToggleProps) {
 
 type AppShellProps = {
     topbar: React.ReactNode;
+    toolbar: React.ReactNode;
     footer: React.ReactNode;
     leftPanel: React.ReactNode;
     rightPanel: React.ReactNode;
     canvas: React.ReactNode;
+    workspaceOverlayHost?: React.ReactNode;
     leftCollapsed: boolean;
     rightCollapsed: boolean;
     onToggleLeft: () => void;
     onToggleRight: () => void;
     detailsMode: "expanded" | "compact";
-    timelineMode: "expanded" | "compact";
 };
 
 export function AppShell({
     topbar,
+    toolbar,
     footer,
     leftPanel,
     rightPanel,
     canvas,
+    workspaceOverlayHost,
     leftCollapsed,
     rightCollapsed,
     onToggleLeft,
     onToggleRight,
     detailsMode,
-    timelineMode,
 }: AppShellProps) {
     const layoutClassName = buildLayoutClassName(leftCollapsed, rightCollapsed);
     const rightStackClassName = [
         "panel-right-stack",
         detailsMode === "expanded" ? "details-expanded" : "details-compact",
-        timelineMode === "expanded" ? "timeline-expanded" : "timeline-compact",
     ].join(" ");
 
     return (
@@ -64,6 +65,10 @@ export function AppShell({
             <header className="topbar">
                 {topbar}
             </header>
+
+            <div className="shell-toolbar">
+                {toolbar}
+            </div>
 
             <main className={layoutClassName}>
                 {/* Left sidebar — always in DOM, slides via CSS */}
@@ -79,6 +84,11 @@ export function AppShell({
                     <ShellSideToggle side="left" collapsed={leftCollapsed} onClick={onToggleLeft} />
                     <ShellSideToggle side="right" collapsed={rightCollapsed} onClick={onToggleRight} />
                     {canvas}
+                    {workspaceOverlayHost ? (
+                        <div className="shell-workspace-overlay-host">
+                            {workspaceOverlayHost}
+                        </div>
+                    ) : null}
                 </section>
 
                 {/* Right sidebar — always in DOM, slides via CSS */}

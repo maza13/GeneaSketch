@@ -17,8 +17,6 @@ import type { GraphDocument, GraphPayload, GraphSource, RecentPayloadV2 } from "
 
 export type RightStackState = {
     detailsMode: "expanded" | "compact";
-    timelineMode: "expanded" | "compact";
-    detailsAutoCompactedByTimeline?: boolean;
 };
 import type { AiSettings } from "@/types/ai";
 import type { MergeDraftSnapshot } from "@/types/merge-draft";
@@ -67,10 +65,10 @@ export interface ViewSlice {
     setShellPanelCollapsed: (side: "left" | "right", collapsed: boolean) => void;
     toggleShellPanel: (side: "left" | "right") => void;
     setLeftSectionState: (patch: Partial<ViewConfig["leftSections"]>) => void;
-    toggleLeftSection: (section: "layers" | "treeConfig" | "canvasTools") => void;
+    toggleLeftSection: (section: "layers" | "treeConfig" | "canvasTools" | "timeline") => void;
     setTimelinePanelOpen: (open: boolean) => void;
     setRightStackState: (patch: Partial<RightStackState>) => void;
-    toggleRightStackSection: (section: "details" | "timeline") => void;
+    toggleRightStackSection: (section: "details") => void;
     setTimelineScope: (scope: TimelineScope) => void;
     setTimelineView: (view: TimelineViewMode) => void;
     setTimelineScaleZoom: (zoom: number) => void;

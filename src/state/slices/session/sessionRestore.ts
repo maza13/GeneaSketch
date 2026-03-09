@@ -48,10 +48,13 @@ export function normalizeRestoredViewConfig(viewConfig: unknown, document: Graph
     rightStack.detailsMode ||
     (typeof rightStack.detailsExpanded === "boolean" ? (rightStack.detailsExpanded ? "expanded" : "compact") : undefined) ||
     defaults.rightStack?.detailsMode;
+  // Legacy snapshot normalization only. Active shell state no longer uses
+  // rightStack.timelineMode; older autosessions are mapped into the current
+  // left-side analysis rail so restore remains backward compatible.
   const timelineMode =
     rightStack.timelineMode ||
     (typeof rightStack.timelineExpanded === "boolean" ? (rightStack.timelineExpanded ? "expanded" : "compact") : undefined) ||
-    defaults.rightStack?.timelineMode;
+    "expanded";
 
   return {
     ...defaults,
@@ -69,14 +72,19 @@ export function normalizeRestoredViewConfig(viewConfig: unknown, document: Graph
           ? legacyIncludeSpouses
           : defaults.showSpouses,
     shellPanels: { ...defaults.shellPanels, ...(nextViewConfig.shellPanels || {}) },
-    leftSections: { ...defaults.leftSections, ...(nextViewConfig.leftSections || {}) },
+    leftSections: {
+      ...defaults.leftSections,
+      ...(nextViewConfig.leftSections || {}),
+      timelineExpanded:
+        typeof nextViewConfig.leftSections?.timelineExpanded === "boolean"
+          ? nextViewConfig.leftSections.timelineExpanded
+          : timelineMode === "expanded",
+    },
     timeline: { ...defaults.timeline, ...(nextViewConfig.timeline || {}) },
     rightStack: {
       ...defaults.rightStack,
       ...rightStack,
       detailsMode,
-      timelineMode,
-      detailsAutoCompactedByTimeline: !!rightStack.detailsAutoCompactedByTimeline,
     },
     kindra: {
       ...normalizeKindraConfig(nextViewConfig.kindra),

@@ -148,6 +148,7 @@ export type LeftPanelViewModel = {
     layersOpen: boolean;
     treeConfigOpen: boolean;
     canvasToolsOpen: boolean;
+    timelineExpanded: boolean;
   };
   treeConfig: {
     isVertical: boolean;
@@ -238,6 +239,13 @@ export type PersonWorkspaceViewModel = {
   v3Sections: PersonWorkspaceV3SectionDescriptor[];
 };
 
+export type WorkspaceWindowState = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export type ImportReviewViewModel = {
   baseDocument: ImportReviewDocumentView | null;
   incomingDocument: ImportReviewDocumentView | null;
@@ -277,12 +285,13 @@ export type ShellChromeFacade = {
   leftCollapsed: boolean;
   rightCollapsed: boolean;
   detailsMode: "expanded" | "compact";
-  timelineMode: "expanded" | "compact";
   topbar: {
     menus: MenuGroup[];
-    actions: MenuItem[];
     menuLayout: "frequency" | "role" | "hybrid";
     onChangeLayout: (layout: "frequency" | "role" | "hybrid") => void;
+  };
+  toolbar: {
+    actions: MenuItem[];
   };
   footer: {
     statusMessage: string;
@@ -310,6 +319,7 @@ export type ShellChromeFacade = {
     viewModel: SelectedPersonPanelViewModel;
     commands: {
       onToggleDetailsExpanded: () => void;
+      onInspectPerson: (personId: string) => void;
       onEditPerson: (personId: string) => void;
       onViewPersonDetail: (personId: string) => void;
       onAddRelation: (personId: string, type: PendingRelationType) => void;
@@ -477,9 +487,10 @@ export type ShellFeaturesFacade = {
       onCreateStandalone: (input: import("@/types/editor").PersonRelationInput) => void;
     };
   };
-  personWorkspace: {
+  personWorkspaceV3: {
     open: boolean;
     viewModel: PersonWorkspaceViewModel | null;
+    windowState: WorkspaceWindowState;
     commands: {
       onClose: () => void;
       onSelectPerson: (personId: string) => void;
@@ -488,12 +499,6 @@ export type ShellFeaturesFacade = {
       onSaveFamily: (familyId: string, patch: FamilyPatch) => void;
       onCreatePerson: (input: { name: string; surname?: string; sex?: "M" | "F" | "U"; birthDate?: string; deathDate?: string; lifeStatus?: "alive" | "deceased" }) => string | null;
       onQuickAddRelation: (anchorId: string, relationType: PendingRelationType) => void;
-    };
-  };
-  personWorkspaceV3: {
-    open: boolean;
-    viewModel: PersonWorkspaceViewModel | null;
-    commands: ShellFeaturesFacade["personWorkspace"]["commands"] & {
       onEditPerson: (personId: string) => void;
       onOpenAiAssistant: (personId: string) => void;
     };

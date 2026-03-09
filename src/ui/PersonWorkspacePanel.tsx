@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import type { PersonWorkspaceViewModel, ShellFeaturesFacade } from "@/app-shell/facade/types";
+import type { PersonWorkspaceViewModel } from "@/app-shell/facade/types";
+import type { FamilyPatch } from "@/core/edit/commands";
+import type { PendingRelationType } from "@/types/domain";
+import type { PersonEditorPatch } from "@/types/editor";
 import { PersonDetailShell } from "@/ui/person/PersonDetailShell";
 import { type PersonDetailSectionId } from "@/ui/person/personDetailSections";
 import { PersonIdentitySection } from "@/ui/person/sections/PersonIdentitySection";
@@ -15,9 +18,20 @@ import { PersonAnalysisSection } from "@/ui/person/sections/PersonAnalysisSectio
 import { PersonHistorySection } from "@/ui/person/sections/PersonHistorySection";
 import { getPersonLabel } from "@/ui/person/personDetailUtils";
 
+// Legacy workspace shell preserved only as reference.
+// Do not wire this component back into the active app shell.
+
 type Props = {
   viewModel: PersonWorkspaceViewModel;
-  commands: ShellFeaturesFacade["personWorkspace"]["commands"];
+  commands: {
+    onClose: () => void;
+    onSelectPerson: (personId: string) => void;
+    onSetAsFocus: (personId: string) => void;
+    onSavePerson: (personId: string, patch: PersonEditorPatch) => void;
+    onSaveFamily: (familyId: string, patch: FamilyPatch) => void;
+    onCreatePerson: (input: { name: string; surname?: string; sex?: "M" | "F" | "U"; birthDate?: string; deathDate?: string; lifeStatus?: "alive" | "deceased" }) => string | null;
+    onQuickAddRelation: (anchorId: string, relationType: PendingRelationType) => void;
+  };
 };
 
 function getInitialTab(): PersonDetailSectionId {

@@ -30,15 +30,17 @@ vi.mock("@/app-shell/components/ShellCanvasStage", () => ({
 }));
 
 vi.mock("@/app-shell/components/ShellAppFrame", () => ({
-  ShellAppFrame: ({ canvasStage }: { canvasStage: ReactNode }) => (
+  ShellAppFrame: ({ canvasStage, workspaceOverlayHost }: { canvasStage: ReactNode; workspaceOverlayHost?: ReactNode }) => (
     <div data-host="app-frame">
       app-frame
       {canvasStage}
+      {workspaceOverlayHost}
     </div>
   ),
 }));
 
 vi.mock("@/app-shell/components/ShellWorkspaceOverlays", () => ({
+  ShellWorkspaceWindowHost: () => <div data-host="workspace-window-host">workspace-window-host</div>,
   ShellWorkspaceOverlays: () => <div data-host="workspace-overlays">workspace-overlays</div>,
 }));
 
@@ -54,6 +56,7 @@ describe("App root composition", () => {
     expect(html).toContain("app-root-wrapper");
     expect(html).toContain("app-frame");
     expect(html).toContain("canvas-stage");
+    expect(html).toContain("workspace-window-host");
     expect(html).toContain("workspace-overlays");
     expect(html).toContain("global-overlays");
   });

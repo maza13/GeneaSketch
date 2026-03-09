@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from "react";
 import type { ShellChromeFacade, ShellFeaturesFacade } from "@/app-shell/facade/types";
 import { AppFooter } from "@/ui/shell/AppFooter";
 import { AppShell } from "@/ui/shell/AppShell";
+import { ShellToolbar } from "@/ui/shell/ShellToolbar";
 import { PanelErrorBoundary } from "@/ui/common/PanelErrorBoundary";
 import { TopMenuBar } from "@/ui/TopMenuBar";
 
@@ -32,23 +33,28 @@ type Props = {
   chrome: ShellChromeFacade;
   timeline: ShellFeaturesFacade["timeline"];
   canvasStage: ReactNode;
+  workspaceOverlayHost?: ReactNode;
 };
 
-export function ShellAppFrame({ chrome, timeline, canvasStage }: Props) {
+export function ShellAppFrame({ chrome, timeline, canvasStage, workspaceOverlayHost }: Props) {
   return (
     <AppShell
       leftCollapsed={chrome.leftCollapsed}
       rightCollapsed={chrome.rightCollapsed}
       detailsMode={chrome.detailsMode}
-      timelineMode={chrome.timelineMode}
       onToggleLeft={chrome.shellCommands.onToggleLeft}
       onToggleRight={chrome.shellCommands.onToggleRight}
       topbar={
         <TopMenuBar
           menus={chrome.topbar.menus}
-          actions={chrome.topbar.actions}
           menuLayout={chrome.topbar.menuLayout}
           onChangeLayout={chrome.topbar.onChangeLayout}
+        />
+      }
+      toolbar={
+        <ShellToolbar
+          actions={chrome.toolbar.actions}
+          menuLayout={chrome.topbar.menuLayout}
         />
       }
       footer={
@@ -65,28 +71,29 @@ export function ShellAppFrame({ chrome, timeline, canvasStage }: Props) {
       leftPanel={
         <PanelErrorBoundary panelName="Panel izquierdo">
           <Suspense fallback={<LeftPanelPlaceholder />}>
-            <LeftPanel viewModel={chrome.leftPanel.viewModel} commands={chrome.leftPanel.commands} />
+            <div className="panel-left-stack">
+              <LeftPanel viewModel={chrome.leftPanel.viewModel} commands={chrome.leftPanel.commands} />
+              {timeline.viewModel.isOpen ? (
+                <ShellTimelineRightPanel viewModel={timeline.viewModel} commands={timeline.commands} />
+              ) : null}
+            </div>
           </Suspense>
         </PanelErrorBoundary>
       }
       rightPanel={
         <PanelErrorBoundary panelName="Panel derecho">
           <Suspense fallback={<RightPanelPlaceholder />}>
-            <>
-              <RightPanel
-                viewModel={chrome.rightPanel.viewModel}
-                detailsMode={chrome.detailsMode}
-                onToggleDetailsExpanded={chrome.rightPanel.commands.onToggleDetailsExpanded}
-                onEditPerson={chrome.rightPanel.commands.onEditPerson}
-                onViewPersonDetail={chrome.rightPanel.commands.onViewPersonDetail}
-                onAddRelation={chrome.rightPanel.commands.onAddRelation}
-                onLinkExistingRelation={chrome.rightPanel.commands.onLinkExistingRelation}
-                onUnlinkRelation={chrome.rightPanel.commands.onUnlinkRelation}
-              />
-              {timeline.viewModel.isOpen ? (
-                <ShellTimelineRightPanel viewModel={timeline.viewModel} commands={timeline.commands} />
-              ) : null}
-            </>
+            <RightPanel
+              viewModel={chrome.rightPanel.viewModel}
+              detailsMode={chrome.detailsMode}
+              onToggleDetailsExpanded={chrome.rightPanel.commands.onToggleDetailsExpanded}
+              onInspectPerson={chrome.rightPanel.commands.onInspectPerson}
+              onEditPerson={chrome.rightPanel.commands.onEditPerson}
+              onViewPersonDetail={chrome.rightPanel.commands.onViewPersonDetail}
+              onAddRelation={chrome.rightPanel.commands.onAddRelation}
+              onLinkExistingRelation={chrome.rightPanel.commands.onLinkExistingRelation}
+              onUnlinkRelation={chrome.rightPanel.commands.onUnlinkRelation}
+            />
           </Suspense>
         </PanelErrorBoundary>
       }
@@ -95,6 +102,7 @@ export function ShellAppFrame({ chrome, timeline, canvasStage }: Props) {
           {canvasStage}
         </PanelErrorBoundary>
       }
+      workspaceOverlayHost={workspaceOverlayHost}
     />
   );
 }

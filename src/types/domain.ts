@@ -359,8 +359,6 @@ export type ViewConfig = {
   timelinePanelOpen?: boolean;
   rightStack?: {
     detailsMode: "expanded" | "compact";
-    timelineMode: "expanded" | "compact";
-    detailsAutoCompactedByTimeline?: boolean;
   };
   shellPanels?: {
     leftCollapsed: boolean;
@@ -370,6 +368,7 @@ export type ViewConfig = {
     layersOpen: boolean;
     treeConfigOpen: boolean;
     canvasToolsOpen: boolean;
+    timelineExpanded?: boolean;
   };
   timeline: TimelinePanelConfig;
   depth: {

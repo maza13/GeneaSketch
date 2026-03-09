@@ -60,7 +60,7 @@ export function useNodeActions(p: NodeActionsParams): NodeMenuState {
             const kindraConfig = p.viewConfig?.kindra;
 
             const items: NodeActionMenuItem[] = [
-                { id: "view-details", label: "👁️ Ver ficha detallada", group: "accion", onSelect: () => p.setWorkspacePersonId(person.id) },
+                { id: "view-details", label: "👁️ Abrir expediente", group: "accion", onSelect: () => p.setWorkspacePersonId(person.id) },
                 { id: "select-person", label: "🔍 Seleccionar persona", group: "accion", onSelect: () => p.focusPersonInCanvas(person.id) },
                 { id: "edit-person", label: "📝 Editar detalles", group: "accion", onSelect: () => p.openPersonEditor(person.id) },
                 { id: "add-relation", label: "➕ Agregar familiar...", group: "accion", onSelect: () => p.openAddRelationEditor(person.id, "child") }

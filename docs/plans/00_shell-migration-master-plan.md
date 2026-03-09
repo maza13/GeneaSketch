@@ -17,6 +17,19 @@ La meta es que GeneaSketch adopte una ventana principal mas delimitada y coheren
 
 El paquete no reemplaza la wiki. La wiki sigue siendo la fuente de verdad de UX y arquitectura, y estos documentos funcionan como plan operativo de ejecucion.
 
+El archivo [geneasketch.jsx](./geneasketch.jsx) funciona como referencia anatomica del shell completo. Su uso en esta migracion queda limitado a:
+
+- configuracion espacial general
+- delimitacion de superficies
+- relacion entre ventana principal, inspector y workspace
+
+No debe tomarse como fuente de:
+
+- estilo visual final
+- branding
+- naming funcional del producto
+- subsistemas o pills tecnicas ajenas a GeneaSketch
+
 ## Proposito
 
 - Copiar y adaptar la configuracion espacial del mock para toda la app, no solo para el expediente.
@@ -46,6 +59,17 @@ La app completa debe converger a esta organizacion:
 6. `workspace window`
 7. `workspace fullscreen/workbench`
 8. `status bar`
+
+## Equivalencias entre el mock y GeneaSketch
+
+| Referencia mock | Traduccion a GeneaSketch |
+| --- | --- |
+| top titlebar | titlebar shell de GeneaSketch |
+| toolbar | toolbar shell de GeneaSketch |
+| left tools | `LeftPanel` / `Analysis Controls` |
+| details panel | `RightPanel` como `Inspector` |
+| expediente flotante | `PersonWorkspacePanelV3` en `layoutMode="window"` |
+| fullscreen dossier | `PersonWorkspacePanelV3` en `layoutMode="fullscreen"` |
 
 ## Reglas de activacion UX
 
@@ -91,6 +115,23 @@ Regla:
 - `RightPanel` se conserva como `Inspector`
 - `PersonWorkspacePanelV3` se conserva como `Workspace` oficial
 - cualquier patron UX nuevo que nazca aqui debe actualizar la wiki en el mismo ciclo
+
+## Contratos conceptuales fijados por la fase 0
+
+- `AppShell`
+  - debe evolucionar a una composicion explicita con `titlebar`, `toolbar`, `main`, `status bar` y `workspaceOverlayHost`
+- `RightPanel`
+  - contrato funcional reducido a inspector de lectura y navegacion
+- `PersonWorkspacePanelV3`
+  - unica superficie oficial de trabajo profundo por persona
+  - dos densidades: `window` y `fullscreen`
+- `PersonWorkspaceViewModel`
+  - `layoutMode`
+  - `v3Sections`
+  - metadata suficiente para prioridades de workbench
+- `workspaceWindowState`
+  - concern local del shell desktop
+  - nunca parte del documento ni del core compartible
 
 ## Criterios globales de aceptacion
 

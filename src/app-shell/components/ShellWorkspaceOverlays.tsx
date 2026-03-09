@@ -9,7 +9,6 @@ const PersonWorkspacePanelV3 = lazy(() => import("@/ui/PersonWorkspacePanelV3").
 type Props = {
   workspace: Pick<ShellWorkspaceFacade, "hiddenInputs" | "pdfExport" | "importReview">;
   personEditor: ShellFeaturesFacade["personEditor"];
-  personWorkspace: ShellFeaturesFacade["personWorkspace"];
   personWorkspaceV3: ShellFeaturesFacade["personWorkspaceV3"];
 };
 
@@ -17,15 +16,28 @@ const PDF_PANEL_STYLE = { width: 520 } as const;
 const PDF_ACTIONS_STYLE = { justifyContent: "flex-end", marginTop: 24 } as const;
 const PDF_BUILDER_STYLE = { marginTop: 8 } as const;
 
+export function ShellWorkspaceWindowHost({ personWorkspaceV3 }: Pick<Props, "personWorkspaceV3">) {
+  const activeWorkspaceViewModel = personWorkspaceV3.viewModel;
+  const shouldRenderWorkspaceV3 = Boolean(activeWorkspaceViewModel && personWorkspaceV3.open);
+
+  return (
+    <Suspense fallback={null}>
+      {shouldRenderWorkspaceV3 && activeWorkspaceViewModel ? (
+        <PersonWorkspacePanelV3
+          viewModel={activeWorkspaceViewModel}
+          windowState={personWorkspaceV3.windowState}
+          commands={personWorkspaceV3.commands}
+        />
+      ) : null}
+    </Suspense>
+  );
+}
+
 export function ShellWorkspaceOverlays({
   workspace,
   personEditor,
-  personWorkspace,
-  personWorkspaceV3,
+  personWorkspaceV3: _personWorkspaceV3,
 }: Props) {
-  const activeWorkspaceViewModel = personWorkspaceV3.viewModel ?? personWorkspace.viewModel;
-  const shouldRenderWorkspaceV3 = Boolean(activeWorkspaceViewModel && (personWorkspaceV3.open || personWorkspace.open));
-
   return (
     <>
       <input
@@ -99,10 +111,6 @@ export function ShellWorkspaceOverlays({
 
         {personEditor.viewModel.editorState ? (
           <PersonDetailPanel viewModel={personEditor.viewModel} commands={personEditor.commands} />
-        ) : null}
-
-        {shouldRenderWorkspaceV3 && activeWorkspaceViewModel ? (
-          <PersonWorkspacePanelV3 viewModel={activeWorkspaceViewModel} commands={personWorkspaceV3.commands} />
         ) : null}
       </Suspense>
     </>

@@ -46,7 +46,7 @@ function buildParams(): MenuConfigParams {
     leftCollapsed: false,
     rightCollapsed: false,
     timelineOpen: false,
-    menuLayout: "frequency",
+    menuLayout: "role",
     createNewTreeDoc: () => {},
     openFileInput: () => {},
     importFileInput: () => {},

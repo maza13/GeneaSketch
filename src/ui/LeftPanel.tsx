@@ -36,7 +36,7 @@ export function LeftPanel({ viewModel, commands }: Props) {
     <div className="gs-panel" style={{ height: "100%" }}>
       <div className="gs-panel-header">
         <span className="material-symbols-outlined gs-panel-header-icon">explore</span>
-        <span className="gs-panel-header-title">Explorador</span>
+        <span className="gs-panel-header-title">Vista y analisis</span>
         <div className="gs-panel-header-actions">
           <button
             className="panel-icon-btn"

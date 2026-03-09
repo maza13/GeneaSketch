@@ -107,6 +107,16 @@ El expediente solo puede sentirse como una ventana interna creible cuando el she
 - actualizar la wiki UX para reflejar que el expediente normal ya es una ventana interna flotante del shell
 - reflejar la existencia de `layoutMode` y `workspaceWindowState` como concerns de shell
 
+## Implementacion base cerrada
+
+La implementacion base de esta fase queda fijada asi:
+
+- `window` ya no usa `StandardModal`
+- el expediente en `window` vive dentro de `workspaceOverlayHost` sobre el canvas
+- `fullscreen` sigue usando shell expandido del mismo workspace y se conmuta desde el mismo estado local
+- `workspaceWindowState` se persiste de forma minima en el host desktop
+- no se implementa drag libre en esta fase; la ventana queda anclada con posicion y tamano controlados
+
 ## Deuda prohibida al cerrar la fase
 
 - no dejar el expediente viviendo a medias entre modal generico y ventana interna

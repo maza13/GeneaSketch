@@ -7,7 +7,7 @@ export function useShellChromeState() {
   const [colorTheme, setColorTheme] = useState<ColorThemeConfig>(DEFAULT_COLOR_THEME);
   const [menuLayout, setMenuLayout] = useState<MenuLayout>(() => {
     const saved = localStorage.getItem("gsk_menu_layout");
-    return saved === "frequency" || saved === "role" || saved === "hybrid" ? saved : "frequency";
+    return saved === "frequency" || saved === "role" || saved === "hybrid" ? saved : "role";
   });
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showColorThemeMenu, setShowColorThemeMenu] = useState(false);

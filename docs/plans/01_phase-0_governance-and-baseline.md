@@ -45,18 +45,21 @@ Sin esta fase, cualquier rediseno posterior corre el riesgo de mezclar decisione
 - dejar definida la estructura `titlebar + toolbar + left rail + canvas + right inspector + workspace window + fullscreen workbench + status bar`
 - dejar claro que el mock solo aporta configuracion espacial
 - fijar que el canvas sigue siendo la superficie principal
+- dejar una tabla de equivalencias entre [geneasketch.jsx](./geneasketch.jsx) y las superficies reales de GeneaSketch
 
 ### 0.3 Fijar frontera shell/core
 
 - enumerar que parte de la migracion pertenece a `desktop shell`
 - enumerar que concerns no deben entrar al `core`
 - documentar que `workspaceWindowState`, stacking, drag, scroll y layout son problemas del shell, no del dominio
+- documentar que `titlebar`, `toolbar`, `status bar`, overlays y reglas de overflow pertenecen al host desktop
 
 ### 0.4 Fijar reglas de scroll, overlays y superficies
 
 - definir que no debe existir scroll global del viewport
 - definir que cada superficie scrollable debe hacerlo localmente
 - definir reglas de activacion entre inspector, workspace, editor y utilities
+- fijar que pruebas de overflow y stacking son obligatorias desde la fase 1
 
 ## Contratos, tipos o interfaces a tocar
 
@@ -65,6 +68,7 @@ Esta fase no modifica codigo, pero debe dejar cerrados estos contratos conceptua
 - `AppShell` como host de `titlebar`, `toolbar`, `main region`, `footer/status bar` y `workspace overlay host`
 - `PersonWorkspaceViewModel` con `layoutMode: "window" | "fullscreen"`
 - `workspaceWindowState` como estado local del shell desktop
+- `v3Sections` como descriptor canonico para tabs en `window` y rail en `fullscreen`
 - taxonomia oficial:
   - `Inspector = RightPanel`
   - `Editor = PersonDetailPanel`
@@ -88,6 +92,7 @@ Esta fase no modifica codigo, pero debe dejar cerrados estos contratos conceptua
 - si una decision parece empujar semantica al shell, se documenta como bloqueo y se corrige antes de seguir
 - si hay duda sobre si algo pertenece al `core` o al shell, por defecto se trata como shell hasta que se demuestre que define semantica del documento
 - si el mock exige una superficie no existente en GeneaSketch, se adapta a una superficie real y no se inventa un subsistema nuevo
+- si una necesidad del shell parece reusable, no entra al core por defecto; primero se clasifica como concern de host y solo despues se promueve si demuestra semantica compartible
 
 ## Criterios de salida
 
@@ -95,6 +100,7 @@ Esta fase no modifica codigo, pero debe dejar cerrados estos contratos conceptua
 - la anatomia final de la app esta descrita sin ambiguedad
 - la frontera shell/core esta escrita en terminos operativos
 - las reglas de activacion y scroll quedan cerradas
+- la tabla de equivalencias entre mock y GeneaSketch ya existe
 - la wiki relevante esta identificada como lectura obligatoria para las fases siguientes
 
 ## Pruebas minimas obligatorias
@@ -102,12 +108,14 @@ Esta fase no modifica codigo, pero debe dejar cerrados estos contratos conceptua
 - verificacion documental de consistencia entre este plan y la wiki
 - verificacion de enlaces internos del paquete `docs/plans`
 - chequeo de que todas las fases usan la misma taxonomia de superficies
+- verificacion de que el mock no contradice la wiki UX/software en sus equivalencias declaradas
 
 ## Impacto documental
 
 - crea la base documental de la migracion
 - prepara futuras actualizaciones a `docs/wiki-uxdesign/15_...`
 - refuerza la aplicacion practica de `docs/wiki-software/11_shared_core_direction.md`
+- deja fijado que esta migracion es de `desktop shell` y no de `shared core`
 
 ## Deuda prohibida al cerrar la fase
 

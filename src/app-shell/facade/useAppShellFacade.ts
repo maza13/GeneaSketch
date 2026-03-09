@@ -49,14 +49,13 @@ export function useAppShellFacade(): AppShellFacade {
   });
 
   const searchFilters = runtime.search.filters;
-  const { visiblePersonIds, normalizedKindraConfig, leftPanelViewModel, selectedPersonPanelViewModel, timelineViewModel, searchViewModel, diagnosticsViewModel, globalStatsViewModel, personStatsViewModel, personWorkspaceViewModel, personWorkspaceViewModelV3, personEditorViewModel, importReviewViewModel, aiAssistantViewModel, personPickerViewModel, branchExportViewModel } =
+  const { visiblePersonIds, normalizedKindraConfig, leftPanelViewModel, selectedPersonPanelViewModel, timelineViewModel, searchViewModel, diagnosticsViewModel, globalStatsViewModel, personStatsViewModel, personWorkspaceViewModelV3, personEditorViewModel, importReviewViewModel, aiAssistantViewModel, personPickerViewModel, branchExportViewModel } =
     useShellDerivedViewModels({
       document,
       viewConfig: state.viewConfig,
       visualConfig: state.visualConfig,
       expandedGraph: state.expandedGraph,
       selectedPersonId: state.selectedPersonId,
-      workspacePersonId: runtime.shellController.workspacePersonId,
       workspacePersonIdV3: runtime.shellController.workspacePersonIdV3,
       branchAnchorId: runtime.shellController.branchAnchorId,
       showSearchPanel: runtime.shellController.showSearchPanel,
@@ -93,7 +92,6 @@ export function useAppShellFacade(): AppShellFacade {
     diagnosticsViewModel,
     globalStatsViewModel,
     personStatsViewModel,
-    personWorkspaceViewModel,
     personWorkspaceViewModelV3,
     personEditorViewModel,
     importReviewViewModel,

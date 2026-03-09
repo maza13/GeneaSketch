@@ -90,6 +90,7 @@ export function buildLeftPanelViewModel(
       layersOpen: viewConfig?.leftSections?.layersOpen ?? true,
       treeConfigOpen: viewConfig?.leftSections?.treeConfigOpen ?? true,
       canvasToolsOpen: viewConfig?.leftSections?.canvasToolsOpen ?? false,
+      timelineExpanded: viewConfig?.leftSections?.timelineExpanded ?? true,
     },
     treeConfig: viewConfig
       ? {
@@ -135,7 +136,7 @@ export function buildTimelinePanelViewModel(
 
   return {
     isOpen: viewConfig?.timelinePanelOpen ?? false,
-    isExpanded: (viewConfig?.rightStack?.timelineMode ?? "compact") === "expanded",
+    isExpanded: viewConfig?.leftSections?.timelineExpanded ?? true,
     items,
     activeItemId: timelineOverlay?.config.sourceItemId ?? null,
     scopeLabel: scope === "all" ? "Todo el archivo" : "Solo visibles",

@@ -12,7 +12,7 @@ type Params = {
   rightCollapsed: boolean;
   viewConfig: ViewConfig | null;
   menus: AppShellFacade["chrome"]["topbar"]["menus"];
-  menuActions: AppShellFacade["chrome"]["topbar"]["actions"];
+  menuActions: AppShellFacade["chrome"]["toolbar"]["actions"];
   menuLayout: AppShellFacade["chrome"]["topbar"]["menuLayout"];
   setMenuLayout: AppShellFacade["chrome"]["topbar"]["onChangeLayout"];
   status: string;
@@ -27,6 +27,7 @@ type Params = {
   setGridEnabled: AppShellFacade["chrome"]["leftPanel"]["commands"]["onGridEnabled"];
   clearNodePositions: AppShellFacade["chrome"]["leftPanel"]["commands"]["onClearPositions"];
   selectedPersonPanelViewModel: SelectedPersonPanelViewModel;
+  inspectPerson: (personId: string) => void;
   toggleRightStackSection: () => void;
   openPersonEditor: AppShellFacade["chrome"]["rightPanel"]["commands"]["onEditPerson"];
   openPersonDetail: AppShellFacade["chrome"]["rightPanel"]["commands"]["onViewPersonDetail"];
@@ -57,12 +58,13 @@ export function useShellChromeFeature(params: Params): AppShellFacade["chrome"] 
     leftCollapsed: params.leftCollapsed,
     rightCollapsed: params.rightCollapsed,
     detailsMode: params.viewConfig?.rightStack?.detailsMode ?? "expanded",
-    timelineMode: params.viewConfig?.rightStack?.timelineMode ?? "compact",
     topbar: {
       menus: params.menus,
-      actions: params.menuActions,
       menuLayout: params.menuLayout,
       onChangeLayout: params.setMenuLayout,
+    },
+    toolbar: {
+      actions: params.menuActions,
     },
     footer: {
       statusMessage: params.status,
@@ -90,6 +92,7 @@ export function useShellChromeFeature(params: Params): AppShellFacade["chrome"] 
       viewModel: params.selectedPersonPanelViewModel,
       commands: {
         onToggleDetailsExpanded: params.toggleRightStackSection,
+        onInspectPerson: params.inspectPerson,
         onEditPerson: params.openPersonEditor,
         onViewPersonDetail: params.openPersonDetail,
         onAddRelation: params.openAddRelationEditor,

@@ -41,7 +41,6 @@ type Params = {
   visualConfig: VisualConfig;
   expandedGraph: ExpandedGraph;
   selectedPersonId: string | null;
-  workspacePersonId: string | null;
   workspacePersonIdV3: string | null;
   branchAnchorId: string | null;
   showSearchPanel: boolean;
@@ -75,7 +74,6 @@ type Result = {
     getStats: (scope: "all" | "visible") => ReturnType<typeof calculateGlobalStatistics>;
   };
   personStatsViewModel: PersonStatsViewModel;
-  personWorkspaceViewModel: PersonWorkspaceViewModel | null;
   personWorkspaceViewModelV3: PersonWorkspaceViewModel | null;
   personEditorViewModel: ReturnType<typeof buildPersonEditorViewModel>;
   importReviewViewModel: ImportReviewViewModel;
@@ -98,8 +96,8 @@ export function useShellDerivedViewModels(params: Params): Result {
     [params.document, params.viewConfig, params.visualConfig],
   );
   const selectedPersonPanelViewModel = useMemo(
-    () => buildSelectedPersonPanelViewModel(params.document, params.workspacePersonIdV3 || params.workspacePersonId || params.selectedPersonId),
-    [params.document, params.selectedPersonId, params.workspacePersonId, params.workspacePersonIdV3],
+    () => buildSelectedPersonPanelViewModel(params.document, params.workspacePersonIdV3 || params.selectedPersonId),
+    [params.document, params.selectedPersonId, params.workspacePersonIdV3],
   );
   const timelineViewModel = useMemo(
     () => buildTimelinePanelViewModel(params.document, params.expandedGraph, params.viewConfig),
@@ -136,10 +134,6 @@ export function useShellDerivedViewModels(params: Params): Result {
     () => buildPersonStatsViewModel(params.document, params.showPersonStatsPersonId),
     [params.document, params.showPersonStatsPersonId],
   );
-  const personWorkspaceViewModel = useMemo<PersonWorkspaceViewModel | null>(
-    () => buildPersonWorkspaceViewModel(params.document, params.aiSettings, params.workspacePersonId),
-    [params.aiSettings, params.document, params.workspacePersonId],
-  );
   const personWorkspaceViewModelV3 = useMemo<PersonWorkspaceViewModel | null>(
     () => buildPersonWorkspaceViewModel(params.document, params.aiSettings, params.workspacePersonIdV3),
     [params.aiSettings, params.document, params.workspacePersonIdV3],
@@ -175,7 +169,6 @@ export function useShellDerivedViewModels(params: Params): Result {
     diagnosticsViewModel,
     globalStatsViewModel,
     personStatsViewModel,
-    personWorkspaceViewModel,
     personWorkspaceViewModelV3,
     personEditorViewModel,
     importReviewViewModel,

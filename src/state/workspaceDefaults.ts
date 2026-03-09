@@ -42,6 +42,7 @@ export function createDefaultViewConfig(homePersonId = ""): ViewConfig {
       layersOpen: true,
       treeConfigOpen: true,
       canvasToolsOpen: false,
+      timelineExpanded: true,
     },
     timeline: {
       scope: "visible",

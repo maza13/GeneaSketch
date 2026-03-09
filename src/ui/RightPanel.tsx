@@ -6,6 +6,7 @@ type Props = {
   viewModel: SelectedPersonPanelViewModel;
   detailsMode: "expanded" | "compact";
   onToggleDetailsExpanded: () => void;
+  onInspectPerson: (personId: string) => void;
   onEditPerson: (personId: string) => void;
   onViewPersonDetail: (personId: string) => void;
   onAddRelation: (personId: string, type: PendingRelationType) => void;
@@ -20,7 +21,7 @@ function formatLifeLine(viewModel: Extract<SelectedPersonPanelViewModel, { kind:
 }
 
 export function RightPanel(props: Props) {
-  const { viewModel, detailsMode, onToggleDetailsExpanded, onViewPersonDetail } = props;
+  const { viewModel, detailsMode, onToggleDetailsExpanded, onViewPersonDetail, onInspectPerson } = props;
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     life: true,
     parents: true,
@@ -64,7 +65,7 @@ export function RightPanel(props: Props) {
     <div className="gs-panel" style={{ height: "100%" }}>
       <div className="gs-panel-header">
         <span className="material-symbols-outlined gs-panel-header-icon">contact_page</span>
-        <span className="gs-panel-header-title">Ficha rapida</span>
+        <span className="gs-panel-header-title">Inspector</span>
         <div className="gs-panel-header-actions">
           <button className="panel-icon-btn" onClick={() => onViewPersonDetail(person.id)} title="Abrir expediente">
             <span className="material-symbols-outlined">open_in_new</span>
@@ -152,7 +153,7 @@ export function RightPanel(props: Props) {
                     key={related.id}
                     type="button"
                     className="right-panel-related-link gs-list-item"
-                    onClick={() => onViewPersonDetail(related.id)}
+                    onClick={() => onInspectPerson(related.id)}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
                       {section.key === "parents" ? (related.sex === "M" ? "male" : related.sex === "F" ? "female" : "person") : section.icon}

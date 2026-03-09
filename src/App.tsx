@@ -2,7 +2,7 @@ import { useAppShellFacade } from "@/app-shell/facade/useAppShellFacade";
 import { ShellAppFrame } from "@/app-shell/components/ShellAppFrame";
 import { ShellCanvasStage } from "@/app-shell/components/ShellCanvasStage";
 import { ShellGlobalOverlays } from "@/app-shell/components/ShellGlobalOverlays";
-import { ShellWorkspaceOverlays } from "@/app-shell/components/ShellWorkspaceOverlays";
+import { ShellWorkspaceOverlays, ShellWorkspaceWindowHost } from "@/app-shell/components/ShellWorkspaceOverlays";
 
 export function App() {
   const facade = useAppShellFacade();
@@ -13,12 +13,16 @@ export function App() {
         chrome={facade.chrome}
         timeline={facade.features.timeline}
         canvasStage={<ShellCanvasStage workspace={facade.workspace} canvas={facade.features.canvas} />}
+        workspaceOverlayHost={
+          <ShellWorkspaceWindowHost
+            personWorkspaceV3={facade.features.personWorkspaceV3}
+          />
+        }
       />
 
       <ShellWorkspaceOverlays
         workspace={facade.workspace}
         personEditor={facade.features.personEditor}
-        personWorkspace={facade.features.personWorkspace}
         personWorkspaceV3={facade.features.personWorkspaceV3}
       />
 

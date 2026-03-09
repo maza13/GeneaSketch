@@ -161,5 +161,30 @@ Mientras sigamos desarrollando:
 4. si toca bridge o read model, revisar riesgo de duplicacion semantica
 5. si una capacidad futura parece web-safe o mobile-safe, documentar la frontera antes de mezclarla con el shell actual
 
+## Aplicacion explicita al rediseño del shell
+
+La migracion del shell inspirada por la referencia anatomica del plan vive por completo en el host desktop.
+
+Esto incluye:
+
+- layout del shell
+- `titlebar`, `toolbar` y `status bar`
+- `workspaceWindowState`
+- stacking y overlays
+- drag y positioning de ventanas internas
+- reglas de overflow regional
+- `workspaceOverlayHost`
+
+Regla:
+
+- nada de lo anterior debe moverse al `shared core` por conveniencia de implementacion
+- si un cambio solo existe para soportar el shell desktop, debe quedarse en `app-shell`, `ui`, `styles` o adaptadores del host
+- si una capacidad demuestra semantica compartible, se evalua despues contra los guardrails del core; no se promueve por anticipacion
+
+Referencia cruzada operativa:
+
+- `docs/plans/00_shell-migration-master-plan.md`
+- `docs/plans/01_phase-0_governance-and-baseline.md`
+
 ## Navegacion
 [<- 10_interconexiones](./10_interconexiones.md) | [Siguiente: glosario_usuario ->](./glosario_usuario.md)

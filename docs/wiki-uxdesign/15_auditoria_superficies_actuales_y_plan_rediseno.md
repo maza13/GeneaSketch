@@ -295,3 +295,98 @@ Implicacion UX:
 - `PersonWorkspacePanelV3` en `window` usa tabs superiores y cuerpo unico, cercano al expediente clasico
 - `PersonWorkspacePanelV3` en `fullscreen` puede reemplazar las tabs superiores por un rail lateral de navegacion y un sidecar derecho de herramientas/contexto
 - esta adaptacion toma como referencia anatomica patrones tipo `canvas + inspector + expediente + workbench`, pero no implica copiar estilos demo ni branding ajeno
+
+### 15.12.3 Patron de shell completo para la migracion
+
+La migracion del shell queda cerrada con estos hard cuts:
+
+- `PersonWorkspacePanelV3` es el unico `Workspace` oficial de persona
+- `RightPanel` queda como `Inspector` y no vuelve a crecer hacia editor profundo o expediente
+- `PersonDetailPanel` sobrevive solo como editor puntual o legacy degradado
+- [PersonWorkspacePanel.tsx](/C:/My_Projects/GeneaSketch/src/ui/PersonWorkspacePanel.tsx) permanece solo como referencia legacy y no debe volver a cablearse al shell activo
+
+Reglas operativas finales:
+
+- el shell no expone dos workspaces de persona en paralelo
+- el host interno del expediente consume solo V3
+- la apertura, restauracion, expansion y cierre del expediente usan una sola ruta de estado: `workspacePersonIdV3`
+- cualquier compatibilidad con snapshots antiguos queda confinada al restaurador de sesion y no reintroduce contratos legacy en el shell activo
+
+Compatibilidad legacy permitida:
+
+- puede mantenerse normalizacion de snapshots antiguos dentro de `sessionRestore`
+- esa compatibilidad existe solo para lectura de payloads viejos, por ejemplo mapeando `rightStack.timelineMode` a la configuracion actual del carril izquierdo de analisis
+- esa normalizacion no autoriza revivir `timelineMode` ni el workspace legacy como estado vivo del shell
+
+La fase 0 de la migracion del shell deja cerrado que la referencia anatomica ya no aplica solo al expediente, sino a la ventana principal completa.
+
+Patron objetivo del shell:
+
+- `titlebar`
+- `toolbar`
+- `left rail`
+- `canvas central`
+- `right inspector`
+- `workspace window`
+- `workspace fullscreen/workbench`
+- `status bar`
+
+Reglas de activacion:
+
+- seleccion simple de persona -> `Inspector`
+- doble click o accion explicita `abrir expediente` -> `Workspace`
+- accion `expandir` desde el expediente -> mismo workspace en `fullscreen`
+- `RightPanel` no compite con `Workspace`
+- `AncestrAI` sigue siendo utility contextual y no panel dominante del shell
+
+Regla de carriles:
+
+- el carril izquierdo concentra `View / Analysis Controls`
+- `Timeline` pertenece al carril izquierdo como herramienta de analisis
+- el carril derecho queda reservado al `Inspector`
+
+Reglas de overflow:
+
+- no debe existir scroll global del viewport en uso normal
+- el scroll debe vivir dentro de superficies locales
+- las pruebas de overflow y stacking pasan a ser obligatorias desde la fase 1 del rediseño
+
+### 15.12.4 Equivalencias entre la referencia anatomica y GeneaSketch
+
+El archivo de referencia del plan (`docs/plans/geneasketch.jsx`) se acepta solo como guia de configuracion espacial.
+
+Tabla de equivalencias:
+
+| Referencia | GeneaSketch |
+| :--- | :--- |
+| top titlebar | titlebar shell |
+| toolbar | toolbar shell |
+| left tools | `LeftPanel` / `Analysis Controls` |
+| details panel | `RightPanel` como inspector |
+| expediente flotante | `PersonWorkspacePanelV3` en `layoutMode="window"` |
+| fullscreen dossier | `PersonWorkspacePanelV3` en `layoutMode="fullscreen"` |
+
+Regla:
+
+- la referencia no autoriza copiar branding, nombres ficticios, pills de engine ni estilos demo
+- si la referencia contradice esta wiki, gana esta wiki
+
+### 15.12.5 Cierre de fase 3 del shell
+
+La fase 3 fija una decision de implementacion concreta:
+
+- `PersonWorkspacePanelV3` en `window` deja de usar modal global centrado
+- el expediente normal pasa a ser una ventana interna del shell, montada sobre el canvas mediante `workspaceOverlayHost`
+- `fullscreen` sigue siendo la transformacion del mismo expediente
+- `workspaceWindowState` pertenece al shell desktop y no al core compartible
+- el drag libre no es obligatorio en esta etapa; la base aceptada es ventana fija con posicion y tamano controlados
+
+### 15.12.6 Cierre de fase 4 del workbench fullscreen
+
+La fase 4 deja cerrado que el `fullscreen` del expediente:
+
+- usa `StandardModal` solo como host tecnico
+- traslada su chrome real al interior del workbench
+- usa `rail izquierdo` como navegacion principal y no tabs superiores
+- agrupa prioridades de trabajo profundo antes que secciones de registro base
+- mantiene `sidecar` como apoyo contextual y reserva visible para `claims` y `journal`

@@ -12,7 +12,7 @@ type WorkspaceState = {
   setPendingKinshipSourceId: (id: string | null) => void;
   setPersonDetailModal: (state: PersonEditorState) => void;
   setPicker: (picker: PickerState | null) => void;
-  setWorkspacePersonId: (id: string | null) => void;
+  setWorkspacePersonIdV3: (id: string | null) => void;
   setBranchAnchorId: (id: string | null) => void;
 };
 
@@ -98,7 +98,7 @@ export function useShellNodeInteraction(
     nodeMenu: workspaceState.nodeMenu,
     document: params.document,
     viewConfig: params.viewConfig,
-    setWorkspacePersonId: workspaceState.setWorkspacePersonId,
+    setWorkspacePersonId: workspaceState.setWorkspacePersonIdV3,
     focusPersonInCanvas,
     openPersonEditor,
     openAddRelationEditor,

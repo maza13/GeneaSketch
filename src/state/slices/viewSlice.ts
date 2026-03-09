@@ -7,7 +7,7 @@ import type { ActiveOverlay } from "@/types/domain";
 import { createDefaultVisualConfig } from "@/state/workspaceDefaults";
 
 const defaultKindra = () => createDefaultKindraConfig();
-const defaultRightStack = () => ({ detailsMode: "expanded" as const, timelineMode: "compact" as const, detailsAutoCompactedByTimeline: false });
+const defaultRightStack = () => ({ detailsMode: "expanded" as const });
 const withNormalizedKindra = (kindra: Partial<ReturnType<typeof createDefaultKindraConfig>>) => {
     const normalized = { ...defaultKindra(), ...kindra };
     return { kindra: normalized };
@@ -106,12 +106,18 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
 
     toggleLeftSection: (section) => set((state) => {
         if (!state.viewConfig) return {};
-        const prop = section === "layers" ? "layersOpen" : section === "treeConfig" ? "treeConfigOpen" : "canvasToolsOpen";
+        const prop = section === "layers"
+            ? "layersOpen"
+            : section === "treeConfig"
+                ? "treeConfigOpen"
+                : section === "canvasTools"
+                    ? "canvasToolsOpen"
+                    : "timelineExpanded";
         const current = !!state.viewConfig.leftSections?.[prop];
         return {
             viewConfig: {
                 ...state.viewConfig,
-                leftSections: { ...(state.viewConfig.leftSections || { layersOpen: true, treeConfigOpen: false, canvasToolsOpen: false }), [prop]: !current }
+                leftSections: { ...(state.viewConfig.leftSections || { layersOpen: true, treeConfigOpen: false, canvasToolsOpen: false, timelineExpanded: true }), [prop]: !current }
             }
         };
     }),
@@ -119,28 +125,16 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
     setTimelinePanelOpen: (open) => set((state) => {
         if (!state.viewConfig) return {};
         const current = state.viewConfig;
-        const currentStack = { ...defaultRightStack(), ...(current.rightStack || {}) };
         const overlays = current.kindra?.overlays || [];
         const nextOverlays = open ? overlays : overlays.filter((overlay) => overlay.type !== "timeline");
-        const stack = open
-            ? {
-                ...currentStack,
-                timelineMode: "expanded" as const,
-                detailsMode: "compact" as const,
-                detailsAutoCompactedByTimeline: true
-            }
-            : {
-                ...currentStack,
-                timelineMode: "compact" as const,
-                detailsMode: currentStack.detailsAutoCompactedByTimeline ? "expanded" as const : currentStack.detailsMode,
-                detailsAutoCompactedByTimeline: false
-            };
+        const nextLeftSections = {
+            ...(current.leftSections || { layersOpen: true, treeConfigOpen: false, canvasToolsOpen: false, timelineExpanded: true }),
+            timelineExpanded: open ? (current.leftSections?.timelineExpanded ?? true) : (current.leftSections?.timelineExpanded ?? true),
+        };
 
         if (
             current.timelinePanelOpen === open &&
-            currentStack.detailsMode === stack.detailsMode &&
-            currentStack.timelineMode === stack.timelineMode &&
-            currentStack.detailsAutoCompactedByTimeline === stack.detailsAutoCompactedByTimeline &&
+            current.leftSections?.timelineExpanded === nextLeftSections.timelineExpanded &&
             nextOverlays === overlays
         ) {
             return {};
@@ -150,7 +144,7 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
             viewConfig: {
                 ...current,
                 timelinePanelOpen: open,
-                rightStack: stack,
+                leftSections: nextLeftSections,
                 ...withNormalizedKindra({ ...(current.kindra || defaultKindra()), overlays: nextOverlays })
             }
         };
@@ -161,21 +155,21 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         return {
             viewConfig: {
                 ...state.viewConfig,
-                rightStack: { ...(state.viewConfig.rightStack || { detailsMode: "expanded", timelineMode: "compact" }), ...patch }
+                rightStack: { ...(state.viewConfig.rightStack || { detailsMode: "expanded" }), ...patch }
             }
         };
     }),
 
-    toggleRightStackSection: (section) => set((state) => {
+    toggleRightStackSection: () => set((state) => {
         if (!state.viewConfig) return {};
-        const current = state.viewConfig.rightStack?.[section === "details" ? "detailsMode" : "timelineMode"] === "expanded";
+        const current = state.viewConfig.rightStack?.detailsMode === "expanded";
         const mode = current ? "compact" : "expanded";
         return {
             viewConfig: {
                 ...state.viewConfig,
                 rightStack: {
-                    ...(state.viewConfig.rightStack || { detailsMode: "expanded", timelineMode: "compact" }),
-                    [section === "details" ? "detailsMode" : "timelineMode"]: mode
+                    ...(state.viewConfig.rightStack || { detailsMode: "expanded" }),
+                    detailsMode: mode
                 }
             }
         };
@@ -341,17 +335,12 @@ export const createViewSlice: StateCreator<AppState, [], [], ViewSlice> = (set) 
         const currentStack = { ...defaultRightStack(), ...(current.rightStack || {}) };
         const nextStack = {
             ...currentStack,
-            timelineMode: "compact" as const,
-            detailsMode: currentStack.detailsAutoCompactedByTimeline ? "expanded" as const : currentStack.detailsMode,
-            detailsAutoCompactedByTimeline: false
         };
         const needsOverlayClear = (current.kindra?.overlays || []).length > 0;
         const needsTimelineClose = !!current.timelinePanelOpen;
         const needsFamilyReset = current.focusFamilyId !== null;
         const needsStackChange =
-            currentStack.timelineMode !== nextStack.timelineMode ||
-            currentStack.detailsMode !== nextStack.detailsMode ||
-            !!currentStack.detailsAutoCompactedByTimeline !== !!nextStack.detailsAutoCompactedByTimeline;
+            currentStack.detailsMode !== nextStack.detailsMode;
         if (!needsOverlayClear && !needsTimelineClose && !needsFamilyReset && !needsStackChange) return {};
         return {
             viewConfig: {

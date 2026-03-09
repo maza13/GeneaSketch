@@ -103,7 +103,6 @@ export type ShellFeatureCompositionParams = {
   diagnosticsViewModel: DiagnosticsViewModel;
   globalStatsViewModel: GlobalStatsViewModel;
   personStatsViewModel: PersonStatsViewModel;
-  personWorkspaceViewModel: PersonWorkspaceViewModel | null;
   personWorkspaceViewModelV3: PersonWorkspaceViewModel | null;
   personEditorViewModel: PersonEditorViewModel;
   importReviewViewModel: ImportReviewViewModel;

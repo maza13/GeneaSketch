@@ -48,7 +48,7 @@ export function AppFooter({
     };
 
     return (
-        <div className="app-footer" ref={containerRef}>
+        <div className="app-footer status-bar" ref={containerRef}>
             {/* LEFT: System Status */}
             <div className="footer-left" onClick={() => setExpanded(!expanded)} title="Click para expandir detalle">
                 <div className={`footer-status-dot ${severityClass}`}></div>

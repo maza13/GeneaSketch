@@ -870,7 +870,7 @@ describe("timeline contract", () => {
     expect(after).toEqual([]);
   });
 
-  it("maps legacy rightStack booleans to mode-based rightStack on restore", async () => {
+  it("maps legacy rightStack timeline flags to left timeline expansion on restore", async () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
@@ -911,11 +911,12 @@ describe("timeline contract", () => {
 
     await useAppStore.getState().restoreSession();
     const stack = useAppStore.getState().viewConfig?.rightStack;
+    const leftSections = useAppStore.getState().viewConfig?.leftSections;
     expect(stack?.detailsMode).toBe("compact");
-    expect(stack?.timelineMode).toBe("expanded");
+    expect(leftSections?.timelineExpanded).toBe(true);
   });
 
-  it("auto-compacts details when timeline opens and restores details when timeline closes", () => {
+  it("opens and closes timeline from the left-side analysis state without compacting the inspector", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
@@ -923,9 +924,9 @@ describe("timeline contract", () => {
 
     useAppStore.getState().setTimelinePanelOpen(true);
     let stack = useAppStore.getState().viewConfig?.rightStack;
-    expect(stack?.detailsMode).toBe("compact");
-    expect(stack?.timelineMode).toBe("expanded");
-    expect(stack?.detailsAutoCompactedByTimeline).toBe(true);
+    let leftSections = useAppStore.getState().viewConfig?.leftSections;
+    expect(stack?.detailsMode ?? "expanded").toBe("expanded");
+    expect(leftSections?.timelineExpanded).toBe(true);
 
     useAppStore.getState().setTimelineStatus(["@I1@"], [], 1995);
     expect(
@@ -936,9 +937,9 @@ describe("timeline contract", () => {
 
     useAppStore.getState().setTimelinePanelOpen(false);
     stack = useAppStore.getState().viewConfig?.rightStack;
-    expect(stack?.timelineMode).toBe("compact");
-    expect(stack?.detailsMode).toBe("expanded");
-    expect(stack?.detailsAutoCompactedByTimeline).toBe(false);
+    expect(stack?.detailsMode ?? "expanded").toBe("expanded");
+    leftSections = useAppStore.getState().viewConfig?.leftSections;
+    expect(leftSections?.timelineExpanded).toBe(true);
     expect(
       useAppStore
         .getState()
@@ -984,21 +985,19 @@ describe("timeline contract", () => {
     expect(after.viewConfig?.kindra?.overlays).toEqual([]);
   });
 
-  it("clearVisualModes restores details to expanded when auto-compacted by timeline", () => {
+  it("clearVisualModes closes timeline without mutating inspector compactness", () => {
     const doc = createNewTree();
     doc.persons["@I1@"].name = "Root";
     doc.persons["@I1@"].isPlaceholder = false;
     loadDoc(doc);
     useAppStore.getState().setTimelinePanelOpen(true);
     const stackBefore = useAppStore.getState().viewConfig?.rightStack;
-    expect(stackBefore?.detailsMode).toBe("compact");
-    expect(stackBefore?.detailsAutoCompactedByTimeline).toBe(true);
+    expect(stackBefore?.detailsMode ?? "expanded").toBe("expanded");
 
     useAppStore.getState().clearVisualModes();
-    const stackAfter = useAppStore.getState().viewConfig?.rightStack;
-    expect(stackAfter?.timelineMode).toBe("compact");
-    expect(stackAfter?.detailsMode).toBe("expanded");
-    expect(stackAfter?.detailsAutoCompactedByTimeline).toBe(false);
+    const afterViewConfig = useAppStore.getState().viewConfig;
+    expect(afterViewConfig?.timelinePanelOpen).toBe(false);
+    expect(afterViewConfig?.rightStack?.detailsMode ?? "expanded").toBe("expanded");
   });
 
   it("clearVisualModes is idempotent", () => {

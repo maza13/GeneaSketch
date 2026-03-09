@@ -36,6 +36,7 @@ Una vez que la ventana principal ya esta delimitada, hay que estabilizar la jera
 - dejar de tratar `LeftPanel` como contenedor generico
 - convertirlo en carril oficial de controles de vista, capas y analisis
 - fijar su peso visual como soporte del canvas y no como protagonista
+- mover `Timeline` al lado izquierdo como parte de `Analysis Controls`
 
 ### 2.2 Compactar el inspector derecho
 
@@ -51,8 +52,8 @@ Una vez que la ventana principal ya esta delimitada, hay que estabilizar la jera
 
 ### 2.4 Estabilizar stacking con timeline y paneles derechos
 
-- definir cuando timeline o paneles auxiliares conviven con el inspector
-- evitar que el stack derecho rompa el rol de ficha rapida
+- sacar timeline del stack derecho
+- dejar el lado derecho reservado al inspector
 - fijar scroll local y alturas para no reintroducir overflow global
 
 ## Contratos, tipos o interfaces a tocar

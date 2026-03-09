@@ -15,7 +15,7 @@ const mockController = vi.hoisted(() => ({
     nodeWidth: 210,
     nodeHeight: 92,
   },
-  menuLayout: "frequency" as const,
+  menuLayout: "role" as const,
   setMenuLayout: vi.fn(),
   showDiagnostics: false,
   setShowDiagnostics: vi.fn(),
@@ -31,8 +31,6 @@ const mockController = vi.hoisted(() => ({
   setPendingKinshipSourceId: vi.fn(),
   personDetailModal: null as any,
   setPersonDetailModal: vi.fn(),
-  workspacePersonId: null as string | null,
-  setWorkspacePersonId: vi.fn(),
   workspacePersonIdV3: null as string | null,
   setWorkspacePersonIdV3: vi.fn(),
   nodeMenuState: null as any,
@@ -239,7 +237,6 @@ describe("useAppShellFacade contract", () => {
       personId: "@I1@",
       person: doc.persons["@I1@"],
     };
-    mockController.workspacePersonId = "@I1@";
     mockController.workspacePersonIdV3 = "@I1@";
     mockGskFile.importIncomingDoc = doc;
     mockAiAssistant.showAiAssistantModal = true;
@@ -264,10 +261,11 @@ describe("useAppShellFacade contract", () => {
     facade!.features.personEditor.commands.onClose();
     expect(mockController.setPersonDetailModal).toHaveBeenCalledWith(null);
 
-    expect(facade!.features.personWorkspace.viewModel?.sections.identity.person.id).toBe("@I1@");
-    expect(facade!.features.personWorkspace.viewModel?.sections.timeline.personId).toBe("@I1@");
-    facade!.features.personWorkspace.commands.onQuickAddRelation("@I1@", "child");
-    expect(mockController.setWorkspacePersonId).toHaveBeenCalledWith(null);
+    expect((facade!.features as Record<string, unknown>).personWorkspace).toBeUndefined();
+    expect(facade!.features.personWorkspaceV3.viewModel?.sections.identity.person.id).toBe("@I1@");
+    expect(facade!.features.personWorkspaceV3.viewModel?.sections.timeline.personId).toBe("@I1@");
+    facade!.features.personWorkspaceV3.commands.onQuickAddRelation("@I1@", "child");
+    expect(mockController.setWorkspacePersonIdV3).toHaveBeenCalledWith(null);
     expect(mockController.openAddRelationEditor).toHaveBeenCalledWith("@I1@", "child");
 
     expect(facade!.features.personWorkspaceV3.viewModel?.v3Sections.find((section) => section.id === "identity")?.status).toBe("operativo");

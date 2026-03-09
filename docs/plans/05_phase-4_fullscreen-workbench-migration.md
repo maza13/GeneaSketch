@@ -105,6 +105,16 @@ El workbench fullscreen debe ser una expansion natural del expediente ya migrado
 - actualizar la wiki UX para reflejar la division explicita `window dossier` vs `fullscreen workbench`
 - documentar el papel de `claims` y `journal` como carriles futuros del workspace
 
+## Implementacion base cerrada
+
+La base de esta fase queda fijada asi:
+
+- `fullscreen` mantiene `StandardModal` solo como host tecnico
+- el chrome propio del workbench vive dentro de `PersonWorkspacePanelV3`
+- el header del workbench se compacta y deja de competir con el contenido central
+- el rail se agrupa por prioridad de trabajo (`analysis`) y por registro base
+- el sidecar sigue siendo contextual, no decorativo ni dominante
+
 ## Deuda prohibida al cerrar la fase
 
 - no dejar fullscreen como simple variante estirada del modal anterior

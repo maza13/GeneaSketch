@@ -17,9 +17,10 @@ type Params = {
   setTimelineScaleOffset: (offset: number) => void;
   handleTimelineHighlight: AppShellFacade["features"]["timeline"]["commands"]["onTimelineHighlight"];
   setTimelineStatus: (livingIds: string[], deceasedIds: string[], year: number, eventPersonIds?: string[]) => void;
-  toggleRightStackSection: (section: "details" | "timeline") => void;
+  toggleRightStackSection: (section: "details") => void;
   clearOverlayType: (type: string) => void;
   setTimelinePanelOpen: (open: boolean) => void;
+  setLeftSectionState: (patch: { timelineExpanded?: boolean }) => void;
 };
 
 export function useShellStatsFeature(params: Params): Pick<AppShellFacade["features"], "globalStats" | "personStats" | "timeline"> {
@@ -63,7 +64,7 @@ export function useShellStatsFeature(params: Params): Pick<AppShellFacade["featu
           };
         },
         onApplyPresence: (result) => params.setTimelineStatus(result.livingIds, result.deceasedIds, result.effectiveValue, result.eventIds),
-        onToggleTimelineExpanded: () => params.toggleRightStackSection("timeline"),
+        onToggleTimelineExpanded: () => params.setLeftSectionState({ timelineExpanded: !params.timelineViewModel.isExpanded }),
         onClosePanel: () => {
           params.clearOverlayType("timeline");
           params.setTimelinePanelOpen(false);
